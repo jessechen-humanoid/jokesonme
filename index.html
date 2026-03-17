@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>收支紀錄 — 看我笑話工作室</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav"></nav>
+
+  <div class="container">
+    <h1 class="page-title">收支紀錄</h1>
+
+    <div class="show-selector" id="show-selector"></div>
+
+    <!-- Add Transaction Form -->
+    <div class="card" id="add-form" style="display:none;">
+      <div class="card-title">新增收支</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">項目名稱</label>
+          <input type="text" class="form-control" id="tx-item" placeholder="例：場地租金">
+        </div>
+        <div class="form-group">
+          <label class="form-label">金額（正數=收入，負數=支出）</label>
+          <input type="number" class="form-control" id="tx-amount" placeholder="例：-3500">
+        </div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">墊款人（公帳支付可留空）</label>
+          <div id="tx-member-container"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">日期</label>
+          <input type="date" class="form-control" id="tx-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">登記人</label>
+          <div id="tx-recorder-container"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="tx-submit">新增</button>
+    </div>
+
+    <!-- Transaction List -->
+    <div id="transaction-list"></div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/transaction.js"></script>
+</body>
+</html>
