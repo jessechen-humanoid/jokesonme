@@ -3,6 +3,7 @@
 // ============================================================
 
 (async function () {
+  checkAuth();
   renderNav('analytics');
   await loadAnalytics();
 })();
@@ -14,6 +15,7 @@ async function loadAnalytics() {
   const expenseEl = document.getElementById('expense-breakdown');
   const unsettledEl = document.getElementById('unsettled-advances');
   const monthlyEl = document.getElementById('monthly-breakdown');
+  const earningsEl = document.getElementById('member-earnings');
 
   summaryEl.innerHTML = '<div class="loading">載入中...</div>';
 
@@ -32,16 +34,6 @@ async function loadAnalytics() {
       t.notes = t.item;
     }
   });
-
-  if (transactions.length === 0) {
-    summaryEl.innerHTML = '<div class="empty-state">尚無收支紀錄</div>';
-    showPnlEl.innerHTML = '';
-    incomeEl.innerHTML = '';
-    expenseEl.innerHTML = '';
-    unsettledEl.innerHTML = '';
-    monthlyEl.innerHTML = '';
-    return;
-  }
 
   // ---- Year Summary ----
   const totalIncome = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
@@ -93,6 +85,9 @@ async function loadAnalytics() {
 
   // ---- Monthly Breakdown ----
   renderMonthly(transactions, monthlyEl);
+
+  // ---- Per-member Projected Net Earnings ----
+  renderMemberEarnings(transactions, earningsEl);
 }
 
 function renderShowPnl(transactions, el) {
@@ -162,7 +157,12 @@ function renderShowPnl(transactions, el) {
 
 function renderCategoryBreakdown(items, total, fixedCategories, el, title, type) {
   if (total === 0) {
-    el.innerHTML = '';
+    el.innerHTML = `
+      <div class="card">
+        <div class="card-title">${title}</div>
+        <div style="padding: 16px 0; color: var(--text-light); font-size: 13px;">尚無${type === 'income' ? '收入' : '支出'}紀錄</div>
+      </div>
+    `;
     return;
   }
 
@@ -333,6 +333,55 @@ function renderMonthly(transactions, el) {
                 ${formatAmount(totals.net)}
               </td>
             </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderMemberEarnings(transactions, el) {
+  if (!el) return;
+
+  const totalExpense = transactions.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
+  const expensePerMember = totalExpense / MEMBERS.length;
+
+  // Calculate each member's allocated income
+  const memberIncome = {};
+  MEMBERS.forEach(m => { memberIncome[m] = 0; });
+
+  transactions.filter(t => t.amount > 0).forEach(t => {
+    const excluded = t.excludedMembers ? t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const included = MEMBERS.filter(m => !excluded.includes(m));
+    const share = included.length > 0 ? t.amount / included.length : 0;
+    included.forEach(m => { memberIncome[m] += share; });
+  });
+
+  const members = MEMBERS.map(m => ({
+    name: m,
+    net: memberIncome[m] + expensePerMember,
+  }));
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">成員年度預估淨收入</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>成員</th>
+              <th style="text-align:right">預估淨收入</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${members.map(m => `
+              <tr>
+                <td>${escapeHtml(m.name)}</td>
+                <td class="${m.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right; font-weight:600;">
+                  ${formatAmount(Math.round(m.net))}
+                </td>
+              </tr>
+            `).join('')}
           </tbody>
         </table>
       </div>

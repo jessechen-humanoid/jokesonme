@@ -4,7 +4,7 @@
 - [x] 1.2 在 `gas/Code.gs` 新增 deleteTransaction API action routing，根據 row ID 刪除收支紀錄列
 - [x] 1.3 更新 `gas/Code.gs` 預設演出清單擴充 Pre-loaded default shows，新增「會員與其他收支」「周邊商品收支」至 DEFAULT_SHOWS
 - [x] 1.4 更新 `js/api.js` 新增 deleteTransaction 方法
-- [ ] 1.5 重新部署 Google Apps Script Web App 並驗證所有 API action routing 正常運作
+- [x] 1.5 重新部署 Google Apps Script Web App 並驗證所有 API action routing 正常運作
 
 ## 2. 收支分類系統設計
 
@@ -46,6 +46,6 @@
 
 ## 8. 部署與驗證
 
-- [ ] 8.1 重新部署 Google Apps Script Web App（含 deleteTransaction 與欄位變更）
-- [ ] 8.2 推送前端至 GitHub Pages 並驗證所有頁面正常運作
-- [ ] 8.3 端對端驗證：新增收支（含分類切換）、編輯收支、刪除收支、Checklist 操作、財務報表檢視
+- [x] 8.1 重新部署 Google Apps Script Web App（含 deleteTransaction 與欄位變更）
+- [x] 8.2 推送前端至 GitHub Pages 並驗證所有頁面正常運作
+- [x] 8.3 端對端驗證：新增收支（含分類切換）、編輯收支、刪除收支、Checklist 操作、財務報表檢視

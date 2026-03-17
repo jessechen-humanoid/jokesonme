@@ -2,6 +2,47 @@
 // 看我笑話工作室 — 共用元件
 // ============================================================
 
+// ---- Password Gate ----
+
+function checkAuth() {
+  if (sessionStorage.getItem('authenticated') === 'true') return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'auth-overlay';
+  overlay.innerHTML = `
+    <div class="auth-box">
+      <div class="auth-title">看我笑話工作室</div>
+      <div class="auth-subtitle">請輸入密碼以繼續</div>
+      <input type="password" class="form-control auth-input" id="auth-password" placeholder="密碼">
+      <div class="auth-error" id="auth-error"></div>
+      <button class="btn btn-primary auth-btn" id="auth-submit">進入</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const input = document.getElementById('auth-password');
+  const error = document.getElementById('auth-error');
+  const submit = document.getElementById('auth-submit');
+
+  function tryAuth() {
+    if (input.value === 'joke0321') {
+      sessionStorage.setItem('authenticated', 'true');
+      overlay.remove();
+    } else {
+      error.textContent = '密碼錯誤，請重試';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  submit.addEventListener('click', tryAuth);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tryAuth();
+  });
+
+  input.focus();
+}
+
 const MEMBERS = ['傑哥', '柏文', '巧達', '芭樂', '又又', '兔子', '大弋', '竹節蟲'];
 
 const INCOME_CATEGORIES = ['演出票房', '付費會員', '商演合作', '周邊商品', '品牌贊助', '其他收入'];
@@ -182,6 +223,36 @@ function getMemberValue(id) {
     return otherInput ? otherInput.value.trim() : '';
   }
   return select.value;
+}
+
+// ---- Member Checkbox Grid (Income Allocation) ----
+
+function createMemberCheckboxGrid(containerId, excludedMembers) {
+  const excluded = excludedMembers ? excludedMembers.split(',').map(s => s.trim()) : [];
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="checkbox-grid">
+      ${MEMBERS.map(m => `
+        <label class="checkbox-item">
+          <input type="checkbox" value="${m}" ${excluded.includes(m) ? '' : 'checked'}>
+          <span>${m}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+}
+
+function getExcludedMembers(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return '';
+  const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+  const excluded = [];
+  checkboxes.forEach(cb => {
+    if (!cb.checked) excluded.push(cb.value);
+  });
+  return excluded.join(',');
 }
 
 // ---- Category Select ----

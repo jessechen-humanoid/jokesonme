@@ -39,11 +39,17 @@ The API SHALL route requests based on the `action` parameter. The following acti
 - `addShow`: create a new show
 - `getTransactions`: return transactions (filterable by show)
 - `addTransaction`: create a new transaction
-- `updateTransaction`: update a transaction (e.g., settlement status)
+- `updateTransaction`: update a transaction (e.g., settlement status, category, notes, amount)
+- `deleteTransaction`: delete a transaction by row ID
 - `getChecklist`: return checklist items for a show
 - `initChecklist`: initialize checklist from template for a show
 - `updateChecklistItem`: update a checklist item (progress, assignee, notes)
 - `addChecklistItem`: add a custom checklist item
+
+#### Scenario: Delete transaction action
+
+- **WHEN** a POST request is sent with action `deleteTransaction` and a valid transaction ID
+- **THEN** the corresponding row is removed from the "收支紀錄" sheet and a success response is returned
 
 #### Scenario: Unknown action returns error
 
@@ -52,12 +58,19 @@ The API SHALL route requests based on the `action` parameter. The following acti
 
 
 <!-- @trace
-source: build-platform
+source: platform-v2
 updated: 2026-03-17
 code:
-  - gas/Code.gs
-  - .DS_Store
+  - index.html
+  - js/analytics.js
   - CLAUDE.md
+  - js/checklist.js
+  - .DS_Store
+  - js/transaction.js
+  - js/api.js
+  - js/shared.js
+  - gas/Code.gs
+  - css/style.css
 -->
 
 ---
@@ -86,7 +99,7 @@ code:
 The API SHALL operate on a Google Sheets spreadsheet with four sheets:
 
 1. **演出清單**: show name, creation date, status
-2. **收支紀錄**: show name, item description, amount, advance payment person, settlement status, date, recorded by
+2. **收支紀錄**: show name, category, notes, amount, advance payment person, settlement status, date, recorded by
 3. **Checklist**: show name, category, item name, assignee, progress status, notes
 4. **Checklist模板**: category, item name, default assignee
 
@@ -97,12 +110,19 @@ The API SHALL operate on a Google Sheets spreadsheet with four sheets:
 
 
 <!-- @trace
-source: build-platform
+source: platform-v2
 updated: 2026-03-17
 code:
-  - gas/Code.gs
-  - .DS_Store
+  - index.html
+  - js/analytics.js
   - CLAUDE.md
+  - js/checklist.js
+  - .DS_Store
+  - js/transaction.js
+  - js/api.js
+  - js/shared.js
+  - gas/Code.gs
+  - css/style.css
 -->
 
 ---

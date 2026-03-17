@@ -3,6 +3,7 @@
 // ============================================================
 
 (async function () {
+  checkAuth();
   renderNav('transaction');
   await renderShowSelector('show-selector', onShowSelected);
 
@@ -31,6 +32,9 @@
     categoryContainer.innerHTML = createCategorySelect('tx-category', 'expense', '');
   }
 
+  // Initialize allocation checkbox grid (default all checked)
+  createMemberCheckboxGrid('tx-allocation-container', '');
+
   // Toggle buttons
   const toggleBtns = document.querySelectorAll('#tx-type-toggle .toggle-btn');
   toggleBtns.forEach(btn => {
@@ -39,6 +43,7 @@
       btn.classList.add('active');
       currentTxType = btn.dataset.type;
       updateCategorySelect('tx-category', currentTxType === 'income' ? 'income' : 'expense', '');
+      toggleAllocationFields();
     });
   });
 
@@ -59,6 +64,18 @@
 let currentShow = '';
 let currentTxType = 'expense';
 let editingId = null;
+
+function toggleAllocationFields() {
+  const memberGroup = document.getElementById('tx-member-group');
+  const allocationGroup = document.getElementById('tx-allocation-group');
+  if (currentTxType === 'income') {
+    memberGroup.style.display = 'none';
+    allocationGroup.style.display = 'block';
+  } else {
+    memberGroup.style.display = 'block';
+    allocationGroup.style.display = 'none';
+  }
+}
 
 async function onShowSelected(showName) {
   currentShow = showName;
@@ -129,7 +146,7 @@ async function loadTransactions() {
               <th>分類</th>
               <th>備註</th>
               <th>金額</th>
-              <th>墊款人</th>
+              <th>分配/墊款</th>
               <th>日期</th>
               <th>結清</th>
               <th></th>
@@ -141,7 +158,7 @@ async function loadTransactions() {
                 <td>${escapeHtml(t.category || '')}</td>
                 <td>${escapeHtml(t.notes || '')}</td>
                 <td class="${amountClass(t.amount)}">${formatAmount(t.amount)}</td>
-                <td>${escapeHtml(t.advancedBy) || '—'}</td>
+                <td>${formatAllocCell(t)}</td>
                 <td>${t.date || ''}</td>
                 <td>
                   ${t.advancedBy
@@ -155,7 +172,7 @@ async function loadTransactions() {
                   <div class="tx-actions">
                     <button class="btn-actions" data-id="${t.id}">⋯</button>
                     <div class="action-menu" id="menu-${t.id}">
-                      <button class="action-menu-item btn-edit" data-id="${t.id}" data-category="${escapeAttr(t.category || '')}" data-notes="${escapeAttr(t.notes || '')}" data-amount="${t.amount}" data-advanced-by="${escapeAttr(t.advancedBy || '')}" data-date="${t.date || ''}" data-recorded-by="${escapeAttr(t.recordedBy || '')}">編輯</button>
+                      <button class="action-menu-item btn-edit" data-id="${t.id}" data-category="${escapeAttr(t.category || '')}" data-notes="${escapeAttr(t.notes || '')}" data-amount="${t.amount}" data-advanced-by="${escapeAttr(t.advancedBy || '')}" data-excluded-members="${escapeAttr(t.excludedMembers || '')}" data-date="${t.date || ''}" data-recorded-by="${escapeAttr(t.recordedBy || '')}">編輯</button>
                       <button class="action-menu-item danger btn-delete" data-id="${t.id}">刪除</button>
                     </div>
                   </div>
@@ -214,7 +231,7 @@ async function loadTransactions() {
   list.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', () => {
       const data = btn.dataset;
-      startEdit(Number(data.id), data.category, data.notes, Number(data.amount), data.advancedBy, data.date, data.recordedBy);
+      startEdit(Number(data.id), data.category, data.notes, Number(data.amount), data.advancedBy, data.excludedMembers, data.date, data.recordedBy);
       document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
     });
   });
@@ -235,7 +252,7 @@ async function loadTransactions() {
   });
 }
 
-function startEdit(id, category, notes, amount, advancedBy, date, recordedBy) {
+function startEdit(id, category, notes, amount, advancedBy, excludedMembers, date, recordedBy) {
   editingId = id;
   const isIncome = amount > 0;
 
@@ -246,6 +263,9 @@ function startEdit(id, category, notes, amount, advancedBy, date, recordedBy) {
     b.classList.toggle('active', b.dataset.type === currentTxType);
   });
 
+  // Toggle allocation/member fields
+  toggleAllocationFields();
+
   // Set category
   updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', category);
 
@@ -255,8 +275,12 @@ function startEdit(id, category, notes, amount, advancedBy, date, recordedBy) {
   // Set amount (always positive in the field)
   document.getElementById('tx-amount').value = Math.abs(amount);
 
-  // Set member
-  setMemberValue('tx-member', advancedBy);
+  // Set member or allocation
+  if (isIncome) {
+    createMemberCheckboxGrid('tx-allocation-container', excludedMembers || '');
+  } else {
+    setMemberValue('tx-member', advancedBy);
+  }
 
   // Set date
   document.getElementById('tx-date').value = date || '';
@@ -282,6 +306,10 @@ function cancelEdit() {
   toggleBtns.forEach(b => {
     b.classList.toggle('active', b.dataset.type === 'expense');
   });
+
+  // Reset allocation/member fields
+  toggleAllocationFields();
+  createMemberCheckboxGrid('tx-allocation-container', '');
 
   // Reset category
   updateCategorySelect('tx-category', 'expense', '');
@@ -333,7 +361,9 @@ async function submitTransaction() {
   const category = document.getElementById('tx-category').value;
   const notes = document.getElementById('tx-notes').value.trim();
   const rawAmount = Number(document.getElementById('tx-amount').value);
-  const advancedBy = getMemberValue('tx-member');
+  const isIncome = currentTxType === 'income';
+  const advancedBy = isIncome ? '' : getMemberValue('tx-member');
+  const excludedMembers = isIncome ? getExcludedMembers('tx-allocation-container') : '';
   const date = document.getElementById('tx-date').value;
   const recordedBy = getMemberValue('tx-recorder');
 
@@ -343,7 +373,7 @@ async function submitTransaction() {
   }
 
   // Apply sign based on toggle
-  const amount = currentTxType === 'income' ? rawAmount : -rawAmount;
+  const amount = isIncome ? rawAmount : -rawAmount;
 
   const btn = document.getElementById('tx-submit');
   btn.disabled = true;
@@ -356,6 +386,7 @@ async function submitTransaction() {
       notes,
       amount,
       advancedBy,
+      excludedMembers,
       date,
       recordedBy,
     });
@@ -368,17 +399,22 @@ async function submitTransaction() {
       notes,
       amount,
       advancedBy,
+      excludedMembers,
       date,
       recordedBy,
     });
 
     // Reset form (keep toggle and date)
-    updateCategorySelect('tx-category', currentTxType === 'income' ? 'income' : 'expense', '');
+    updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', '');
     document.getElementById('tx-notes').value = '';
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
-    const memberSelect = document.getElementById('tx-member');
-    if (memberSelect) memberSelect.value = '';
+    if (isIncome) {
+      createMemberCheckboxGrid('tx-allocation-container', '');
+    } else {
+      const memberSelect = document.getElementById('tx-member');
+      if (memberSelect) memberSelect.value = '';
+    }
     const recorderSelect = document.getElementById('tx-recorder');
     if (recorderSelect) recorderSelect.value = '';
   }
@@ -387,6 +423,20 @@ async function submitTransaction() {
   btn.textContent = '新增';
 
   await loadTransactions();
+}
+
+function formatAllocCell(t) {
+  if (t.amount > 0) {
+    // Income
+    if (!t.excludedMembers) return '全員';
+    const excluded = t.excludedMembers.split(',').map(s => s.trim());
+    const included = MEMBERS.filter(m => !excluded.includes(m));
+    const count = included.length;
+    return `<span class="alloc-cell">${count}/${MEMBERS.length} 人<span class="alloc-tooltip">${included.join('、')}</span></span>`;
+  }
+  // Expense
+  if (t.advancedBy) return escapeHtml(t.advancedBy) + '(墊)';
+  return '—';
 }
 
 function escapeHtml(str) {

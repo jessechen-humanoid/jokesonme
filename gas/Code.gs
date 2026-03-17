@@ -90,7 +90,7 @@ function setupSheets() {
   }
 
   // 收支紀錄
-  getOrCreateSheet(ss, SHEET_NAMES.TRANSACTIONS, ['演出名稱', '分類', '備註', '金額', '墊款人', '結清狀態', '日期', '登記人']);
+  getOrCreateSheet(ss, SHEET_NAMES.TRANSACTIONS, ['演出名稱', '分類', '備註', '金額', '墊款人', '排除成員', '結清狀態', '日期', '登記人']);
 
   // Checklist
   getOrCreateSheet(ss, SHEET_NAMES.CHECKLIST, ['演出名稱', '類別', '項目名稱', '負責人', '進度', '備註']);
@@ -221,7 +221,7 @@ function getTransactions(params) {
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return { success: true, data: [] };
 
-  const data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  const data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
   let transactions = data.map((row, i) => ({
     id: i + 2,
     showName: row[0],
@@ -229,9 +229,10 @@ function getTransactions(params) {
     notes: row[2],
     amount: row[3],
     advancedBy: row[4],
-    settled: row[5] === '已結清',
-    date: row[6],
-    recordedBy: row[7],
+    excludedMembers: row[5] || '',
+    settled: row[6] === '已結清',
+    date: row[7],
+    recordedBy: row[8],
   }));
 
   const showFilter = params.show || '';
@@ -253,11 +254,12 @@ function addTransaction(payload) {
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
   const advancedBy = (payload.advancedBy || '').trim();
+  const excludedMembers = (payload.excludedMembers || '').trim();
   const settled = advancedBy ? '未結清' : '已結清';
   const date = payload.date || new Date().toISOString().split('T')[0];
   const recordedBy = (payload.recordedBy || '').trim();
 
-  sheet.appendRow([showName, category, notes, amount, advancedBy, settled, date, recordedBy]);
+  sheet.appendRow([showName, category, notes, amount, advancedBy, excludedMembers, settled, date, recordedBy]);
   return { success: true, data: { category: category, amount: amount } };
 }
 
@@ -269,10 +271,6 @@ function updateTransaction(payload) {
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
 
-  if (payload.settled !== undefined) {
-    const status = payload.settled ? '已結清' : '未結清';
-    sheet.getRange(rowId, 6).setValue(status);
-  }
   if (payload.category !== undefined) {
     sheet.getRange(rowId, 2).setValue(payload.category);
   }
@@ -285,11 +283,18 @@ function updateTransaction(payload) {
   if (payload.advancedBy !== undefined) {
     sheet.getRange(rowId, 5).setValue(payload.advancedBy);
   }
+  if (payload.excludedMembers !== undefined) {
+    sheet.getRange(rowId, 6).setValue(payload.excludedMembers);
+  }
+  if (payload.settled !== undefined) {
+    const status = payload.settled ? '已結清' : '未結清';
+    sheet.getRange(rowId, 7).setValue(status);
+  }
   if (payload.date !== undefined) {
-    sheet.getRange(rowId, 7).setValue(payload.date);
+    sheet.getRange(rowId, 8).setValue(payload.date);
   }
   if (payload.recordedBy !== undefined) {
-    sheet.getRange(rowId, 8).setValue(payload.recordedBy);
+    sheet.getRange(rowId, 9).setValue(payload.recordedBy);
   }
 
   return { success: true, data: { id: rowId } };

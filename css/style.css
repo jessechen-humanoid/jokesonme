@@ -521,6 +521,117 @@ tr.totals-row td {
   font-size: 14px;
 }
 
+/* Password Gate Overlay */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-box {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 24px;
+}
+
+.auth-input {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.auth-error {
+  color: var(--red);
+  font-size: 13px;
+  min-height: 20px;
+  margin-bottom: 8px;
+}
+
+.auth-btn {
+  width: 100%;
+}
+
+/* Member Checkbox Grid (Income Allocation) */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.checkbox-item:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.checkbox-item input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Allocation Tooltip */
+.alloc-cell {
+  position: relative;
+  cursor: default;
+}
+
+.alloc-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(45, 45, 45, 0.92);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 4px;
+}
+
+.alloc-cell:hover .alloc-tooltip {
+  display: block;
+}
+
 /* Modal for adding show */
 .modal-overlay {
   display: none;
@@ -744,5 +855,9 @@ tr.totals-row td {
   .show-select {
     width: 100%;
     min-width: unset;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

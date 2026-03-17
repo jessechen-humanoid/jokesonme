@@ -49,6 +49,10 @@ const API = {
     return this.post('updateTransaction', { id, ...updates });
   },
 
+  deleteTransaction(id) {
+    return this.post('deleteTransaction', { id });
+  },
+
   // Checklist
   getChecklist(showName) {
     return this.get('getChecklist', { show: showName });

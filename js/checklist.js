@@ -3,6 +3,7 @@
 // ============================================================
 
 (async function () {
+  checkAuth();
   renderNav('checklist');
   await renderShowSelector('show-selector', onShowSelected);
 })();
