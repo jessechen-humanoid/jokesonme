@@ -116,13 +116,22 @@ async function renderShowSelector(containerId, onChange) {
           await renderShowSelector(containerId, onChange);
           const newSelect = document.getElementById('show-select');
           newSelect.value = newName;
+          sessionStorage.setItem('selectedShow', newName);
           if (onChange) onChange(newName);
         }
       });
       return;
     }
+    sessionStorage.setItem('selectedShow', select.value);
     if (onChange) onChange(select.value);
   });
+
+  // Restore previously selected show from sessionStorage
+  const saved = sessionStorage.getItem('selectedShow');
+  if (saved && select.querySelector(`option[value="${CSS.escape(saved)}"]`)) {
+    select.value = saved;
+    if (onChange) onChange(saved);
+  }
 }
 
 // ---- Add Show Modal ----
