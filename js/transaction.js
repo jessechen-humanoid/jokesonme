@@ -25,11 +25,40 @@
     setupMemberSelectOther('tx-recorder');
   }
 
+  // Render default category select (expense)
+  const categoryContainer = document.getElementById('tx-category-container');
+  if (categoryContainer) {
+    categoryContainer.innerHTML = createCategorySelect('tx-category', 'expense', '');
+  }
+
+  // Toggle buttons
+  const toggleBtns = document.querySelectorAll('#tx-type-toggle .toggle-btn');
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      toggleBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTxType = btn.dataset.type;
+      updateCategorySelect('tx-category', currentTxType === 'income' ? 'income' : 'expense', '');
+    });
+  });
+
   // Submit handler
-  document.getElementById('tx-submit').addEventListener('click', addTransaction);
+  document.getElementById('tx-submit').addEventListener('click', submitTransaction);
+
+  // Cancel edit handler
+  document.getElementById('tx-cancel').addEventListener('click', cancelEdit);
+
+  // Close action menus on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.tx-actions')) {
+      document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
+    }
+  });
 })();
 
 let currentShow = '';
+let currentTxType = 'expense';
+let editingId = null;
 
 async function onShowSelected(showName) {
   currentShow = showName;
@@ -43,6 +72,7 @@ async function onShowSelected(showName) {
   }
 
   form.style.display = 'block';
+  cancelEdit();
   await loadTransactions();
 }
 
@@ -61,6 +91,14 @@ async function loadTransactions() {
     list.innerHTML = '<div class="empty-state">尚無收支紀錄，請新增第一筆</div>';
     return;
   }
+
+  // Legacy compatibility: map v1 data
+  transactions.forEach(t => {
+    if (!t.category && t.item) {
+      t.category = t.amount >= 0 ? '其他收入' : '其他支出';
+      t.notes = t.item;
+    }
+  });
 
   // Calculate summary
   const totalIncome = transactions.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
@@ -88,17 +126,20 @@ async function loadTransactions() {
         <table>
           <thead>
             <tr>
-              <th>項目</th>
+              <th>分類</th>
+              <th>備註</th>
               <th>金額</th>
               <th>墊款人</th>
               <th>日期</th>
               <th>結清</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             ${transactions.map(t => `
-              <tr class="${!t.settled && t.advancedBy ? 'unsettled' : ''}">
-                <td>${escapeHtml(t.item)}</td>
+              <tr class="${!t.settled && t.advancedBy ? 'unsettled' : ''}" data-id="${t.id}">
+                <td>${escapeHtml(t.category || '')}</td>
+                <td>${escapeHtml(t.notes || '')}</td>
                 <td class="${amountClass(t.amount)}">${formatAmount(t.amount)}</td>
                 <td>${escapeHtml(t.advancedBy) || '—'}</td>
                 <td>${t.date || ''}</td>
@@ -110,6 +151,15 @@ async function loadTransactions() {
                     : '<span style="color: var(--text-light);">—</span>'
                   }
                 </td>
+                <td>
+                  <div class="tx-actions">
+                    <button class="btn-actions" data-id="${t.id}">⋯</button>
+                    <div class="action-menu" id="menu-${t.id}">
+                      <button class="action-menu-item btn-edit" data-id="${t.id}" data-category="${escapeAttr(t.category || '')}" data-notes="${escapeAttr(t.notes || '')}" data-amount="${t.amount}" data-advanced-by="${escapeAttr(t.advancedBy || '')}" data-date="${t.date || ''}" data-recorded-by="${escapeAttr(t.recordedBy || '')}">編輯</button>
+                      <button class="action-menu-item danger btn-delete" data-id="${t.id}">刪除</button>
+                    </div>
+                  </div>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -118,51 +168,220 @@ async function loadTransactions() {
     </div>
   `;
 
-  // Bind settle buttons
+  // Bind settle buttons (Optimistic UI)
   list.querySelectorAll('.btn-settle').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = Number(btn.dataset.id);
       const currentlySettled = btn.dataset.settled === 'true';
-      btn.disabled = true;
-      await API.updateTransaction(id, { settled: !currentlySettled });
-      await loadTransactions();
+      const newSettled = !currentlySettled;
+
+      // Optimistic update
+      btn.textContent = newSettled ? '已結清' : '未結清';
+      btn.classList.toggle('settled', newSettled);
+      btn.dataset.settled = String(newSettled);
+      const row = btn.closest('tr');
+      if (row) row.classList.toggle('unsettled', !newSettled);
+
+      // Background API call
+      try {
+        const res = await API.updateTransaction(id, { settled: newSettled });
+        if (!res.success) throw new Error(res.error);
+      } catch (e) {
+        // Rollback
+        btn.textContent = currentlySettled ? '已結清' : '未結清';
+        btn.classList.toggle('settled', currentlySettled);
+        btn.dataset.settled = String(currentlySettled);
+        if (row) row.classList.toggle('unsettled', !currentlySettled && !!btn.closest('tr'));
+        alert('更新結清狀態失敗，請重試');
+      }
+    });
+  });
+
+  // Bind action menu toggle
+  list.querySelectorAll('.btn-actions').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById(`menu-${btn.dataset.id}`);
+      // Close other menus
+      document.querySelectorAll('.action-menu.open').forEach(m => {
+        if (m !== menu) m.classList.remove('open');
+      });
+      menu.classList.toggle('open');
+    });
+  });
+
+  // Bind edit buttons
+  list.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const data = btn.dataset;
+      startEdit(Number(data.id), data.category, data.notes, Number(data.amount), data.advancedBy, data.date, data.recordedBy);
+      document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
+    });
+  });
+
+  // Bind delete buttons
+  list.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
+      if (!confirm('確定要刪除這筆紀錄嗎？')) return;
+      const id = Number(btn.dataset.id);
+      const res = await API.deleteTransaction(id);
+      if (res.success) {
+        await loadTransactions();
+      } else {
+        alert('刪除失敗：' + (res.error || '未知錯誤'));
+      }
     });
   });
 }
 
-async function addTransaction() {
-  const item = document.getElementById('tx-item').value.trim();
-  const amount = Number(document.getElementById('tx-amount').value);
+function startEdit(id, category, notes, amount, advancedBy, date, recordedBy) {
+  editingId = id;
+  const isIncome = amount > 0;
+
+  // Set toggle
+  currentTxType = isIncome ? 'income' : 'expense';
+  const toggleBtns = document.querySelectorAll('#tx-type-toggle .toggle-btn');
+  toggleBtns.forEach(b => {
+    b.classList.toggle('active', b.dataset.type === currentTxType);
+  });
+
+  // Set category
+  updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', category);
+
+  // Set notes
+  document.getElementById('tx-notes').value = notes || '';
+
+  // Set amount (always positive in the field)
+  document.getElementById('tx-amount').value = Math.abs(amount);
+
+  // Set member
+  setMemberValue('tx-member', advancedBy);
+
+  // Set date
+  document.getElementById('tx-date').value = date || '';
+
+  // Set recorder
+  setMemberValue('tx-recorder', recordedBy);
+
+  // Update UI
+  document.getElementById('form-title').textContent = '編輯收支';
+  document.getElementById('tx-submit').textContent = '更新';
+  document.getElementById('tx-cancel').style.display = 'inline-block';
+
+  // Scroll to form
+  document.getElementById('add-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEdit() {
+  editingId = null;
+
+  // Reset toggle to expense
+  currentTxType = 'expense';
+  const toggleBtns = document.querySelectorAll('#tx-type-toggle .toggle-btn');
+  toggleBtns.forEach(b => {
+    b.classList.toggle('active', b.dataset.type === 'expense');
+  });
+
+  // Reset category
+  updateCategorySelect('tx-category', 'expense', '');
+
+  // Reset fields
+  document.getElementById('tx-notes').value = '';
+  document.getElementById('tx-amount').value = '';
+  document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+
+  const memberSelect = document.getElementById('tx-member');
+  if (memberSelect) memberSelect.value = '';
+  const memberOther = document.getElementById('tx-member-other');
+  if (memberOther) { memberOther.value = ''; memberOther.classList.remove('active'); }
+
+  const recorderSelect = document.getElementById('tx-recorder');
+  if (recorderSelect) recorderSelect.value = '';
+  const recorderOther = document.getElementById('tx-recorder-other');
+  if (recorderOther) { recorderOther.value = ''; recorderOther.classList.remove('active'); }
+
+  // Update UI
+  document.getElementById('form-title').textContent = '新增收支';
+  document.getElementById('tx-submit').textContent = '新增';
+  document.getElementById('tx-cancel').style.display = 'none';
+}
+
+function setMemberValue(id, value) {
+  const select = document.getElementById(id);
+  const otherInput = document.getElementById(`${id}-other`);
+  if (!select) return;
+
+  if (!value) {
+    select.value = '';
+    if (otherInput) { otherInput.value = ''; otherInput.classList.remove('active'); }
+    return;
+  }
+
+  // Check if value is in MEMBERS list
+  const isKnownMember = MEMBERS.includes(value);
+  if (isKnownMember) {
+    select.value = value;
+    if (otherInput) { otherInput.value = ''; otherInput.classList.remove('active'); }
+  } else {
+    select.value = '__other__';
+    if (otherInput) { otherInput.value = value; otherInput.classList.add('active'); }
+  }
+}
+
+async function submitTransaction() {
+  const category = document.getElementById('tx-category').value;
+  const notes = document.getElementById('tx-notes').value.trim();
+  const rawAmount = Number(document.getElementById('tx-amount').value);
   const advancedBy = getMemberValue('tx-member');
   const date = document.getElementById('tx-date').value;
   const recordedBy = getMemberValue('tx-recorder');
 
-  if (!item || isNaN(amount) || amount === 0) {
-    alert('請填寫項目名稱與金額');
+  if (!category || isNaN(rawAmount) || rawAmount <= 0) {
+    alert('請選擇分類並填寫金額（正數）');
     return;
   }
 
+  // Apply sign based on toggle
+  const amount = currentTxType === 'income' ? rawAmount : -rawAmount;
+
   const btn = document.getElementById('tx-submit');
   btn.disabled = true;
-  btn.textContent = '新增中...';
+  btn.textContent = editingId ? '更新中...' : '新增中...';
 
-  await API.addTransaction({
-    showName: currentShow,
-    item,
-    amount,
-    advancedBy,
-    date,
-    recordedBy,
-  });
+  if (editingId) {
+    // Update existing
+    await API.updateTransaction(editingId, {
+      category,
+      notes,
+      amount,
+      advancedBy,
+      date,
+      recordedBy,
+    });
+    cancelEdit();
+  } else {
+    // Add new
+    await API.addTransaction({
+      showName: currentShow,
+      category,
+      notes,
+      amount,
+      advancedBy,
+      date,
+      recordedBy,
+    });
 
-  // Reset form
-  document.getElementById('tx-item').value = '';
-  document.getElementById('tx-amount').value = '';
-  document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
-  const memberSelect = document.getElementById('tx-member');
-  if (memberSelect) memberSelect.value = '';
-  const recorderSelect = document.getElementById('tx-recorder');
-  if (recorderSelect) recorderSelect.value = '';
+    // Reset form (keep toggle and date)
+    updateCategorySelect('tx-category', currentTxType === 'income' ? 'income' : 'expense', '');
+    document.getElementById('tx-notes').value = '';
+    document.getElementById('tx-amount').value = '';
+    document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
+    const memberSelect = document.getElementById('tx-member');
+    if (memberSelect) memberSelect.value = '';
+    const recorderSelect = document.getElementById('tx-recorder');
+    if (recorderSelect) recorderSelect.value = '';
+  }
 
   btn.disabled = false;
   btn.textContent = '新增';
@@ -175,4 +394,9 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

@@ -69,7 +69,20 @@ async function loadChecklist() {
     html += `
       <div class="card checklist-category">
         <div class="card-title">${escapeHtml(cat)}</div>
-        ${items.map(item => renderChecklistItem(item, cat, projectNames)).join('')}
+        <div class="table-wrapper">
+          <table class="checklist-table">
+            <thead>
+              <tr>
+                <th>項目</th>
+                <th style="width:120px;">負責人</th>
+                <th style="width:100px;">進度</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => renderChecklistItem(item, cat, projectNames)).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
   });
@@ -170,44 +183,59 @@ function renderChecklistItem(item, category, projectNames) {
     `;
   }
 
-  return `
-    <div class="checklist-item">
-      <div class="checklist-item-name">
-        ${nameHtml}
-      </div>
-      <div class="checklist-assignee">
+  let rowsHtml = `
+    <tr>
+      <td><div class="item-name">${nameHtml}</div></td>
+      <td>
         <select data-id="${item.id}" data-field="assignee">
           <option value="">—</option>
           ${MEMBERS.map(m => `<option value="${m}" ${m === item.assignee ? 'selected' : ''}>${m}</option>`).join('')}
           <option value="__other__">其他</option>
         </select>
-      </div>
-      <div>
+      </td>
+      <td>
         <button class="status status-${item.progress}" data-id="${item.id}" data-field="progress" data-current="${item.progress}">
           ${item.progress}
         </button>
-      </div>
-    </div>
-    ${notesHtml ? `<div style="padding: 0 12px 10px;">${notesHtml}</div>` : ''}
+      </td>
+    </tr>
   `;
+
+  if (notesHtml) {
+    rowsHtml += `<tr class="notes-row"><td colspan="3">${notesHtml}</td></tr>`;
+  }
+
+  return rowsHtml;
 }
 
 function bindChecklistEvents() {
   const content = document.getElementById('checklist-content');
 
-  // Status toggle
+  // Status toggle (Optimistic UI with rollback)
   content.querySelectorAll('[data-field="progress"]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const states = ['未開始', '進行中', '已完成'];
-      const currentIndex = states.indexOf(btn.dataset.current);
+      const prevState = btn.dataset.current;
+      const currentIndex = states.indexOf(prevState);
       const nextState = states[(currentIndex + 1) % states.length];
       const id = Number(btn.dataset.id);
 
+      // Optimistic update
       btn.className = `status status-${nextState}`;
       btn.textContent = nextState;
       btn.dataset.current = nextState;
 
-      await API.updateChecklistItem(id, { progress: nextState });
+      // Background API call with rollback on failure
+      try {
+        const res = await API.updateChecklistItem(id, { progress: nextState });
+        if (!res.success) throw new Error(res.error);
+      } catch (e) {
+        // Rollback
+        btn.className = `status status-${prevState}`;
+        btn.textContent = prevState;
+        btn.dataset.current = prevState;
+        alert('更新進度失敗，請重試');
+      }
     });
   });
 

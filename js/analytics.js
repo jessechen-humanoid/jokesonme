@@ -24,6 +24,15 @@ async function loadAnalytics() {
   }
 
   const transactions = res.data;
+
+  // Legacy compatibility
+  transactions.forEach(t => {
+    if (!t.category && t.item) {
+      t.category = t.amount >= 0 ? '其他收入' : '其他支出';
+      t.notes = t.item;
+    }
+  });
+
   if (transactions.length === 0) {
     summaryEl.innerHTML = '<div class="empty-state">尚無收支紀錄</div>';
     showPnlEl.innerHTML = '';
@@ -59,26 +68,28 @@ async function loadAnalytics() {
   // ---- Per-show P&L ----
   renderShowPnl(transactions, showPnlEl);
 
-  // ---- Income Breakdown ----
-  renderBreakdown(
+  // ---- Income Breakdown by Category ----
+  renderCategoryBreakdown(
     transactions.filter(t => t.amount > 0),
     totalIncome,
+    INCOME_CATEGORIES,
     incomeEl,
     '收入佔比',
     'income'
   );
 
-  // ---- Expense Breakdown ----
-  renderBreakdown(
+  // ---- Expense Breakdown by Category ----
+  renderCategoryBreakdown(
     transactions.filter(t => t.amount < 0),
     Math.abs(totalExpense),
+    EXPENSE_CATEGORIES,
     expenseEl,
     '支出佔比',
     'expense'
   );
 
-  // ---- Unsettled Advances ----
-  renderUnsettled(transactions, unsettledEl);
+  // ---- Advance Payments Overview ----
+  renderAdvances(transactions, unsettledEl);
 
   // ---- Monthly Breakdown ----
   renderMonthly(transactions, monthlyEl);
@@ -104,6 +115,12 @@ function renderShowPnl(transactions, el) {
     net: data.income + data.expense,
   }));
 
+  const totals = shows.reduce((acc, s) => ({
+    income: acc.income + s.income,
+    expense: acc.expense + s.expense,
+    net: acc.net + s.net,
+  }), { income: 0, expense: 0, net: 0 });
+
   el.innerHTML = `
     <div class="card">
       <div class="card-title">各檔演出損益</div>
@@ -128,6 +145,14 @@ function renderShowPnl(transactions, el) {
                 </td>
               </tr>
             `).join('')}
+            <tr class="totals-row">
+              <td>合計</td>
+              <td class="amount-positive" style="text-align:right">${formatAmount(totals.income)}</td>
+              <td class="amount-negative" style="text-align:right">${formatAmount(totals.expense)}</td>
+              <td class="${totals.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">
+                ${formatAmount(totals.net)}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -135,23 +160,30 @@ function renderShowPnl(transactions, el) {
   `;
 }
 
-function renderBreakdown(items, total, el, title, type) {
-  if (items.length === 0 || total === 0) {
+function renderCategoryBreakdown(items, total, fixedCategories, el, title, type) {
+  if (total === 0) {
     el.innerHTML = '';
     return;
   }
 
-  // Group by item name
+  // Aggregate by fixed category
   const groups = {};
+  fixedCategories.forEach(c => { groups[c] = 0; });
+
   items.forEach(t => {
-    const key = t.item || '未分類';
-    if (!groups[key]) groups[key] = 0;
-    groups[key] += Math.abs(t.amount);
+    const key = t.category || (type === 'income' ? '其他收入' : '其他支出');
+    if (groups[key] !== undefined) {
+      groups[key] += Math.abs(t.amount);
+    } else {
+      // Unknown category falls into "其他"
+      const fallback = type === 'income' ? '其他收入' : '其他支出';
+      groups[fallback] = (groups[fallback] || 0) + Math.abs(t.amount);
+    }
   });
 
-  const sorted = Object.entries(groups)
-    .map(([name, amount]) => ({ name, amount, pct: (amount / total * 100) }))
-    .sort((a, b) => b.amount - a.amount);
+  const sorted = fixedCategories
+    .map(name => ({ name, amount: groups[name], pct: (groups[name] / total * 100) }))
+    .filter(item => item.amount > 0);
 
   el.innerHTML = `
     <div class="card">
@@ -170,14 +202,14 @@ function renderBreakdown(items, total, el, title, type) {
   `;
 }
 
-function renderUnsettled(transactions, el) {
-  const unsettled = transactions.filter(t => !t.settled && t.advancedBy);
+function renderAdvances(transactions, el) {
+  const advanceTx = transactions.filter(t => t.advancedBy);
 
-  if (unsettled.length === 0) {
+  if (advanceTx.length === 0) {
     el.innerHTML = `
       <div class="card">
-        <div class="card-title">墊款未結清</div>
-        <div class="empty-state">所有墊款已結清</div>
+        <div class="card-title">代墊追蹤</div>
+        <div class="empty-state">目前沒有代墊紀錄</div>
       </div>
     `;
     return;
@@ -185,38 +217,54 @@ function renderUnsettled(transactions, el) {
 
   // Group by person
   const personMap = {};
-  unsettled.forEach(t => {
-    if (!personMap[t.advancedBy]) personMap[t.advancedBy] = { total: 0, items: [] };
-    personMap[t.advancedBy].total += Math.abs(t.amount);
-    personMap[t.advancedBy].items.push(t);
+  advanceTx.forEach(t => {
+    if (!personMap[t.advancedBy]) personMap[t.advancedBy] = { unsettled: 0, settled: 0 };
+    const amt = Math.abs(t.amount);
+    if (t.settled) {
+      personMap[t.advancedBy].settled += amt;
+    } else {
+      personMap[t.advancedBy].unsettled += amt;
+    }
   });
 
   const persons = Object.entries(personMap)
-    .map(([name, data]) => ({ name, ...data }))
+    .map(([name, data]) => ({ name, unsettled: data.unsettled, settled: data.settled, total: data.unsettled + data.settled }))
     .sort((a, b) => b.total - a.total);
+
+  const grandTotal = persons.reduce((acc, p) => ({
+    unsettled: acc.unsettled + p.unsettled,
+    settled: acc.settled + p.settled,
+    total: acc.total + p.total,
+  }), { unsettled: 0, settled: 0, total: 0 });
 
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">墊款未結清</div>
+      <div class="card-title">代墊追蹤</div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
               <th>墊款人</th>
               <th style="text-align:right">未結清金額</th>
-              <th>明細</th>
+              <th style="text-align:right">已結清金額</th>
+              <th style="text-align:right">總計</th>
             </tr>
           </thead>
           <tbody>
             ${persons.map(p => `
               <tr>
                 <td>${escapeHtml(p.name)}</td>
-                <td class="amount-negative" style="text-align:right; font-weight:600;">NT$${p.total.toLocaleString()}</td>
-                <td style="font-size:12px; color:var(--text-light);">
-                  ${p.items.map(i => escapeHtml(i.item)).join('、')}
-                </td>
+                <td class="amount-negative" style="text-align:right">NT$${p.unsettled.toLocaleString()}</td>
+                <td style="text-align:right; color: var(--text-light);">NT$${p.settled.toLocaleString()}</td>
+                <td style="text-align:right; font-weight:600;">NT$${p.total.toLocaleString()}</td>
               </tr>
             `).join('')}
+            <tr class="totals-row">
+              <td>合計</td>
+              <td class="amount-negative" style="text-align:right">NT$${grandTotal.unsettled.toLocaleString()}</td>
+              <td style="text-align:right; color: var(--text-light);">NT$${grandTotal.settled.toLocaleString()}</td>
+              <td style="text-align:right">NT$${grandTotal.total.toLocaleString()}</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -247,6 +295,12 @@ function renderMonthly(transactions, el) {
     }))
     .sort((a, b) => a.month.localeCompare(b.month));
 
+  const totals = months.reduce((acc, m) => ({
+    income: acc.income + m.income,
+    expense: acc.expense + m.expense,
+    net: acc.net + m.net,
+  }), { income: 0, expense: 0, net: 0 });
+
   el.innerHTML = `
     <div class="card">
       <div class="card-title">月度淨利</div>
@@ -271,6 +325,14 @@ function renderMonthly(transactions, el) {
                 </td>
               </tr>
             `).join('')}
+            <tr class="totals-row">
+              <td>年度合計</td>
+              <td class="amount-positive" style="text-align:right">${formatAmount(totals.income)}</td>
+              <td class="amount-negative" style="text-align:right">${formatAmount(totals.expense)}</td>
+              <td class="${totals.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">
+                ${formatAmount(totals.net)}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

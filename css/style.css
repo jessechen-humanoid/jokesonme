@@ -1,5 +1,5 @@
 /* ============================================================
-   看我笑話工作室 — MUJI Style
+   看我笑話工作室 — Liquid Glass Style
    ============================================================ */
 
 /* Reset & Base */
@@ -12,33 +12,42 @@
 :root {
   --white: #FFFFFF;
   --bg: #F5F5F5;
-  --text: #333333;
-  --text-light: #888888;
-  --border: #E0E0E0;
-  --border-light: #EEEEEE;
+  --text: #2D2D2D;
+  --text-light: #777777;
+  --border: rgba(255, 255, 255, 0.3);
+  --border-light: rgba(255, 255, 255, 0.15);
+  --border-solid: #E0E0E0;
   --red: #E74C3C;
   --yellow: #F39C12;
   --green: #27AE60;
-  --red-light: #FDEDEC;
-  --yellow-light: #FEF9E7;
-  --green-light: #EAFAF1;
-  --accent: #333333;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --radius: 6px;
+  --red-light: rgba(231, 76, 60, 0.1);
+  --yellow-light: rgba(243, 156, 18, 0.1);
+  --green-light: rgba(39, 174, 96, 0.1);
+  --accent: #5B6EF5;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+  --glass-blur: blur(20px);
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-  background: var(--bg);
+  background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%);
+  background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
 }
 
-/* Navigation */
+/* Navigation — Frosted Glass */
 .nav {
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: var(--glass-border);
   padding: 0 24px;
   display: flex;
   align-items: center;
@@ -80,7 +89,7 @@ body {
 }
 
 .nav-link.active {
-  color: var(--text);
+  color: var(--accent);
   border-bottom-color: var(--accent);
 }
 
@@ -98,9 +107,12 @@ body {
   color: var(--text);
 }
 
-/* Card */
+/* Card — Frosted Glass */
 .card {
-  background: var(--white);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 24px;
@@ -113,7 +125,7 @@ body {
   color: var(--text);
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* Forms */
@@ -132,18 +144,21 @@ body {
 .form-control {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text);
-  background: var(--white);
-  transition: border-color 0.2s;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s;
   font-family: inherit;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--text);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 110, 245, 0.1);
 }
 
 .form-row {
@@ -165,48 +180,56 @@ body {
 
 .show-select {
   padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text);
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   min-width: 280px;
   font-family: inherit;
 }
 
 .show-select:focus {
   outline: none;
-  border-color: var(--text);
+  border-color: var(--accent);
 }
 
 /* Buttons */
 .btn {
   padding: 10px 20px;
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.1s;
 }
 
 .btn:hover {
-  opacity: 0.85;
+  opacity: 0.88;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
-  background: var(--text);
+  background: var(--accent);
   color: var(--white);
 }
 
 .btn-secondary {
-  background: var(--border);
+  background: rgba(0, 0, 0, 0.06);
   color: var(--text);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .btn-sm {
@@ -217,18 +240,19 @@ body {
 .btn-settle {
   padding: 4px 10px;
   font-size: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   color: var(--text-light);
   font-family: inherit;
+  transition: background 0.2s, color 0.2s;
 }
 
 .btn-settle.settled {
   background: var(--green-light);
   color: var(--green);
-  border-color: var(--green);
+  border-color: rgba(39, 174, 96, 0.3);
 }
 
 /* Status badges */
@@ -242,6 +266,11 @@ body {
   cursor: pointer;
   border: none;
   font-family: inherit;
+  transition: transform 0.1s;
+}
+
+.status:active {
+  transform: scale(0.95);
 }
 
 .status-未開始 {
@@ -273,12 +302,12 @@ th {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-light);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   vertical-align: middle;
 }
 
@@ -287,7 +316,7 @@ tr:last-child td {
 }
 
 tr.unsettled {
-  background: #FFFBF0;
+  background: rgba(255, 248, 230, 0.5);
 }
 
 .amount-positive {
@@ -300,42 +329,52 @@ tr.unsettled {
   font-weight: 600;
 }
 
-/* Checklist */
+/* Totals row */
+tr.totals-row td {
+  font-weight: 600;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Checklist — Table Layout */
 .checklist-category {
   margin-bottom: 24px;
 }
 
-.category-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 12px;
-  padding-left: 4px;
-}
-
-.checklist-item {
-  display: grid;
-  grid-template-columns: 1fr 100px 100px;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-light);
+.checklist-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 14px;
 }
 
-.checklist-item:last-child {
+.checklist-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.checklist-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  vertical-align: middle;
+}
+
+.checklist-table tr:last-child td {
   border-bottom: none;
 }
 
-.checklist-item-name {
+.checklist-table .item-name {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.checklist-item-name input {
+.checklist-table .item-name input {
   border: none;
-  border-bottom: 1px dashed var(--border);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
   padding: 2px 4px;
   font-size: 14px;
   font-family: inherit;
@@ -344,35 +383,36 @@ tr.unsettled {
   width: 120px;
 }
 
-.checklist-item-name input:focus {
+.checklist-table .item-name input:focus {
   outline: none;
-  border-bottom-color: var(--text);
+  border-bottom-color: var(--accent);
 }
 
-.checklist-assignee {
-  font-size: 13px;
-}
-
-.checklist-assignee select {
+.checklist-table select {
   padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
   color: var(--text);
-  background: var(--white);
+  background: rgba(255, 255, 255, 0.6);
   width: 100%;
+}
+
+.notes-row td {
+  padding-top: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .notes-field {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
   color: var(--text);
-  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.5);
   resize: none;
 }
 
@@ -385,9 +425,12 @@ tr.unsettled {
 }
 
 .stat-card {
-  background: var(--white);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   padding: 20px;
   text-align: center;
 }
@@ -431,7 +474,7 @@ tr.unsettled {
 .breakdown-track {
   flex: 1;
   height: 20px;
-  background: var(--border-light);
+  background: rgba(0, 0, 0, 0.04);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -483,7 +526,9 @@ tr.unsettled {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -494,12 +539,15 @@ tr.unsettled {
 }
 
 .modal {
-  background: var(--white);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius);
   padding: 24px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
 }
 
 .modal-title {
@@ -515,6 +563,114 @@ tr.unsettled {
   margin-top: 16px;
 }
 
+/* Toggle group (income/expense) */
+.toggle-group {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.toggle-btn {
+  padding: 8px 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-light);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.toggle-btn:not(:last-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn.active[data-type="expense"] {
+  background: var(--red);
+  color: var(--white);
+}
+
+.toggle-btn.active[data-type="income"] {
+  background: var(--green);
+  color: var(--white);
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Transaction action menu */
+.tx-actions {
+  position: relative;
+}
+
+.btn-actions {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-light);
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.btn-actions:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.action-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  min-width: 100px;
+  overflow: hidden;
+}
+
+.action-menu.open {
+  display: block;
+}
+
+.action-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.action-menu-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.action-menu-item.danger {
+  color: var(--red);
+}
+
 /* Other input for member */
 .member-other-input {
   display: none;
@@ -523,6 +679,32 @@ tr.unsettled {
 
 .member-other-input.active {
   display: block;
+}
+
+/* Glassmorphism fallback */
+@supports not (backdrop-filter: blur(20px)) {
+  .nav {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .card,
+  .stat-card,
+  .modal {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .form-control,
+  .show-select {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .action-menu {
+    background: rgba(255, 255, 255, 0.97);
+  }
+
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.4);
+  }
 }
 
 /* Responsive */
@@ -554,9 +736,9 @@ tr.unsettled {
     grid-template-columns: 1fr;
   }
 
-  .checklist-item {
-    grid-template-columns: 1fr;
-    gap: 6px;
+  .checklist-table {
+    display: block;
+    overflow-x: auto;
   }
 
   .show-select {

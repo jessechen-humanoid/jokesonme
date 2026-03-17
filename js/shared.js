@@ -4,6 +4,9 @@
 
 const MEMBERS = ['傑哥', '柏文', '巧達', '芭樂', '又又', '兔子', '大弋', '竹節蟲'];
 
+const INCOME_CATEGORIES = ['演出票房', '付費會員', '商演合作', '周邊商品', '品牌贊助', '其他收入'];
+const EXPENSE_CATEGORIES = ['場地租借', '工作人員', '設備道具', '剪輯製作', '行政雜支', '平台手續', '其他支出'];
+
 // ---- Navigation ----
 
 function renderNav(activePage) {
@@ -179,6 +182,24 @@ function getMemberValue(id) {
     return otherInput ? otherInput.value.trim() : '';
   }
   return select.value;
+}
+
+// ---- Category Select ----
+
+function createCategorySelect(id, type, selectedValue) {
+  const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  return `<select class="form-control" id="${id}">
+    <option value="">— 請選擇分類 —</option>
+    ${categories.map(c => `<option value="${c}" ${c === selectedValue ? 'selected' : ''}>${c}</option>`).join('')}
+  </select>`;
+}
+
+function updateCategorySelect(id, type, selectedValue) {
+  const container = document.getElementById(id);
+  if (!container) return;
+  const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  container.innerHTML = `<option value="">— 請選擇分類 —</option>` +
+    categories.map(c => `<option value="${c}" ${c === selectedValue ? 'selected' : ''}>${c}</option>`).join('');
 }
 
 // ---- Utilities ----
