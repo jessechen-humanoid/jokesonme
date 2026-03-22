@@ -165,6 +165,9 @@ function handleRequest(e) {
       case 'addChecklistItem':
         result = addChecklistItem(postData);
         break;
+      case 'batchImportTransactions':
+        result = batchImportTransactions(postData);
+        break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
     }
@@ -415,4 +418,33 @@ function addChecklistItem(payload) {
   const assignee = (payload.assignee || '').trim();
   sheet.appendRow([showName, category || '自訂', itemName, assignee, '未開始', '']);
   return { success: true, data: { itemName: itemName } };
+}
+
+// ============================================================
+// Batch Import (應援匯入)
+// ============================================================
+
+function batchImportTransactions(payload) {
+  const transactions = payload.transactions;
+  if (!Array.isArray(transactions) || transactions.length === 0) {
+    return { success: false, error: '沒有要匯入的交易資料' };
+  }
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+
+  // Headers: 演出名稱, 分類, 備註, 金額, 墊款人, 排除成員, 結清狀態, 日期, 登記人
+  const rows = transactions.map(t => [
+    (t.showName || '').trim(),
+    (t.category || '').trim(),
+    (t.notes || '').trim(),
+    Number(t.amount) || 0,
+    '',           // 墊款人 (empty for imports)
+    '',           // 排除成員
+    '已結清',     // 結清狀態
+    t.date || new Date().toISOString().split('T')[0],
+    (t.recordedBy || '應援匯入').trim(),
+  ]);
+
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 9).setValues(rows);
+  return { success: true, data: { count: rows.length } };
 }

@@ -8,33 +8,33 @@ TBD - created by archiving change 'build-platform'. Update Purpose after archive
 
 ### Requirement: Record transaction by show
 
-The system SHALL allow users to record income and expense entries associated with a specific show. Each transaction SHALL include: show name, category (from fixed category list), optional notes, amount (always stored as positive for income, negative for expense), date, and the person who recorded it. The previous free-text item field is replaced by category and notes fields.
-
-#### Scenario: Add an income entry
-
-- **WHEN** user selects income mode, selects a category, optionally enters notes, enters a positive amount, and submits
-- **THEN** the transaction is saved to the "收支紀錄" sheet with the category, notes, and amount as a positive number
+The system SHALL allow users to record income and expense entries associated with a specific show. Each transaction SHALL include: show name, category, notes (optional), amount (positive for income, negative for expense), date, and the person who recorded it. For expense transactions, an optional advance payment person (墊款人) field SHALL be available. For income transactions, a member allocation checkbox grid SHALL be displayed instead of the advance payment field.
 
 #### Scenario: Add an expense entry
 
-- **WHEN** user selects expense mode, selects a category, optionally enters notes, enters a positive amount, and submits
-- **THEN** the transaction is saved to the "收支紀錄" sheet with the category, notes, and amount as a negative number
+- **WHEN** user selects "支出" mode, selects a show, chooses a category, enters an amount, and submits
+- **THEN** the transaction is saved with a negative amount and optional advance payment person
+
+#### Scenario: Add an income entry
+
+- **WHEN** user selects "收入" mode, selects a show, chooses a category, enters an amount, and submits
+- **THEN** the transaction is saved with a positive amount and the member allocation (excluded members stored as comma-separated names)
 
 
 <!-- @trace
-source: platform-v2
+source: income-allocation-analytics
 updated: 2026-03-17
 code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
-  - js/api.js
+  - analytics.html
   - js/shared.js
+  - js/checklist.js
+  - js/transaction.js
   - gas/Code.gs
+  - .DS_Store
+  - js/analytics.js
+  - index.html
   - css/style.css
+  - js/api.js
 -->
 
 ---
@@ -97,28 +97,28 @@ code:
 ---
 ### Requirement: View transactions by show
 
-The system SHALL allow users to filter and view all transactions for a selected show, displaying category, notes, amount, advance payment person, date, settlement status, and an action menu for each row.
+The system SHALL allow users to filter and view all transactions for a selected show. The transaction list SHALL display category, notes, amount, date, settlement status, and a combined allocation/advance column. For income transactions, the column SHALL show "全員" or "N/8 人" (with hover tooltip for included members). For expense transactions, the column SHALL show the advance payment person or "—".
 
 #### Scenario: Select a show to view transactions
 
 - **WHEN** user selects a show from the dropdown
-- **THEN** all transactions for that show are displayed with category, notes, amount, advance payment person, date, settlement status, and action button
+- **THEN** all transactions for that show are displayed with the combined allocation/advance column
 
 
 <!-- @trace
-source: platform-v2
+source: income-allocation-analytics
 updated: 2026-03-17
 code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
-  - js/api.js
+  - analytics.html
   - js/shared.js
+  - js/checklist.js
+  - js/transaction.js
   - gas/Code.gs
+  - .DS_Store
+  - js/analytics.js
+  - index.html
   - css/style.css
+  - js/api.js
 -->
 
 ---

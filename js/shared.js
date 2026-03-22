@@ -55,6 +55,7 @@ function renderNav(activePage) {
     { id: 'transaction', label: '收支紀錄', href: 'index.html' },
     { id: 'checklist', label: '演出準備', href: 'checklist.html' },
     { id: 'analytics', label: '財務分析', href: 'analytics.html' },
+    { id: 'import', label: '應援匯入', href: 'import.html' },
   ];
 
   const nav = document.querySelector('.nav');

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>應援匯入 — 看我笑話工作室</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <nav class="nav"></nav>
+
+  <div class="container">
+    <h1 class="page-title">應援金流匯入</h1>
+
+    <!-- Upload Zone -->
+    <div class="card">
+      <div class="card-title">上傳檔案</div>
+      <div class="import-upload-row">
+        <div class="import-upload-zone" id="cashflow-zone">
+          <div class="upload-icon">📄</div>
+          <div class="upload-label">撥款明細</div>
+          <div class="upload-hint">拖曳或點擊上傳 .xlsx</div>
+          <input type="file" accept=".xlsx" id="cashflow-input" hidden>
+        </div>
+        <div class="import-upload-zone" id="event-zone">
+          <div class="upload-icon">🎫</div>
+          <div class="upload-label">活動報名狀態</div>
+          <div class="upload-hint">可上傳多個 .xlsx</div>
+          <input type="file" accept=".xlsx" id="event-input" multiple hidden>
+        </div>
+      </div>
+      <div id="upload-status"></div>
+    </div>
+
+    <!-- Event Mapping -->
+    <div class="card" id="mapping-section" style="display:none;">
+      <div class="card-title">活動對應演出</div>
+      <div id="mapping-list"></div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-section" style="display:none;">
+      <div class="stat-grid" id="import-stats"></div>
+      <div class="card" id="breakdown-section">
+        <div class="card-title">金流分類明細</div>
+        <div id="breakdown-list"></div>
+      </div>
+      <div class="card" id="unmatched-section" style="display:none;">
+        <div class="card-title">未配對項目</div>
+        <div id="unmatched-list"></div>
+      </div>
+      <div id="import-actions" style="display:none;">
+        <button class="btn btn-primary" id="btn-import" disabled>匯入到 Google Sheets</button>
+        <span class="import-hint" id="import-hint"></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/import.js"></script>
+</body>
+</html>

@@ -860,4 +860,192 @@ tr.totals-row td {
   .checkbox-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .import-upload-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Import Page ---- */
+
+.import-upload-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.import-upload-zone {
+  border: 2px dashed rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius);
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.import-upload-zone:hover {
+  border-color: var(--accent);
+  background: rgba(91, 110, 245, 0.04);
+}
+
+.import-upload-zone.has-file {
+  border-color: var(--green);
+  border-style: solid;
+  background: var(--green-light);
+}
+
+.upload-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.upload-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.upload-hint {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.upload-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.upload-status-item .status-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-status-item .status-badge {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.upload-status-item .btn-remove {
+  padding: 2px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-light);
+  font-family: inherit;
+}
+
+.upload-status-item .btn-remove:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* Mapping row */
+.mapping-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 14px;
+}
+
+.mapping-row:last-child {
+  border-bottom: none;
+}
+
+.mapping-arrow {
+  color: var(--text-light);
+  font-size: 16px;
+}
+
+.mapping-row select {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Breakdown table in import */
+.import-breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.import-breakdown-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.import-breakdown-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.import-breakdown-table tr:last-child td {
+  border-bottom: none;
+}
+
+.import-breakdown-table tr.totals-row td {
+  font-weight: 600;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Import actions */
+#import-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.import-hint {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+/* Unmatched row */
+.unmatched-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  font-size: 13px;
+}
+
+.unmatched-row:last-child {
+  border-bottom: none;
+}
+
+.unmatched-info {
+  flex: 1;
+}
+
+.unmatched-row select {
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.7);
 }

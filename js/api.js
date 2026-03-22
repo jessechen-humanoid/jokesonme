@@ -70,6 +70,11 @@ const API = {
     return this.post('addChecklistItem', data);
   },
 
+  // Import
+  batchImportTransactions(transactions) {
+    return this.post('batchImportTransactions', { transactions });
+  },
+
   // Setup
   setup() {
     return this.get('setup');
