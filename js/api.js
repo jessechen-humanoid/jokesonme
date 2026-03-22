@@ -70,6 +70,15 @@ const API = {
     return this.post('addChecklistItem', data);
   },
 
+  // Settlements
+  getSettlements() {
+    return this.get('getSettlements');
+  },
+
+  addSettlement(data) {
+    return this.post('addSettlement', data);
+  },
+
   // Import
   batchImportTransactions(transactions) {
     return this.post('batchImportTransactions', { transactions });

@@ -9,6 +9,7 @@ const SHEET_NAMES = {
   TRANSACTIONS: '收支紀錄',
   CHECKLIST: 'Checklist',
   TEMPLATE: 'Checklist模板',
+  SETTLEMENTS: '成員結算',
 };
 
 const DEFAULT_SHOWS = [
@@ -101,6 +102,9 @@ function setupSheets() {
     tmplSheet.getRange(2, 1, CHECKLIST_TEMPLATE.length, 3).setValues(CHECKLIST_TEMPLATE);
   }
 
+  // 成員結算
+  getOrCreateSheet(ss, SHEET_NAMES.SETTLEMENTS, ['成員', '金額', '日期', '備註']);
+
   return { success: true, data: 'Setup complete' };
 }
 
@@ -173,6 +177,12 @@ function handleRequest(e) {
         break;
       case 'migrateAnalyticsCleanup':
         result = migrateAnalyticsCleanup();
+        break;
+      case 'getSettlements':
+        result = getSettlements();
+        break;
+      case 'addSettlement':
+        result = addSettlement(postData);
         break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
@@ -550,4 +560,39 @@ function migrateAnalyticsCleanup() {
   }
 
   return { success: true, data: { deleted, moved } };
+}
+
+// ============================================================
+// Member Settlements (成員結算)
+// ============================================================
+
+function getSettlements() {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.SETTLEMENTS, ['成員', '金額', '日期', '備註']);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { success: true, data: [] };
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  const settlements = data.map((row, i) => ({
+    id: i + 2,
+    member: row[0],
+    amount: row[1],
+    date: row[2],
+    notes: row[3],
+  }));
+  return { success: true, data: settlements };
+}
+
+function addSettlement(payload) {
+  const member = (payload.member || '').trim();
+  const amount = Number(payload.amount);
+  if (!member || isNaN(amount) || amount <= 0) {
+    return { success: false, error: '成員和金額為必填' };
+  }
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.SETTLEMENTS, ['成員', '金額', '日期', '備註']);
+  const date = payload.date || new Date().toISOString().split('T')[0];
+  const notes = (payload.notes || '').trim();
+  sheet.appendRow([member, amount, date, notes]);
+  return { success: true, data: { member, amount } };
 }
