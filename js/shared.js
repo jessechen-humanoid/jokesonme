@@ -287,7 +287,7 @@ function updateCategorySelect(id, type, selectedValue) {
 
 function formatAmount(amount) {
   const num = Number(amount);
-  const formatted = 'NT$' + Math.abs(num).toLocaleString();
+  const formatted = '$' + Math.abs(num).toLocaleString();
   if (num > 0) return `+${formatted}`;
   if (num < 0) return `-${formatted}`;
   return formatted;

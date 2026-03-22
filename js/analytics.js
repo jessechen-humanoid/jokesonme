@@ -151,7 +151,7 @@ function renderPieChart(items, total, fixedCategories, el, title, type) {
         ${sorted.map((item, i) => `<div class="pie-legend-item">
           <div class="pie-legend-color" style="background:${colors[i % colors.length]}"></div>
           <span class="pie-legend-label">${escapeHtml(item.name)}</span>
-          <span class="pie-legend-value">NT$${item.amount.toLocaleString()} (${item.pct.toFixed(1)}%)</span>
+          <span class="pie-legend-value">$${item.amount.toLocaleString()} (${item.pct.toFixed(1)}%)</span>
         </div>`).join('')}
       </div>
     </div>
@@ -244,7 +244,7 @@ function renderMemberEarnings(transactions, settlements, el) {
             <td>${escapeHtml(m.name)}</td>
             <td style="text-align:right;color:var(--text-light)">${formatAmount(m.settled)}</td>
             <td class="${m.unsettledNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">${formatAmount(m.unsettledNet)}</td>
-            <td style="text-align:right;${m.advances > 0 ? 'color:var(--red)' : 'color:var(--text-light)'}">${m.advances > 0 ? 'NT$' + m.advances.toLocaleString() : 'NT$0'}</td>
+            <td style="text-align:right;${m.advances > 0 ? 'color:var(--red)' : 'color:var(--text-light)'}">${m.advances > 0 ? '$' + m.advances.toLocaleString() : '$0'}</td>
             <td class="${m.toPay >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(m.toPay)}</td>
             <td class="${m.annualNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(m.annualNet)}</td>
           </tr>`).join('')}
@@ -331,7 +331,7 @@ async function submitSettlement() {
 // ---- Utilities ----
 
 function formatAmountAbs(amount) {
-  return 'NT$' + Math.abs(amount).toLocaleString();
+  return '$' + Math.abs(amount).toLocaleString();
 }
 
 function escapeHtml(str) {

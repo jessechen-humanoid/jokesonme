@@ -177,7 +177,7 @@ function renderUploadStatus() {
     const total = merged.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     html += `<div class="upload-status-item">
       <div class="status-left">✅ 合併後（去重）</div>
-      <span class="status-badge">${merged.length} 筆 ｜ NT$${total.toLocaleString()}</span>
+      <span class="status-badge">${merged.length} 筆 ｜ $${total.toLocaleString()}</span>
     </div>`;
   } else if (cashflowFiles.length === 1) {
     const cf = cashflowFiles[0];
@@ -187,7 +187,7 @@ function renderUploadStatus() {
     // Replace the single file item with a summary style
     html = `<div class="upload-status-item">
       <div class="status-left">✅ ${escapeHtml(cf.name)}</div>
-      <span class="status-badge">${cf.rows.length} 筆 ｜ ${dateRange} ｜ NT$${total.toLocaleString()}</span>
+      <span class="status-badge">${cf.rows.length} 筆 ｜ ${dateRange} ｜ $${total.toLocaleString()}</span>
     </div>`;
   }
 
@@ -363,9 +363,9 @@ function renderDashboard() {
   const totalNet = allRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
 
   document.getElementById('import-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">收取金額</div><div class="stat-value positive">NT$${totalRevenue.toLocaleString()}</div></div>
-    <div class="stat-card"><div class="stat-label">平台手續費</div><div class="stat-value negative">-NT$${totalFees.toLocaleString()}</div></div>
-    <div class="stat-card"><div class="stat-label">實際收取</div><div class="stat-value positive">NT$${totalNet.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">收取金額</div><div class="stat-value positive">$${totalRevenue.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">平台手續費</div><div class="stat-value negative">-$${totalFees.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">實際收取</div><div class="stat-value positive">$${totalNet.toLocaleString()}</div></div>
   `;
 
   let breakdownHtml = `<table class="import-breakdown-table">
@@ -383,7 +383,7 @@ function renderDashboard() {
     if (plan1699.length) detail.push(`1,699元×${plan1699.length}`);
     breakdownHtml += `<tr>
       <td>💳 付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
-      <td class="amount-positive">NT$${mAmt.toLocaleString()}</td><td class="amount-negative">-NT$${mFee.toLocaleString()}</td><td>NT$${mNet.toLocaleString()}</td></tr>`;
+      <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
     groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
@@ -402,17 +402,17 @@ function renderDashboard() {
     const typeStr = Object.entries(types).map(([t, c]) => `${t}×${c}`).join('、');
     breakdownHtml += `<tr>
       <td>🎫 ${escapeHtml(showName)}</td><td>${rows.length}</td>
-      <td class="amount-positive">NT$${eAmt.toLocaleString()}</td><td class="amount-negative">-NT$${eFee.toLocaleString()}</td><td>NT$${eNet.toLocaleString()}</td></tr>`;
+      <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td></tr>`;
     groups.push({ showName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
   });
 
   if (refunds.length > 0) {
     const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
-    breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-NT$${rAmt.toLocaleString()}</td></tr>`;
+    breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
   }
 
   breakdownHtml += `<tr class="totals-row"><td>合計</td><td>${allRows.length}</td>
-    <td class="amount-positive">NT$${totalRevenue.toLocaleString()}</td><td class="amount-negative">-NT$${totalFees.toLocaleString()}</td><td>NT$${totalNet.toLocaleString()}</td></tr>`;
+    <td class="amount-positive">$${totalRevenue.toLocaleString()}</td><td class="amount-negative">-$${totalFees.toLocaleString()}</td><td>$${totalNet.toLocaleString()}</td></tr>`;
   breakdownHtml += '</tbody></table>';
   document.getElementById('breakdown-list').innerHTML = breakdownHtml;
   window._importGroups = groups;
@@ -432,7 +432,7 @@ function renderUnmatched(unmatched) {
   list.innerHTML = unmatched.map((r, i) => {
     const item = r['品項數量'] || '';
     return `<div class="unmatched-row">
-      <div class="unmatched-info">${escapeHtml(r['付款人'] || '')} ｜ ${r['付款時間'] || ''} ｜ NT$${Number(r['收取金額'] || 0).toLocaleString()} ｜ ${escapeHtml(item)}</div>
+      <div class="unmatched-info">${escapeHtml(r['付款人'] || '')} ｜ ${r['付款時間'] || ''} ｜ $${Number(r['收取金額'] || 0).toLocaleString()} ｜ ${escapeHtml(item)}</div>
       <select id="unmatched-${i}" onchange="onUnmatchedAssign()"><option value="">— 選擇專案 —</option>${showOptions}</select>
     </div>`;
   }).join('');
