@@ -93,15 +93,15 @@ async function renderShowSelector(containerId, onChange) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  container.innerHTML = '<div class="loading">載入演出清單中...</div>';
+  container.innerHTML = '<div class="loading">載入專案清單中...</div>';
 
   const shows = await loadShows();
 
   container.innerHTML = `
     <select class="show-select" id="show-select">
-      <option value="">— 請選擇演出 —</option>
+      <option value="">— 請選擇專案 —</option>
       ${shows.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
-      <option value="__add_new__">＋ 新增一檔演出</option>
+      <option value="__add_new__">＋ 新增一個專案</option>
     </select>
   `;
 
@@ -148,9 +148,9 @@ function showAddShowModal(callback) {
 
   overlay.innerHTML = `
     <div class="modal">
-      <div class="modal-title">新增演出</div>
+      <div class="modal-title">新增專案</div>
       <div class="form-group">
-        <label class="form-label">演出名稱</label>
+        <label class="form-label">專案名稱</label>
         <input type="text" class="form-control" id="new-show-name" placeholder="例：看我笑話 7 月號">
       </div>
       <div class="modal-actions">

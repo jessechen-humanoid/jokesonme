@@ -384,7 +384,7 @@ function renderDashboard() {
     breakdownHtml += `<tr>
       <td>💳 付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
       <td class="amount-positive">NT$${mAmt.toLocaleString()}</td><td class="amount-negative">-NT$${mFee.toLocaleString()}</td><td>NT$${mNet.toLocaleString()}</td></tr>`;
-    groups.push({ showName: '會員與其他收支', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
+    groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
   Object.entries(matched).forEach(([eventName, rows]) => {
@@ -433,7 +433,7 @@ function renderUnmatched(unmatched) {
     const item = r['品項數量'] || '';
     return `<div class="unmatched-row">
       <div class="unmatched-info">${escapeHtml(r['付款人'] || '')} ｜ ${r['付款時間'] || ''} ｜ NT$${Number(r['收取金額'] || 0).toLocaleString()} ｜ ${escapeHtml(item)}</div>
-      <select id="unmatched-${i}" onchange="onUnmatchedAssign()"><option value="">— 選擇演出 —</option>${showOptions}</select>
+      <select id="unmatched-${i}" onchange="onUnmatchedAssign()"><option value="">— 選擇專案 —</option>${showOptions}</select>
     </div>`;
   }).join('');
 }
@@ -460,7 +460,7 @@ function updateImportButton() {
   const unresolved = assignments.filter(a => !a.showName).length;
   if (unresolved > 0) {
     btn.disabled = true;
-    hint.textContent = `還有 ${unresolved} 筆未配對項目需要指定演出`;
+    hint.textContent = `還有 ${unresolved} 筆未配對項目需要指定專案`;
   } else {
     btn.disabled = false;
     hint.textContent = '';

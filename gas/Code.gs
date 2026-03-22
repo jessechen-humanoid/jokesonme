@@ -5,7 +5,7 @@
 const SPREADSHEET_ID = '1sM-ST9lTjvCk7a0ppjSX48-zvhSOc16oYXEaVp3qisI';
 
 const SHEET_NAMES = {
-  SHOWS: '演出清單',
+  SHOWS: '專案清單',
   TRANSACTIONS: '收支紀錄',
   CHECKLIST: 'Checklist',
   TEMPLATE: 'Checklist模板',
@@ -81,8 +81,8 @@ function getOrCreateSheet(ss, name, headers) {
 function setupSheets() {
   const ss = getSpreadsheet();
 
-  // 演出清單
-  const showSheet = getOrCreateSheet(ss, SHEET_NAMES.SHOWS, ['演出名稱', '建立日期', '狀態']);
+  // 專案清單
+  const showSheet = getOrCreateSheet(ss, SHEET_NAMES.SHOWS, ['專案名稱', '建立日期', '狀態']);
   if (showSheet.getLastRow() <= 1) {
     const now = new Date().toISOString().split('T')[0];
     const rows = DEFAULT_SHOWS.map(name => [name, now, '進行中']);
@@ -90,10 +90,10 @@ function setupSheets() {
   }
 
   // 收支紀錄
-  getOrCreateSheet(ss, SHEET_NAMES.TRANSACTIONS, ['演出名稱', '分類', '備註', '金額', '墊款人', '排除成員', '結清狀態', '日期', '登記人']);
+  getOrCreateSheet(ss, SHEET_NAMES.TRANSACTIONS, ['專案名稱', '分類', '備註', '金額', '墊款人', '排除成員', '結清狀態', '日期', '登記人']);
 
   // Checklist
-  getOrCreateSheet(ss, SHEET_NAMES.CHECKLIST, ['演出名稱', '類別', '項目名稱', '負責人', '進度', '備註']);
+  getOrCreateSheet(ss, SHEET_NAMES.CHECKLIST, ['專案名稱', '類別', '項目名稱', '負責人', '進度', '備註']);
 
   // Checklist模板
   const tmplSheet = getOrCreateSheet(ss, SHEET_NAMES.TEMPLATE, ['類別', '項目名稱', '預設負責人']);
@@ -168,6 +168,9 @@ function handleRequest(e) {
       case 'batchImportTransactions':
         result = batchImportTransactions(postData);
         break;
+      case 'migrateRenameShowToProject':
+        result = migrateRenameShowToProject();
+        break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
     }
@@ -186,7 +189,7 @@ function handleRequest(e) {
 
 function getShows() {
   const ss = getSpreadsheet();
-  const sheet = getOrCreateSheet(ss, SHEET_NAMES.SHOWS, ['演出名稱', '建立日期', '狀態']);
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.SHOWS, ['專案名稱', '建立日期', '狀態']);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) {
     return { success: true, data: [] };
@@ -204,7 +207,7 @@ function getShows() {
 function addShow(payload) {
   const name = (payload.name || '').trim();
   if (!name) {
-    return { success: false, error: '演出名稱不可為空' };
+    return { success: false, error: '專案名稱不可為空' };
   }
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.SHOWS);
@@ -252,7 +255,7 @@ function addTransaction(payload) {
   const notes = (payload.notes || '').trim();
   const amount = Number(payload.amount);
   if (!showName || !category || isNaN(amount)) {
-    return { success: false, error: '演出名稱、分類、金額為必填' };
+    return { success: false, error: '專案名稱、分類、金額為必填' };
   }
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
@@ -324,7 +327,7 @@ function deleteTransaction(payload) {
 function getChecklist(params) {
   const showName = params.show || '';
   if (!showName) {
-    return { success: false, error: '請指定演出名稱' };
+    return { success: false, error: '請指定專案名稱' };
   }
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.CHECKLIST);
@@ -354,11 +357,11 @@ function getChecklist(params) {
 function initChecklist(payload) {
   const showName = (payload.showName || '').trim();
   if (!showName) {
-    return { success: false, error: '請指定演出名稱' };
+    return { success: false, error: '請指定專案名稱' };
   }
 
   const ss = getSpreadsheet();
-  const sheet = getOrCreateSheet(ss, SHEET_NAMES.CHECKLIST, ['演出名稱', '類別', '項目名稱', '負責人', '進度', '備註']);
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.CHECKLIST, ['專案名稱', '類別', '項目名稱', '負責人', '進度', '備註']);
 
   // Check if already initialized
   const lastRow = sheet.getLastRow();
@@ -411,7 +414,7 @@ function addChecklistItem(payload) {
   const category = (payload.category || '').trim();
   const itemName = (payload.itemName || '').trim();
   if (!showName || !itemName) {
-    return { success: false, error: '演出名稱與項目名稱為必填' };
+    return { success: false, error: '專案名稱與項目名稱為必填' };
   }
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.CHECKLIST);
@@ -432,7 +435,7 @@ function batchImportTransactions(payload) {
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
 
-  // Headers: 演出名稱, 分類, 備註, 金額, 墊款人, 排除成員, 結清狀態, 日期, 登記人
+  // Headers: 專案名稱, 分類, 備註, 金額, 墊款人, 排除成員, 結清狀態, 日期, 登記人
   const rows = transactions.map(t => [
     (t.showName || '').trim(),
     (t.category || '').trim(),
@@ -447,4 +450,53 @@ function batchImportTransactions(payload) {
 
   sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 9).setValues(rows);
   return { success: true, data: { count: rows.length } };
+}
+
+// ============================================================
+// Data Migration: 演出 → 專案
+// ============================================================
+
+function migrateRenameShowToProject() {
+  const ss = getSpreadsheet();
+  let updated = 0;
+
+  // 1. Rename sheet tab 演出清單 → 專案清單
+  const oldSheet = ss.getSheetByName('演出清單');
+  if (oldSheet) {
+    oldSheet.setName('專案清單');
+  }
+
+  // 2. Rename sheet header 演出名稱 → 專案名稱
+  const showSheet = ss.getSheetByName('專案清單');
+  if (showSheet && showSheet.getRange(1, 1).getValue() === '演出名稱') {
+    showSheet.getRange(1, 1).setValue('專案名稱');
+  }
+
+  // 3. Rename transaction sheet header
+  const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+  if (txSheet && txSheet.getRange(1, 1).getValue() === '演出名稱') {
+    txSheet.getRange(1, 1).setValue('專案名稱');
+  }
+
+  // 4. Rename checklist sheet header
+  const clSheet = ss.getSheetByName(SHEET_NAMES.CHECKLIST);
+  if (clSheet && clSheet.getRange(1, 1).getValue() === '演出名稱') {
+    clSheet.getRange(1, 1).setValue('專案名稱');
+  }
+
+  // 5. Move membership records from 會員與其他收支 → 看我笑話會員
+  if (txSheet) {
+    const lastRow = txSheet.getLastRow();
+    if (lastRow > 1) {
+      const data = txSheet.getRange(2, 1, lastRow - 1, 2).getValues();
+      data.forEach((row, i) => {
+        if (row[0] === '會員與其他收支' && row[1] === '付費會員') {
+          txSheet.getRange(i + 2, 1).setValue('看我笑話會員');
+          updated++;
+        }
+      });
+    }
+  }
+
+  return { success: true, data: { sheetRenamed: !!oldSheet, recordsUpdated: updated } };
 }

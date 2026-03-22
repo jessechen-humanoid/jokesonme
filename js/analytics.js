@@ -118,12 +118,12 @@ function renderShowPnl(transactions, el) {
 
   el.innerHTML = `
     <div class="card">
-      <div class="card-title">各檔演出損益</div>
+      <div class="card-title">各專案損益</div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>演出</th>
+              <th>專案</th>
               <th style="text-align:right">收入</th>
               <th style="text-align:right">支出</th>
               <th style="text-align:right">淨利</th>
