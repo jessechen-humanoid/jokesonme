@@ -7,17 +7,16 @@ renderNav('import');
 
 // ---- State ----
 
-let cashflowData = null;   // { rows: [], filename }
+let cashflowFiles = [];     // [{ name, rows: [] }]
 let eventFiles = [];        // [{ name, eventName, rows: [] }]
-let matchResults = null;    // { membership, matched: { eventName -> rows }, unmatched: [], refunds: [] }
-let showsList = [];         // from API
+let matchResults = null;
+let showsList = [];
 
 // ---- Init ----
 
 (async function init() {
   const res = await API.getShows();
   if (res.success) showsList = res.data;
-
   setupUploadZones();
 })();
 
@@ -35,11 +34,13 @@ function setupUploadZones() {
   cfZone.addEventListener('drop', e => {
     e.preventDefault();
     cfZone.style.borderColor = '';
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.xlsx')) handleCashflowFile(file);
+    Array.from(e.dataTransfer.files).forEach(f => {
+      if (f.name.endsWith('.xlsx')) handleCashflowFile(f);
+    });
   });
   cfInput.addEventListener('change', () => {
-    if (cfInput.files[0]) handleCashflowFile(cfInput.files[0]);
+    Array.from(cfInput.files).forEach(f => handleCashflowFile(f));
+    cfInput.value = '';
   });
 
   evZone.addEventListener('click', () => evInput.click());
@@ -81,21 +82,38 @@ function parseXlsx(file) {
 // ---- Event Name Extraction ----
 
 function extractEventName(filename) {
-  // Format: date_eventName_活動報名狀態_N筆.xlsx
   const base = filename.replace(/\.xlsx$/i, '');
   const match = base.match(/^\d+_(.+?)_活動報名狀態/);
   if (match) return match[1];
-  // Fallback: remove date prefix and suffix
   return base.replace(/^\d+_/, '').replace(/_\d+筆$/, '');
+}
+
+// ---- Cashflow Deduplication ----
+
+function getMergedCashflowRows() {
+  const seen = new Set();
+  const merged = [];
+  cashflowFiles.forEach(cf => {
+    cf.rows.forEach(r => {
+      const id = r['金流編號'] || '';
+      if (id && seen.has(id)) return;
+      if (id) seen.add(id);
+      merged.push(r);
+    });
+  });
+  return merged;
 }
 
 // ---- File Handlers ----
 
 async function handleCashflowFile(file) {
-  if (cashflowData && !confirm('已有撥款明細「' + cashflowData.filename + '」，要替換嗎？')) return;
+  if (cashflowFiles.some(f => f.name === file.name)) {
+    alert('此檔案已上傳過：' + file.name);
+    return;
+  }
   try {
     const rows = await parseXlsx(file);
-    cashflowData = { rows, filename: file.name };
+    cashflowFiles.push({ name: file.name, rows });
     document.getElementById('cashflow-zone').classList.add('has-file');
     renderUploadStatus();
     tryRunMatching();
@@ -121,6 +139,15 @@ async function handleEventFile(file) {
   }
 }
 
+function removeCashflowFile(idx) {
+  cashflowFiles.splice(idx, 1);
+  if (cashflowFiles.length === 0) {
+    document.getElementById('cashflow-zone').classList.remove('has-file');
+  }
+  renderUploadStatus();
+  tryRunMatching();
+}
+
 function removeEventFile(idx) {
   eventFiles.splice(idx, 1);
   if (eventFiles.length === 0) {
@@ -136,20 +163,37 @@ function renderUploadStatus() {
   const container = document.getElementById('upload-status');
   let html = '';
 
-  if (cashflowData) {
-    const rows = cashflowData.rows;
-    const dates = rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
+  cashflowFiles.forEach((cf, i) => {
+    const dates = cf.rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
     const dateRange = dates.length ? `${dates[0].slice(0, 10)} ~ ${dates[dates.length - 1].slice(0, 10)}` : '';
-    const total = rows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     html += `<div class="upload-status-item">
-      <div class="status-left">✅ ${cashflowData.filename}</div>
-      <span class="status-badge">${rows.length} 筆 ｜ ${dateRange} ｜ NT$${total.toLocaleString()}</span>
+      <div class="status-left">📄 ${escapeHtml(cf.name)} <span class="status-badge">(${cf.rows.length} 筆 ｜ ${dateRange})</span></div>
+      <button class="btn-remove" onclick="removeCashflowFile(${i})">移除</button>
+    </div>`;
+  });
+
+  if (cashflowFiles.length > 1) {
+    const merged = getMergedCashflowRows();
+    const total = merged.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
+    html += `<div class="upload-status-item">
+      <div class="status-left">✅ 合併後（去重）</div>
+      <span class="status-badge">${merged.length} 筆 ｜ NT$${total.toLocaleString()}</span>
+    </div>`;
+  } else if (cashflowFiles.length === 1) {
+    const cf = cashflowFiles[0];
+    const total = cf.rows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
+    const dates = cf.rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
+    const dateRange = dates.length ? `${dates[0].slice(0, 10)} ~ ${dates[dates.length - 1].slice(0, 10)}` : '';
+    // Replace the single file item with a summary style
+    html = `<div class="upload-status-item">
+      <div class="status-left">✅ ${escapeHtml(cf.name)}</div>
+      <span class="status-badge">${cf.rows.length} 筆 ｜ ${dateRange} ｜ NT$${total.toLocaleString()}</span>
     </div>`;
   }
 
   eventFiles.forEach((ef, i) => {
     html += `<div class="upload-status-item">
-      <div class="status-left">🎫 ${ef.eventName} <span class="status-badge">(${ef.rows.length} 筆)</span></div>
+      <div class="status-left">🎫 ${escapeHtml(ef.eventName)} <span class="status-badge">(${ef.rows.length} 筆)</span></div>
       <button class="btn-remove" onclick="removeEventFile(${i})">移除</button>
     </div>`;
   });
@@ -161,14 +205,13 @@ function renderUploadStatus() {
 
 function parseTime(str) {
   if (!str) return null;
-  // "2026/02/25 23:44" -> Date
   const parts = str.trim().match(/(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})/);
   if (!parts) return null;
   return new Date(+parts[1], +parts[2] - 1, +parts[3], +parts[4], +parts[5]);
 }
 
 function tryRunMatching() {
-  if (!cashflowData || eventFiles.length === 0) {
+  if (cashflowFiles.length === 0 || eventFiles.length === 0) {
     matchResults = null;
     document.getElementById('mapping-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'none';
@@ -178,13 +221,11 @@ function tryRunMatching() {
 }
 
 function runMatching() {
-  const rows = cashflowData.rows;
-
+  const rows = getMergedCashflowRows();
   const membership = [];
   const refunds = [];
   const purchases = [];
 
-  // Step 1: Classify
   rows.forEach(r => {
     if (r['金流狀態'] === '撥款後退款') {
       refunds.push(r);
@@ -195,12 +236,10 @@ function runMatching() {
     }
   });
 
-  // Step 2: Match purchases to events
-  const matched = {};   // eventName -> [cashflow rows]
+  const matched = {};
   const unmatched = [];
   const usedEventRows = new Set();
 
-  // Build event row index for fast lookup
   const eventRowsByName = {};
   const eventRowsByEmail = {};
   eventFiles.forEach(ef => {
@@ -224,7 +263,6 @@ function runMatching() {
     const cfTime = parseTime(cfRow['付款時間']);
     let matchedEvent = null;
 
-    // Tier 1: Time + Name (within 5 min)
     if (cfTime && eventRowsByName[cfName]) {
       let bestDiff = Infinity;
       let bestEntry = null;
@@ -242,7 +280,6 @@ function runMatching() {
       }
     }
 
-    // Tier 2: Email fallback
     if (!matchedEvent && cfEmail && eventRowsByEmail[cfEmail]) {
       let bestDiff = Infinity;
       let bestEntry = null;
@@ -269,7 +306,6 @@ function runMatching() {
   });
 
   matchResults = { membership, matched, unmatched, refunds };
-
   renderMappingSection();
   renderDashboard();
 }
@@ -288,12 +324,8 @@ function getEventShowMap() {
 function renderMappingSection() {
   const section = document.getElementById('mapping-section');
   const list = document.getElementById('mapping-list');
-
   const eventNames = [...new Set(eventFiles.map(f => f.eventName))];
-  if (eventNames.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
+  if (eventNames.length === 0) { section.style.display = 'none'; return; }
 
   section.style.display = '';
   list.innerHTML = eventNames.map(en => {
@@ -321,40 +353,25 @@ function escapeHtml(s) {
 
 function renderDashboard() {
   if (!matchResults) return;
-
   const showMap = getEventShowMap();
   const { membership, matched, unmatched, refunds } = matchResults;
-
   document.getElementById('dashboard-section').style.display = '';
 
-  // Stats cards
-  const allRows = cashflowData.rows.filter(r => r['金流狀態'] !== '撥款後退款');
+  const allRows = getMergedCashflowRows().filter(r => r['金流狀態'] !== '撥款後退款');
   const totalRevenue = allRows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
   const totalFees = allRows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
   const totalNet = allRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
 
   document.getElementById('import-stats').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">收取金額</div>
-      <div class="stat-value positive">NT$${totalRevenue.toLocaleString()}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">平台手續費</div>
-      <div class="stat-value negative">-NT$${totalFees.toLocaleString()}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">實際收取</div>
-      <div class="stat-value positive">NT$${totalNet.toLocaleString()}</div>
-    </div>
+    <div class="stat-card"><div class="stat-label">收取金額</div><div class="stat-value positive">NT$${totalRevenue.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">平台手續費</div><div class="stat-value negative">-NT$${totalFees.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">實際收取</div><div class="stat-value positive">NT$${totalNet.toLocaleString()}</div></div>
   `;
 
-  // Breakdown table
   let breakdownHtml = `<table class="import-breakdown-table">
     <thead><tr><th>來源</th><th>筆數</th><th>收取金額</th><th>手續費</th><th>實際收取</th></tr></thead><tbody>`;
-
   const groups = [];
 
-  // Membership
   if (membership.length > 0) {
     const mAmt = membership.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     const mFee = membership.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
@@ -365,22 +382,16 @@ function renderDashboard() {
     if (plan149.length) detail.push(`149元×${plan149.length}`);
     if (plan1699.length) detail.push(`1,699元×${plan1699.length}`);
     breakdownHtml += `<tr>
-      <td>💳 付費會員（${detail.join('、')}）</td>
-      <td>${membership.length}</td>
-      <td class="amount-positive">NT$${mAmt.toLocaleString()}</td>
-      <td class="amount-negative">-NT$${mFee.toLocaleString()}</td>
-      <td>NT$${mNet.toLocaleString()}</td>
-    </tr>`;
+      <td>💳 付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
+      <td class="amount-positive">NT$${mAmt.toLocaleString()}</td><td class="amount-negative">-NT$${mFee.toLocaleString()}</td><td>NT$${mNet.toLocaleString()}</td></tr>`;
     groups.push({ showName: '會員與其他收支', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
-  // Matched events
   Object.entries(matched).forEach(([eventName, rows]) => {
     const showName = showMap[eventName] || eventName;
     const eAmt = rows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     const eFee = rows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
     const eNet = rows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
-    // Ticket type breakdown
     const types = {};
     rows.forEach(r => {
       const item = r['品項數量'] || '未知';
@@ -390,80 +401,44 @@ function renderDashboard() {
     });
     const typeStr = Object.entries(types).map(([t, c]) => `${t}×${c}`).join('、');
     breakdownHtml += `<tr>
-      <td>🎫 ${escapeHtml(showName)}</td>
-      <td>${rows.length}</td>
-      <td class="amount-positive">NT$${eAmt.toLocaleString()}</td>
-      <td class="amount-negative">-NT$${eFee.toLocaleString()}</td>
-      <td>NT$${eNet.toLocaleString()}</td>
-    </tr>`;
+      <td>🎫 ${escapeHtml(showName)}</td><td>${rows.length}</td>
+      <td class="amount-positive">NT$${eAmt.toLocaleString()}</td><td class="amount-negative">-NT$${eFee.toLocaleString()}</td><td>NT$${eNet.toLocaleString()}</td></tr>`;
     groups.push({ showName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
   });
 
-  // Refunds
   if (refunds.length > 0) {
     const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
-    breakdownHtml += `<tr>
-      <td>↩️ 退款（不匯入）</td>
-      <td>${refunds.length}</td>
-      <td colspan="3" class="amount-negative">-NT$${rAmt.toLocaleString()}</td>
-    </tr>`;
+    breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-NT$${rAmt.toLocaleString()}</td></tr>`;
   }
 
-  // Totals
-  breakdownHtml += `<tr class="totals-row">
-    <td>合計</td>
-    <td>${allRows.length}</td>
-    <td class="amount-positive">NT$${totalRevenue.toLocaleString()}</td>
-    <td class="amount-negative">-NT$${totalFees.toLocaleString()}</td>
-    <td>NT$${totalNet.toLocaleString()}</td>
-  </tr>`;
-
+  breakdownHtml += `<tr class="totals-row"><td>合計</td><td>${allRows.length}</td>
+    <td class="amount-positive">NT$${totalRevenue.toLocaleString()}</td><td class="amount-negative">-NT$${totalFees.toLocaleString()}</td><td>NT$${totalNet.toLocaleString()}</td></tr>`;
   breakdownHtml += '</tbody></table>';
   document.getElementById('breakdown-list').innerHTML = breakdownHtml;
-
-  // Store groups for import
   window._importGroups = groups;
-
-  // Unmatched
   renderUnmatched(unmatched, showMap);
-
-  // Import button
   updateImportButton();
 }
 
 // ---- Unmatched Items ----
 
-function renderUnmatched(unmatched, showMap) {
+function renderUnmatched(unmatched) {
   const section = document.getElementById('unmatched-section');
   const list = document.getElementById('unmatched-list');
-
-  if (unmatched.length === 0) {
-    section.style.display = 'none';
-    return;
-  }
+  if (unmatched.length === 0) { section.style.display = 'none'; return; }
 
   section.style.display = '';
-  const showOptions = showsList.map(s =>
-    `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`
-  ).join('');
-
+  const showOptions = showsList.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`).join('');
   list.innerHTML = unmatched.map((r, i) => {
     const item = r['品項數量'] || '';
     return `<div class="unmatched-row">
-      <div class="unmatched-info">
-        ${escapeHtml(r['付款人'] || '')} ｜ ${r['付款時間'] || ''} ｜ NT$${Number(r['收取金額'] || 0).toLocaleString()} ｜ ${escapeHtml(item)}
-      </div>
-      <select id="unmatched-${i}" onchange="onUnmatchedAssign()">
-        <option value="">— 選擇演出 —</option>
-        ${showOptions}
-      </select>
+      <div class="unmatched-info">${escapeHtml(r['付款人'] || '')} ｜ ${r['付款時間'] || ''} ｜ NT$${Number(r['收取金額'] || 0).toLocaleString()} ｜ ${escapeHtml(item)}</div>
+      <select id="unmatched-${i}" onchange="onUnmatchedAssign()"><option value="">— 選擇演出 —</option>${showOptions}</select>
     </div>`;
   }).join('');
 }
 
-function onUnmatchedAssign() {
-  updateImportButton();
-}
+function onUnmatchedAssign() { updateImportButton(); }
 
 function getUnmatchedAssignments() {
   if (!matchResults) return [];
@@ -480,15 +455,9 @@ function updateImportButton() {
   const btn = document.getElementById('btn-import');
   const hint = document.getElementById('import-hint');
   actions.style.display = '';
-
-  if (!matchResults) {
-    btn.disabled = true;
-    return;
-  }
-
+  if (!matchResults) { btn.disabled = true; return; }
   const assignments = getUnmatchedAssignments();
   const unresolved = assignments.filter(a => !a.showName).length;
-
   if (unresolved > 0) {
     btn.disabled = true;
     hint.textContent = `還有 ${unresolved} 筆未配對項目需要指定演出`;
@@ -496,7 +465,6 @@ function updateImportButton() {
     btn.disabled = false;
     hint.textContent = '';
   }
-
   btn.onclick = doImport;
 }
 
@@ -506,37 +474,17 @@ async function doImport() {
   const btn = document.getElementById('btn-import');
   btn.disabled = true;
   btn.textContent = '匯入中...';
-
   const groups = window._importGroups || [];
-  const showMap = getEventShowMap();
   const today = new Date().toISOString().split('T')[0];
-
   const transactions = [];
 
-  // Income entries from groups
   groups.forEach(g => {
-    transactions.push({
-      showName: g.showName,
-      category: g.category,
-      notes: g.notes,
-      amount: g.amount,
-      date: today,
-      recordedBy: '應援匯入',
-    });
-    // Platform fee as expense
+    transactions.push({ showName: g.showName, category: g.category, notes: g.notes, amount: g.amount, date: today, recordedBy: '應援匯入' });
     if (g.fee > 0) {
-      transactions.push({
-        showName: g.showName,
-        category: '平台手續',
-        notes: `應援手續費`,
-        amount: -g.fee,
-        date: today,
-        recordedBy: '應援匯入',
-      });
+      transactions.push({ showName: g.showName, category: '平台手續', notes: '應援手續費', amount: -g.fee, date: today, recordedBy: '應援匯入' });
     }
   });
 
-  // Unmatched items that have been manually assigned
   const assignments = getUnmatchedAssignments();
   const manualGroups = {};
   assignments.forEach(a => {
@@ -547,23 +495,9 @@ async function doImport() {
     manualGroups[a.showName].items.push(a.row['品項數量'] || '未知');
   });
   Object.entries(manualGroups).forEach(([showName, g]) => {
-    transactions.push({
-      showName,
-      category: '演出票房',
-      notes: `應援匯入（手動指定）：${g.items.length}筆`,
-      amount: g.amount,
-      date: today,
-      recordedBy: '應援匯入',
-    });
+    transactions.push({ showName, category: '演出票房', notes: `應援匯入（手動指定）：${g.items.length}筆`, amount: g.amount, date: today, recordedBy: '應援匯入' });
     if (g.fee > 0) {
-      transactions.push({
-        showName,
-        category: '平台手續',
-        notes: '應援手續費（手動指定）',
-        amount: -g.fee,
-        date: today,
-        recordedBy: '應援匯入',
-      });
+      transactions.push({ showName, category: '平台手續', notes: '應援手續費（手動指定）', amount: -g.fee, date: today, recordedBy: '應援匯入' });
     }
   });
 
