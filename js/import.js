@@ -92,6 +92,7 @@ function extractEventName(filename) {
 // ---- File Handlers ----
 
 async function handleCashflowFile(file) {
+  if (cashflowData && !confirm('已有撥款明細「' + cashflowData.filename + '」，要替換嗎？')) return;
   try {
     const rows = await parseXlsx(file);
     cashflowData = { rows, filename: file.name };
@@ -104,8 +105,10 @@ async function handleCashflowFile(file) {
 }
 
 async function handleEventFile(file) {
-  // Avoid duplicate uploads
-  if (eventFiles.some(f => f.name === file.name)) return;
+  if (eventFiles.some(f => f.name === file.name)) {
+    alert('此檔案已上傳過：' + file.name);
+    return;
+  }
   try {
     const rows = await parseXlsx(file);
     const eventName = extractEventName(file.name);
