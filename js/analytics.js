@@ -14,7 +14,6 @@ async function loadAnalytics() {
   const incomeEl = document.getElementById('income-breakdown');
   const expenseEl = document.getElementById('expense-breakdown');
   const unsettledEl = document.getElementById('unsettled-advances');
-  const monthlyEl = document.getElementById('monthly-breakdown');
   const earningsEl = document.getElementById('member-earnings');
 
   summaryEl.innerHTML = '<div class="loading">載入中...</div>';
@@ -82,9 +81,6 @@ async function loadAnalytics() {
 
   // ---- Advance Payments Overview ----
   renderAdvances(transactions, unsettledEl);
-
-  // ---- Monthly Breakdown ----
-  renderMonthly(transactions, monthlyEl);
 
   // ---- Per-member Projected Net Earnings ----
   renderMemberEarnings(transactions, earningsEl);
@@ -264,74 +260,6 @@ function renderAdvances(transactions, el) {
               <td class="amount-negative" style="text-align:right">NT$${grandTotal.unsettled.toLocaleString()}</td>
               <td style="text-align:right; color: var(--text-light);">NT$${grandTotal.settled.toLocaleString()}</td>
               <td style="text-align:right">NT$${grandTotal.total.toLocaleString()}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-function renderMonthly(transactions, el) {
-  // Group by month
-  const monthMap = {};
-  transactions.forEach(t => {
-    const date = t.date || '';
-    const month = date.substring(0, 7) || '未知';
-    if (!monthMap[month]) monthMap[month] = { income: 0, expense: 0 };
-    if (t.amount > 0) {
-      monthMap[month].income += t.amount;
-    } else {
-      monthMap[month].expense += t.amount;
-    }
-  });
-
-  const months = Object.entries(monthMap)
-    .map(([month, data]) => ({
-      month,
-      income: data.income,
-      expense: data.expense,
-      net: data.income + data.expense,
-    }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
-  const totals = months.reduce((acc, m) => ({
-    income: acc.income + m.income,
-    expense: acc.expense + m.expense,
-    net: acc.net + m.net,
-  }), { income: 0, expense: 0, net: 0 });
-
-  el.innerHTML = `
-    <div class="card">
-      <div class="card-title">月度淨利</div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th style="text-align:right">收入</th>
-              <th style="text-align:right">支出</th>
-              <th style="text-align:right">淨利</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${months.map(m => `
-              <tr>
-                <td>${m.month}</td>
-                <td class="amount-positive" style="text-align:right">${formatAmount(m.income)}</td>
-                <td class="amount-negative" style="text-align:right">${formatAmount(m.expense)}</td>
-                <td class="${m.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right; font-weight:600;">
-                  ${formatAmount(m.net)}
-                </td>
-              </tr>
-            `).join('')}
-            <tr class="totals-row">
-              <td>年度合計</td>
-              <td class="amount-positive" style="text-align:right">${formatAmount(totals.income)}</td>
-              <td class="amount-negative" style="text-align:right">${formatAmount(totals.expense)}</td>
-              <td class="${totals.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">
-                ${formatAmount(totals.net)}
-              </td>
             </tr>
           </tbody>
         </table>

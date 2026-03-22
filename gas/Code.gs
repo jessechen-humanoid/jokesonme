@@ -12,8 +12,8 @@ const SHEET_NAMES = {
 };
 
 const DEFAULT_SHOWS = [
-  '會員與其他收支',
   '周邊商品收支',
+  '看我笑話年度大會｜看我畫大餅',
   '看我笑話第 2 季 Opening Party',
   '看我笑話 4 月號',
   '看我笑話 5 月號',
@@ -170,6 +170,9 @@ function handleRequest(e) {
         break;
       case 'migrateRenameShowToProject':
         result = migrateRenameShowToProject();
+        break;
+      case 'migrateAnalyticsCleanup':
+        result = migrateAnalyticsCleanup();
         break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
@@ -499,4 +502,52 @@ function migrateRenameShowToProject() {
   }
 
   return { success: true, data: { sheetRenamed: !!oldSheet, recordsUpdated: updated } };
+}
+
+// ============================================================
+// Data Migration: Analytics Cleanup
+// ============================================================
+
+function migrateAnalyticsCleanup() {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAMES.SHOWS);
+  if (!sheet) return { success: true, data: { message: 'Sheet not found' } };
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { success: true, data: { message: 'No data' } };
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  let removedRow = null;
+  let bigCakeRow = null;
+  let openingPartyRow = null;
+
+  // Find rows (scan from bottom for safe deletion)
+  data.forEach((row, i) => {
+    const name = row[0];
+    if (name === '會員與其他收支') removedRow = i + 2;
+    if (name.includes('看我畫大餅') || name.includes('年度大會')) bigCakeRow = i + 2;
+    if (name.includes('Opening Party')) openingPartyRow = i + 2;
+  });
+
+  // 1. Delete 會員與其他收支
+  let deleted = false;
+  if (removedRow) {
+    sheet.deleteRow(removedRow);
+    deleted = true;
+    // Adjust row indices after deletion
+    if (bigCakeRow && bigCakeRow > removedRow) bigCakeRow--;
+    if (openingPartyRow && openingPartyRow > removedRow) openingPartyRow--;
+  }
+
+  // 2. Move 畫大餅 before Opening Party (if not already)
+  let moved = false;
+  if (bigCakeRow && openingPartyRow && bigCakeRow > openingPartyRow) {
+    const rowData = sheet.getRange(bigCakeRow, 1, 1, sheet.getLastColumn()).getValues();
+    sheet.deleteRow(bigCakeRow);
+    sheet.insertRowBefore(openingPartyRow);
+    sheet.getRange(openingPartyRow, 1, 1, rowData[0].length).setValues(rowData);
+    moved = true;
+  }
+
+  return { success: true, data: { deleted, moved } };
 }
