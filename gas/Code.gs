@@ -594,5 +594,22 @@ function addSettlement(payload) {
   const date = payload.date || new Date().toISOString().split('T')[0];
   const notes = (payload.notes || '').trim();
   sheet.appendRow([member, amount, date, notes]);
-  return { success: true, data: { member, amount } };
+
+  // Auto-settle all unsettled advances for this member
+  const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+  let settledCount = 0;
+  if (txSheet) {
+    const lastRow = txSheet.getLastRow();
+    if (lastRow > 1) {
+      const data = txSheet.getRange(2, 5, lastRow - 1, 3).getValues(); // cols 5-7: 墊款人, 排除成員, 結清狀態
+      data.forEach((row, i) => {
+        if (row[0] === member && row[2] === '未結清') {
+          txSheet.getRange(i + 2, 7).setValue('已結清');
+          settledCount++;
+        }
+      });
+    }
+  }
+
+  return { success: true, data: { member, amount, advancesSettled: settledCount } };
 }
