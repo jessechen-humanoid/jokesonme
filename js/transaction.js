@@ -7,12 +7,6 @@
   renderNav('transaction');
   await renderShowSelector('show-selector', onShowSelected);
 
-  // Set default date to today
-  const dateInput = document.getElementById('tx-date');
-  if (dateInput) {
-    dateInput.value = new Date().toISOString().split('T')[0];
-  }
-
   // Render member selects
   const memberContainer = document.getElementById('tx-member-container');
   if (memberContainer) {
@@ -147,7 +141,6 @@ async function loadTransactions() {
               <th>備註</th>
               <th>金額</th>
               <th>分配/墊款</th>
-              <th>日期</th>
               <th>結清</th>
               <th></th>
             </tr>
@@ -159,7 +152,6 @@ async function loadTransactions() {
                 <td>${escapeHtml(t.notes || '')}</td>
                 <td class="${amountClass(t.amount)}">${formatAmount(t.amount)}</td>
                 <td>${formatAllocCell(t)}</td>
-                <td>${t.date || ''}</td>
                 <td>
                   ${t.advancedBy
                     ? `<button class="btn-settle ${t.settled ? 'settled' : ''}" data-id="${t.id}" data-settled="${t.settled}">
@@ -282,8 +274,7 @@ function startEdit(id, category, notes, amount, advancedBy, excludedMembers, dat
     setMemberValue('tx-member', advancedBy);
   }
 
-  // Set date
-  document.getElementById('tx-date').value = date || '';
+
 
   // Set recorder
   setMemberValue('tx-recorder', recordedBy);
@@ -317,7 +308,6 @@ function cancelEdit() {
   // Reset fields
   document.getElementById('tx-notes').value = '';
   document.getElementById('tx-amount').value = '';
-  document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
 
   const memberSelect = document.getElementById('tx-member');
   if (memberSelect) memberSelect.value = '';
@@ -364,7 +354,7 @@ async function submitTransaction() {
   const isIncome = currentTxType === 'income';
   const advancedBy = isIncome ? '' : getMemberValue('tx-member');
   const excludedMembers = isIncome ? getExcludedMembers('tx-allocation-container') : '';
-  const date = document.getElementById('tx-date').value;
+  const date = new Date().toISOString().split('T')[0];
   const recordedBy = getMemberValue('tx-recorder');
 
   if (!category || isNaN(rawAmount) || rawAmount <= 0) {
@@ -408,7 +398,6 @@ async function submitTransaction() {
     updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', '');
     document.getElementById('tx-notes').value = '';
     document.getElementById('tx-amount').value = '';
-    document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
     if (isIncome) {
       createMemberCheckboxGrid('tx-allocation-container', '');
     } else {
