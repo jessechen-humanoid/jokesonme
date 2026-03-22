@@ -2,7 +2,8 @@
 // 看我笑話工作室 — 財務分析頁
 // ============================================================
 
-const PIE_COLORS = ['#5B6EF5', '#27AE60', '#F39C12', '#E74C3C', '#9B59B6', '#3498DB', '#1ABC9C'];
+const PIE_COLORS_INCOME = ['#1B7A3D', '#27AE60', '#52C77E', '#7ED9A0', '#A8E6BF', '#D0F0DD'];
+const PIE_COLORS_EXPENSE = ['#A93226', '#E74C3C', '#EF7B6E', '#F4A39A', '#F8C9C4', '#FCE4E1'];
 
 (async function () {
   checkAuth();
@@ -142,12 +143,13 @@ function renderPieChart(items, total, fixedCategories, el, title, type) {
     .sort((a, b) => b.pct - a.pct);
 
   const canvasId = `pie-${type}`;
+  const colors = type === 'income' ? PIE_COLORS_INCOME : PIE_COLORS_EXPENSE;
   el.innerHTML = `<div class="card"><div class="card-title">${title}</div>
     <div class="pie-chart-container">
       <canvas id="${canvasId}" width="200" height="200"></canvas>
       <div class="pie-legend">
         ${sorted.map((item, i) => `<div class="pie-legend-item">
-          <div class="pie-legend-color" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></div>
+          <div class="pie-legend-color" style="background:${colors[i % colors.length]}"></div>
           <span class="pie-legend-label">${escapeHtml(item.name)}</span>
           <span class="pie-legend-value">NT$${item.amount.toLocaleString()} (${item.pct.toFixed(1)}%)</span>
         </div>`).join('')}
@@ -155,10 +157,10 @@ function renderPieChart(items, total, fixedCategories, el, title, type) {
     </div>
   </div>`;
 
-  drawPie(canvasId, sorted);
+  drawPie(canvasId, sorted, colors);
 }
 
-function drawPie(canvasId, data) {
+function drawPie(canvasId, data, colors) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -172,7 +174,7 @@ function drawPie(canvasId, data) {
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
     ctx.closePath();
-    ctx.fillStyle = PIE_COLORS[i % PIE_COLORS.length];
+    ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
     startAngle += sliceAngle;
   });
