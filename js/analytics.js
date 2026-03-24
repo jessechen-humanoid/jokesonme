@@ -191,9 +191,6 @@ function drawPie(canvasId, data, colors) {
 function renderMemberEarnings(transactions, settlements, el) {
   if (!el) return;
 
-  const totalExpense = transactions.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
-  const expensePerMember = totalExpense / MEMBERS.length;
-
   // Allocated income per member
   const memberIncome = {};
   MEMBERS.forEach(m => { memberIncome[m] = 0; });
@@ -202,6 +199,16 @@ function renderMemberEarnings(transactions, settlements, el) {
     const included = MEMBERS.filter(m => !excluded.includes(m));
     const share = included.length > 0 ? t.amount / included.length : 0;
     included.forEach(m => { memberIncome[m] += share; });
+  });
+
+  // Allocated expense per member (same logic as income)
+  const memberExpense = {};
+  MEMBERS.forEach(m => { memberExpense[m] = 0; });
+  transactions.filter(t => t.amount < 0).forEach(t => {
+    const excluded = t.excludedMembers ? t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const included = MEMBERS.filter(m => !excluded.includes(m));
+    const share = included.length > 0 ? t.amount / included.length : 0;
+    included.forEach(m => { memberExpense[m] += share; });
   });
 
   // Settlements per member
@@ -219,7 +226,7 @@ function renderMemberEarnings(transactions, settlements, el) {
   });
 
   const members = MEMBERS.map(m => {
-    const annualNet = Math.round(memberIncome[m] + expensePerMember);
+    const annualNet = Math.round(memberIncome[m] + memberExpense[m]);
     const settled = Math.round(memberSettled[m]);
     const unsettledNet = annualNet - settled;
     const advances = Math.round(memberAdvances[m]);

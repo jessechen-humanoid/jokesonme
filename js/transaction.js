@@ -62,12 +62,15 @@ let editingId = null;
 function toggleAllocationFields() {
   const memberGroup = document.getElementById('tx-member-group');
   const allocationGroup = document.getElementById('tx-allocation-group');
+  const allocationLabel = allocationGroup ? allocationGroup.querySelector('.form-label') : null;
   if (currentTxType === 'income') {
     memberGroup.style.display = 'none';
     allocationGroup.style.display = 'block';
+    if (allocationLabel) allocationLabel.textContent = '收入分配';
   } else {
     memberGroup.style.display = 'block';
-    allocationGroup.style.display = 'none';
+    allocationGroup.style.display = 'block';
+    if (allocationLabel) allocationLabel.textContent = '分擔成員';
   }
 }
 
@@ -267,10 +270,9 @@ function startEdit(id, category, notes, amount, advancedBy, excludedMembers, dat
   // Set amount (always positive in the field)
   document.getElementById('tx-amount').value = Math.abs(amount);
 
-  // Set member or allocation
-  if (isIncome) {
-    createMemberCheckboxGrid('tx-allocation-container', excludedMembers || '');
-  } else {
+  // Set allocation (both income and expense)
+  createMemberCheckboxGrid('tx-allocation-container', excludedMembers || '');
+  if (!isIncome) {
     setMemberValue('tx-member', advancedBy);
   }
 
@@ -353,7 +355,7 @@ async function submitTransaction() {
   const rawAmount = Number(document.getElementById('tx-amount').value);
   const isIncome = currentTxType === 'income';
   const advancedBy = isIncome ? '' : getMemberValue('tx-member');
-  const excludedMembers = isIncome ? getExcludedMembers('tx-allocation-container') : '';
+  const excludedMembers = getExcludedMembers('tx-allocation-container');
   const date = new Date().toISOString().split('T')[0];
   const recordedBy = getMemberValue('tx-recorder');
 
@@ -398,9 +400,8 @@ async function submitTransaction() {
     updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', '');
     document.getElementById('tx-notes').value = '';
     document.getElementById('tx-amount').value = '';
-    if (isIncome) {
-      createMemberCheckboxGrid('tx-allocation-container', '');
-    } else {
+    createMemberCheckboxGrid('tx-allocation-container', '');
+    if (!isIncome) {
       const memberSelect = document.getElementById('tx-member');
       if (memberSelect) memberSelect.value = '';
     }
@@ -415,17 +416,24 @@ async function submitTransaction() {
 }
 
 function formatAllocCell(t) {
-  if (t.amount > 0) {
-    // Income
-    if (!t.excludedMembers) return '全員';
+  // Allocation info (both income and expense)
+  let allocText = '全員';
+  if (t.excludedMembers) {
     const excluded = t.excludedMembers.split(',').map(s => s.trim());
     const included = MEMBERS.filter(m => !excluded.includes(m));
     const count = included.length;
-    return `<span class="alloc-cell">${count}/${MEMBERS.length} 人<span class="alloc-tooltip">${included.join('、')}</span></span>`;
+    allocText = `<span class="alloc-cell">${count}/${MEMBERS.length} 人<span class="alloc-tooltip">${included.join('、')}</span></span>`;
   }
-  // Expense
-  if (t.advancedBy) return escapeHtml(t.advancedBy) + '(墊)';
-  return '—';
+
+  if (t.amount > 0) {
+    return allocText;
+  }
+
+  // Expense: show allocation + advance info
+  if (t.advancedBy) {
+    return allocText + ' ' + escapeHtml(t.advancedBy) + '(墊)';
+  }
+  return allocText;
 }
 
 function escapeHtml(str) {
