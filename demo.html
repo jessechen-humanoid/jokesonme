@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能展示 — 表演團體財務管理平台</title>
+  <style>
+/* ============================================================
+   看我笑話工作室 — Liquid Glass Style (inlined for standalone demo)
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --white: #FFFFFF; --bg: #F5F5F5; --text: #2D2D2D; --text-light: #777777;
+  --border: rgba(255,255,255,0.3); --border-light: rgba(255,255,255,0.15); --border-solid: #E0E0E0;
+  --red: #E74C3C; --yellow: #F39C12; --green: #27AE60;
+  --red-light: rgba(231,76,60,0.1); --yellow-light: rgba(243,156,18,0.1); --green-light: rgba(39,174,96,0.1);
+  --accent: #5B6EF5;
+  --shadow: 0 8px 32px rgba(0,0,0,0.08); --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --radius: 16px; --radius-sm: 10px;
+  --glass-bg: rgba(255,255,255,0.55); --glass-border: 1px solid rgba(255,255,255,0.3); --glass-blur: blur(20px);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%); background-attachment: fixed; color: var(--text); line-height: 1.6; min-height: 100vh; }
+.nav { background: rgba(255,255,255,0.6); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-bottom: var(--glass-border); padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; }
+.nav-brand { font-size: 16px; font-weight: 600; color: var(--text); text-decoration: none; margin-right: 40px; white-space: nowrap; }
+.nav-links { display: flex; gap: 0; height: 100%; }
+.nav-link { display: flex; align-items: center; padding: 0 20px; height: 100%; text-decoration: none; color: var(--text-light); font-size: 14px; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+.nav-link:hover { color: var(--text); }
+.nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+.container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+.page-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text); }
+.card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
+.form-control { width: 100%; padding: 10px 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-family: inherit; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.show-selector { margin-bottom: 24px; }
+.show-select { padding: 10px 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); min-width: 280px; font-family: inherit; }
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: var(--white); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-settle { padding: 4px 10px; font-size: 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); background: rgba(255,255,255,0.6); color: var(--text-light); font-family: inherit; }
+.btn-settle.settled { background: var(--green-light); color: var(--green); border-color: rgba(39,174,96,0.3); }
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 500; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.08); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr.unsettled { background: rgba(255,248,230,0.5); }
+.amount-positive { color: var(--green); font-weight: 600; }
+.amount-negative { color: var(--red); font-weight: 600; }
+tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.3); }
+.checklist-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.checklist-table th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.08); }
+.checklist-table td { padding: 8px 12px; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+.checklist-table tr:last-child td { border-bottom: none; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; text-align: center; }
+.stat-label { font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
+.stat-value { font-size: 24px; font-weight: 600; }
+.stat-value.positive { color: var(--green); }
+.stat-value.negative { color: var(--red); }
+.pie-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.pie-chart-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.pie-legend { width: 100%; font-size: 13px; }
+.pie-legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.pie-legend-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.pie-legend-label { flex: 1; }
+.pie-legend-value { text-align: right; color: var(--text-light); font-size: 12px; }
+.checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.checkbox-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.08); border-radius: var(--radius-sm); font-size: 13px; }
+.checkbox-item input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.toggle-group { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
+.toggle-btn { padding: 8px 24px; border: none; background: rgba(255,255,255,0.5); color: var(--text-light); font-size: 14px; font-family: inherit; }
+.toggle-btn:not(:last-child) { border-right: 1px solid rgba(0,0,0,0.1); }
+.toggle-btn.active[data-type="expense"] { background: var(--red); color: var(--white); }
+.toggle-btn.active[data-type="income"] { background: var(--green); color: var(--white); }
+.form-actions { display: flex; gap: 8px; align-items: center; }
+@supports not (backdrop-filter: blur(20px)) {
+  .nav { background: rgba(255,255,255,0.95); }
+  .card, .stat-card { background: rgba(255,255,255,0.92); }
+  .form-control, .show-select { background: rgba(255,255,255,0.95); }
+}
+@media (max-width: 768px) {
+  .nav { padding: 0 16px; } .nav-brand { margin-right: 16px; font-size: 14px; } .nav-link { padding: 0 12px; font-size: 13px; }
+  .container { padding: 20px 16px; } .form-row { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr; }
+  .pie-chart-row { grid-template-columns: 1fr; } .checkbox-grid { grid-template-columns: repeat(2, 1fr); }
+}
+    /* Demo annotation callouts */
+    .demo-banner {
+      background: linear-gradient(135deg, var(--accent), #7B68EE);
+      color: #fff;
+      text-align: center;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .annotation {
+      position: relative;
+      background: rgba(91, 110, 245, 0.08);
+      border: 1.5px solid rgba(91, 110, 245, 0.25);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .annotation::before {
+      content: '💡';
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      background: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .annotation-title {
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .annotation-text {
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    /* Tab section visibility */
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* Disabled form elements */
+    .demo-disabled {
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    /* Pie chart placeholder using CSS */
+    .pie-placeholder {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .pie-placeholder::after {
+      content: '';
+      position: absolute;
+      top: 25%;
+      left: 25%;
+      width: 50%;
+      height: 50%;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.85);
+    }
+
+    .pie-income {
+      background: conic-gradient(
+        #1B7A3D 0% 35%,
+        #27AE60 35% 55%,
+        #52C77E 55% 72%,
+        #7ED9A0 72% 85%,
+        #A8E6BF 85% 95%,
+        #D0F0DD 95% 100%
+      );
+    }
+
+    .pie-expense {
+      background: conic-gradient(
+        #A93226 0% 30%,
+        #E74C3C 30% 52%,
+        #EF7B6E 52% 68%,
+        #F4A39A 68% 82%,
+        #F8C9C4 82% 93%,
+        #FCE4E1 93% 100%
+      );
+    }
+
+    /* Checklist status override for demo */
+    .demo-status {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Demo Banner -->
+  <div class="demo-banner">
+    ✦ 功能展示模式 — 以下為模擬資料，非真實財務數據 ✦
+  </div>
+
+  <!-- Nav (Tab Switcher) -->
+  <nav class="nav">
+    <span class="nav-brand">表演團體財務平台</span>
+    <div class="nav-links">
+      <a class="nav-link active" href="#" data-tab="transactions">收支紀錄</a>
+      <a class="nav-link" href="#" data-tab="analytics">財務分析</a>
+      <a class="nav-link" href="#" data-tab="checklist">演出準備</a>
+    </div>
+  </nav>
+
+  <!-- ============================== -->
+  <!-- Tab 1: 收支紀錄 -->
+  <!-- ============================== -->
+  <div class="tab-section active" id="tab-transactions">
+    <div class="container">
+      <h1 class="page-title">收支紀錄</h1>
+
+      <div class="annotation">
+        <div class="annotation-title">專案選擇器</div>
+        <div class="annotation-text">每個演出/專案獨立管理收支，下拉選單切換不同專案的紀錄。</div>
+      </div>
+
+      <div class="show-selector">
+        <select class="show-select demo-disabled">
+          <option>春季公演「笑翻天」</option>
+          <option>校園巡演 2026</option>
+          <option>企業商演</option>
+        </select>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">新增收支表單</div>
+        <div class="annotation-text">支援「支出」與「收入」兩種模式切換。支出可選擇由哪些成員分擔費用、指定墊款人；收入可選擇參與分配的成員。</div>
+      </div>
+
+      <div class="card demo-disabled">
+        <div class="card-title">新增收支</div>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-type="expense">支出</button>
+          <button class="toggle-btn" data-type="income">收入</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">分類</label>
+            <select class="form-control">
+              <option>場地租借</option>
+              <option>工作人員</option>
+              <option>設備道具</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">金額（含稅）</label>
+            <input type="number" class="form-control" value="12000" readonly>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註（選填）</label>
+          <input type="text" class="form-control" value="三創場地 5 月" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">分擔成員</label>
+          <div class="checkbox-grid">
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 A</label>
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 B</label>
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 C</label>
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 D</label>
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 E</label>
+            <label class="checkbox-item"><input type="checkbox" checked disabled> 成員 F</label>
+            <label class="checkbox-item"><input type="checkbox" disabled> 成員 G</label>
+            <label class="checkbox-item"><input type="checkbox" disabled> 成員 H</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">墊款人（公帳支付可留空）</label>
+            <select class="form-control">
+              <option>成員 A</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">登記人</label>
+            <select class="form-control">
+              <option>成員 B</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" disabled>新增</button>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">收支明細表</div>
+        <div class="annotation-text">即時顯示該專案的收入、支出、淨利匯總。每筆交易可查看分配狀況、墊款人、結清狀態，並支援編輯與刪除。</div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">收入</div>
+          <div class="stat-value positive">$185,000</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">支出</div>
+          <div class="stat-value negative">-$72,400</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">淨利</div>
+          <div class="stat-value positive">$112,600</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">收支明細</div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>分類</th>
+                <th>備註</th>
+                <th>金額</th>
+                <th>分配/墊款</th>
+                <th>結清</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>演出票房</td>
+                <td>春季公演首場</td>
+                <td class="amount-positive">$85,000</td>
+                <td>全員</td>
+                <td><span style="color: var(--text-light);">—</span></td>
+              </tr>
+              <tr>
+                <td>付費會員</td>
+                <td>4 月份會員費</td>
+                <td class="amount-positive">$62,000</td>
+                <td>6/8 人</td>
+                <td><span style="color: var(--text-light);">—</span></td>
+              </tr>
+              <tr>
+                <td>品牌贊助</td>
+                <td>XX 品牌合作</td>
+                <td class="amount-positive">$38,000</td>
+                <td>全員</td>
+                <td><span style="color: var(--text-light);">—</span></td>
+              </tr>
+              <tr class="unsettled">
+                <td>場地租借</td>
+                <td>三創場地 5 月</td>
+                <td class="amount-negative">-$25,000</td>
+                <td>全員 成員 A(墊)</td>
+                <td><button class="btn-settle">未結清</button></td>
+              </tr>
+              <tr class="unsettled">
+                <td>設備道具</td>
+                <td>音響租借</td>
+                <td class="amount-negative">-$18,000</td>
+                <td>6/8 人 成員 C(墊)</td>
+                <td><button class="btn-settle">未結清</button></td>
+              </tr>
+              <tr>
+                <td>剪輯製作</td>
+                <td>宣傳影片</td>
+                <td class="amount-negative">-$15,400</td>
+                <td>全員</td>
+                <td><span style="color: var(--text-light);">—</span></td>
+              </tr>
+              <tr>
+                <td>工作人員</td>
+                <td>燈光師酬勞</td>
+                <td class="amount-negative">-$8,000</td>
+                <td>全員 成員 B(墊)</td>
+                <td><button class="btn-settle settled">已結清</button></td>
+              </tr>
+              <tr>
+                <td>行政雜支</td>
+                <td>印刷、文具</td>
+                <td class="amount-negative">-$6,000</td>
+                <td>全員</td>
+                <td><span style="color: var(--text-light);">—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">墊款結清管理</div>
+        <div class="annotation-text">成員代墊的支出會標記為「未結清」（黃底高亮），點擊可切換結清狀態。新增結算時會自動結清該成員所有未結清代墊。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Tab 2: 財務分析 -->
+  <!-- ============================== -->
+  <div class="tab-section" id="tab-analytics">
+    <div class="container">
+      <h1 class="page-title">財務分析</h1>
+
+      <div class="annotation">
+        <div class="annotation-title">年度損益總覽</div>
+        <div class="annotation-text">一目了然查看全年度的總收入、總支出與淨利，即時反映團隊整體財務狀況。</div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">年度總收入</div>
+          <div class="stat-value positive">$742,000</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">年度總支出</div>
+          <div class="stat-value negative">-$298,500</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">年度淨利</div>
+          <div class="stat-value positive">$443,500</div>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">各專案損益</div>
+        <div class="annotation-text">每個演出/專案獨立計算收入、支出與淨利，清楚看出哪個專案最賺錢、哪個虧損。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">各專案損益</div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>專案</th>
+                <th style="text-align:right">收入</th>
+                <th style="text-align:right">支出</th>
+                <th style="text-align:right">淨利</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>春季公演「笑翻天」</td>
+                <td class="amount-positive" style="text-align:right">$285,000</td>
+                <td class="amount-negative" style="text-align:right">-$112,000</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$173,000</td>
+              </tr>
+              <tr>
+                <td>校園巡演 2026</td>
+                <td class="amount-positive" style="text-align:right">$198,000</td>
+                <td class="amount-negative" style="text-align:right">-$85,500</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$112,500</td>
+              </tr>
+              <tr>
+                <td>企業商演</td>
+                <td class="amount-positive" style="text-align:right">$150,000</td>
+                <td class="amount-negative" style="text-align:right">-$42,000</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$108,000</td>
+              </tr>
+              <tr>
+                <td>會員與其他收支</td>
+                <td class="amount-positive" style="text-align:right">$109,000</td>
+                <td class="amount-negative" style="text-align:right">-$59,000</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$50,000</td>
+              </tr>
+              <tr class="totals-row">
+                <td>合計</td>
+                <td class="amount-positive" style="text-align:right">$742,000</td>
+                <td class="amount-negative" style="text-align:right">-$298,500</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$443,500</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">收支佔比分析</div>
+        <div class="annotation-text">圓餅圖呈現各分類的收入與支出比重，快速找出主要收入來源和最大支出項目。</div>
+      </div>
+
+      <div class="pie-chart-row">
+        <div class="card">
+          <div class="card-title">收入佔比</div>
+          <div class="pie-chart-container">
+            <div class="pie-placeholder pie-income"></div>
+            <div class="pie-legend">
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#1B7A3D"></div>
+                <span class="pie-legend-label">演出票房</span>
+                <span class="pie-legend-value">$260,000 (35.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#27AE60"></div>
+                <span class="pie-legend-label">付費會員</span>
+                <span class="pie-legend-value">$148,000 (20.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#52C77E"></div>
+                <span class="pie-legend-label">商演合作</span>
+                <span class="pie-legend-value">$126,000 (17.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#7ED9A0"></div>
+                <span class="pie-legend-label">品牌贊助</span>
+                <span class="pie-legend-value">$96,000 (13.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#A8E6BF"></div>
+                <span class="pie-legend-label">周邊商品</span>
+                <span class="pie-legend-value">$74,000 (10.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#D0F0DD"></div>
+                <span class="pie-legend-label">其他收入</span>
+                <span class="pie-legend-value">$38,000 (5.0%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">支出佔比</div>
+          <div class="pie-chart-container">
+            <div class="pie-placeholder pie-expense"></div>
+            <div class="pie-legend">
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#A93226"></div>
+                <span class="pie-legend-label">場地租借</span>
+                <span class="pie-legend-value">$89,500 (30.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#E74C3C"></div>
+                <span class="pie-legend-label">工作人員</span>
+                <span class="pie-legend-value">$65,700 (22.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#EF7B6E"></div>
+                <span class="pie-legend-label">設備道具</span>
+                <span class="pie-legend-value">$47,800 (16.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#F4A39A"></div>
+                <span class="pie-legend-label">剪輯製作</span>
+                <span class="pie-legend-value">$41,800 (14.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#F8C9C4"></div>
+                <span class="pie-legend-label">行政雜支</span>
+                <span class="pie-legend-value">$32,800 (11.0%)</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-color" style="background:#FCE4E1"></div>
+                <span class="pie-legend-label">平台手續</span>
+                <span class="pie-legend-value">$20,900 (7.0%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">成員年度報表</div>
+        <div class="annotation-text">依據每筆交易的成員分配，自動計算每人的年度淨利、已收款金額、未收款淨利與代墊未結清款項。支援一鍵新增結算。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">成員年度報表</div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>成員</th>
+                <th style="text-align:right">已收款淨利</th>
+                <th style="text-align:right">未收款淨利</th>
+                <th style="text-align:right">代墊未結清</th>
+                <th style="text-align:right">需匯款金額</th>
+                <th style="text-align:right">年度淨利</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>成員 A</td>
+                <td style="text-align:right;color:var(--text-light)">$20,000</td>
+                <td class="amount-positive" style="text-align:right">$35,438</td>
+                <td style="text-align:right;color:var(--red)">$25,000</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$60,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 B</td>
+                <td style="text-align:right;color:var(--text-light)">$15,000</td>
+                <td class="amount-positive" style="text-align:right">$40,438</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$40,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 C</td>
+                <td style="text-align:right;color:var(--text-light)">$10,000</td>
+                <td class="amount-positive" style="text-align:right">$45,438</td>
+                <td style="text-align:right;color:var(--red)">$18,000</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$63,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 D</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right">$55,438</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 E</td>
+                <td style="text-align:right;color:var(--text-light)">$25,000</td>
+                <td class="amount-positive" style="text-align:right">$30,438</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$30,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 F</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right">$55,438</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$55,438</td>
+              </tr>
+              <tr>
+                <td>成員 G</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right">$51,188</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$51,188</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$51,188</td>
+              </tr>
+              <tr>
+                <td>成員 H</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right">$51,188</td>
+                <td style="text-align:right;color:var(--text-light)">$0</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$51,188</td>
+                <td class="amount-positive" style="text-align:right;font-weight:600">$51,188</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn btn-primary btn-sm demo-disabled">新增結算</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- Tab 3: 演出準備 -->
+  <!-- ============================== -->
+  <div class="tab-section" id="tab-checklist">
+    <div class="container">
+      <h1 class="page-title">演出準備</h1>
+
+      <div class="annotation">
+        <div class="annotation-title">專案 Checklist</div>
+        <div class="annotation-text">每個演出自動從模板生成待辦清單，包含場地、設備、宣傳等分類。可指派負責人、追蹤進度狀態（未開始 / 進行中 / 已完成）。</div>
+      </div>
+
+      <div class="show-selector">
+        <select class="show-select demo-disabled">
+          <option>春季公演「笑翻天」</option>
+          <option>校園巡演 2026</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="card-title">場地</div>
+        <table class="checklist-table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th style="width:100px">負責人</th>
+              <th style="width:80px">狀態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>場地預約確認</td>
+              <td>成員 A</td>
+              <td><span class="demo-status" style="background:var(--green)">已完成</span></td>
+            </tr>
+            <tr>
+              <td>場地費用支付</td>
+              <td>成員 A</td>
+              <td><span class="demo-status" style="background:var(--green)">已完成</span></td>
+            </tr>
+            <tr>
+              <td>場地動線規劃</td>
+              <td>成員 B</td>
+              <td><span class="demo-status" style="background:var(--yellow)">進行中</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">設備</div>
+        <table class="checklist-table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th style="width:100px">負責人</th>
+              <th style="width:80px">狀態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>音響設備租借</td>
+              <td>成員 C</td>
+              <td><span class="demo-status" style="background:var(--yellow)">進行中</span></td>
+            </tr>
+            <tr>
+              <td>燈光設備確認</td>
+              <td>成員 C</td>
+              <td><span class="demo-status" style="background:var(--red)">未開始</span></td>
+            </tr>
+            <tr>
+              <td>麥克風測試</td>
+              <td>成員 D</td>
+              <td><span class="demo-status" style="background:var(--red)">未開始</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">宣傳</div>
+        <table class="checklist-table">
+          <thead>
+            <tr>
+              <th>項目</th>
+              <th style="width:100px">負責人</th>
+              <th style="width:80px">狀態</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>社群媒體宣傳文案</td>
+              <td>成員 E</td>
+              <td><span class="demo-status" style="background:var(--green)">已完成</span></td>
+            </tr>
+            <tr>
+              <td>海報設計與印刷</td>
+              <td>成員 F</td>
+              <td><span class="demo-status" style="background:var(--yellow)">進行中</span></td>
+            </tr>
+            <tr>
+              <td>售票平台上架</td>
+              <td>成員 E</td>
+              <td><span class="demo-status" style="background:var(--green)">已完成</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="annotation">
+        <div class="annotation-title">狀態管理</div>
+        <div class="annotation-text">每個項目可切換三種狀態，狀態以顏色標籤直覺呈現：紅色（未開始）、黃色（進行中）、綠色（已完成）。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab switching script -->
+  <script>
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const tab = link.dataset.tab;
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
