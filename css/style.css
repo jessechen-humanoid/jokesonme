@@ -1097,3 +1097,20 @@ tr.totals-row td {
   font-family: inherit;
   background: rgba(255, 255, 255, 0.7);
 }
+
+/* Forecast Input */
+.forecast-input {
+  width: 100px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: right;
+  background: rgba(255, 255, 255, 0.7);
+}
+.forecast-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(66, 82, 168, 0.15);
+}

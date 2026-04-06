@@ -55,6 +55,7 @@ function renderNav(activePage) {
     { id: 'transaction', label: '收支紀錄', href: 'index.html' },
     { id: 'checklist', label: '演出準備', href: 'checklist.html' },
     { id: 'analytics', label: '財務分析', href: 'analytics.html' },
+    { id: 'forecast', label: '財務預估', href: 'forecast.html' },
     { id: 'import', label: '應援匯入', href: 'import.html' },
     { id: 'opentix', label: '追蹤演出', href: 'opentix.html' },
     { id: 'opentix-analytics', label: '追蹤售票', href: 'opentix-analytics.html' },

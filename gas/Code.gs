@@ -187,6 +187,12 @@ function handleRequest(e) {
       case 'getCommonFund':
         result = getCommonFund();
         break;
+      case 'getForecast':
+        result = getForecast();
+        break;
+      case 'updateForecast':
+        result = updateForecast(postData);
+        break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
     }
@@ -650,4 +656,105 @@ function addSettlement(payload) {
   }
 
   return { success: true, data: { member, amount, advancesSettled: settledCount } };
+}
+
+// ============================================================
+// Forecast (財務預估)
+// ============================================================
+
+function getForecast() {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName('財務預估');
+  if (!sheet) return { success: false, error: '找不到「財務預估」工作表' };
+
+  const data = sheet.getRange('A1:G69').getValues();
+
+  function readRows(startRow, endRow, cols) {
+    const rows = [];
+    for (let r = startRow - 1; r < endRow; r++) {
+      const label = data[r][0];
+      if (!label) continue;
+      if (cols === 1) {
+        rows.push({ row: r + 1, label: label, value: data[r][1] });
+      } else {
+        rows.push({ row: r + 1, label: label, values: [data[r][1], data[r][2], data[r][3]] });
+      }
+    }
+    return rows;
+  }
+
+  // 基礎參數 (row 4-19, single value in col B)
+  const baseParams = [];
+  for (let r = 3; r < 19; r++) {
+    const label = data[r][0];
+    if (!label) continue;
+    baseParams.push({ row: r + 1, label: label, value: data[r][1], extraD: data[r][3], extraE: data[r][4] });
+  }
+
+  // 版本參數 (row 22-31, three columns B/C/D)
+  const versionParams = {
+    headers: ['保守版', '基礎版', '激進版'],
+    rows: readRows(22, 31, 3)
+  };
+
+  // 收入計算 (row 36-47)
+  const income = {
+    headers: ['保守版', '基礎版', '激進版'],
+    rows: readRows(36, 47, 3)
+  };
+
+  // 支出計算 (row 51-58)
+  const expense = {
+    headers: ['保守版', '基礎版', '激進版'],
+    rows: readRows(51, 58, 3)
+  };
+
+  // 損益彙總 (row 62-63)
+  const pnl = {
+    headers: ['保守版', '基礎版', '激進版'],
+    rows: readRows(62, 63, 3)
+  };
+
+  // 分潤規劃 (row 67-69)
+  const profitShare = {
+    headers: ['保守版', '基礎版', '激進版'],
+    rows: readRows(67, 69, 3)
+  };
+
+  return {
+    success: true,
+    data: { baseParams, versionParams, income, expense, pnl, profitShare }
+  };
+}
+
+function updateForecast(payload) {
+  const baseParams = payload.baseParams;
+  const versionParams = payload.versionParams;
+  if ((!baseParams || baseParams.length === 0) && (!versionParams || versionParams.length === 0)) {
+    return { success: false, error: '沒有要更新的參數' };
+  }
+
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName('財務預估');
+  if (!sheet) return { success: false, error: '找不到「財務預估」工作表' };
+
+  let updated = 0;
+
+  if (baseParams) {
+    baseParams.forEach(p => {
+      sheet.getRange(p.row, 2).setValue(p.value);
+      updated++;
+    });
+  }
+
+  if (versionParams) {
+    versionParams.forEach(p => {
+      sheet.getRange(p.row, 2).setValue(p.values[0]);
+      sheet.getRange(p.row, 3).setValue(p.values[1]);
+      sheet.getRange(p.row, 4).setValue(p.values[2]);
+      updated++;
+    });
+  }
+
+  return { success: true, data: { updated } };
 }
