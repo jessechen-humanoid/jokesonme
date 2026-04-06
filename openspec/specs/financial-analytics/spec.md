@@ -6,33 +6,6 @@ TBD - created by archiving change 'build-platform'. Update Purpose after archive
 
 ## Requirements
 
-### Requirement: Monthly net profit
-
-The system SHALL calculate and display the net profit for each month by summing all income and expense transactions within that calendar month, across all shows. The table SHALL include a totals row at the bottom showing the yearly aggregate for income, expense, and net profit.
-
-#### Scenario: View monthly net profit with totals
-
-- **WHEN** user navigates to the Financial Analytics page
-- **THEN** a monthly breakdown is displayed showing total income, total expenses, and net profit for each month, with a final row showing the yearly totals
-
-
-<!-- @trace
-source: platform-v2
-updated: 2026-03-17
-code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
-  - js/api.js
-  - js/shared.js
-  - gas/Code.gs
-  - css/style.css
--->
-
----
 ### Requirement: Yearly net profit
 
 The system SHALL calculate and display the total net profit for the current year by summing all transactions across all months and shows.
@@ -64,19 +37,18 @@ The system SHALL calculate and display an independent profit and loss summary fo
 
 
 <!-- @trace
-source: platform-v2
-updated: 2026-03-17
+source: expense-allocation
+updated: 2026-03-24
 code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
+  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
   - .DS_Store
+  - RAW DATA/.DS_Store
+  - js/analytics.js
+  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
+  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
   - js/transaction.js
-  - js/api.js
-  - js/shared.js
-  - gas/Code.gs
-  - css/style.css
+  - index.html
 -->
 
 ---
@@ -157,4 +129,44 @@ code:
   - js/shared.js
   - gas/Code.gs
   - css/style.css
+-->
+
+---
+### Requirement: Common fund display
+
+The system SHALL display a "看我笑話共同基金" section on the Financial Analytics page. This section SHALL show:
+- Common income (共同收入): sum of all income transactions where excludedMembers is empty
+- Common expenses (共同支出): sum of all expense transactions where excludedMembers is empty
+- Common net profit (共同淨利): common income + common expenses
+- Fund allocation (提撥金額): common net profit × 20%
+
+#### Scenario: View common fund with mixed transactions
+
+- **WHEN** there are transactions with and without excluded members
+- **THEN** only transactions with no excluded members are included in the common fund calculation
+
+#### Scenario: View common fund with no shared transactions
+
+- **WHEN** all transactions have excluded members
+- **THEN** all common fund values display as $0
+
+#### Scenario: View common fund with negative net profit
+
+- **WHEN** common expenses exceed common income
+- **THEN** common net profit is negative and fund allocation is also negative (20% of negative value)
+
+<!-- @trace
+source: common-fund
+updated: 2026-04-06
+code:
+  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
+  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
+  - .spectra.yaml
+  - RAW DATA/.DS_Store
+  - gas/Code.gs
+  - analytics.html
+  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
+  - js/analytics.js
+  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
+  - .DS_Store
 -->

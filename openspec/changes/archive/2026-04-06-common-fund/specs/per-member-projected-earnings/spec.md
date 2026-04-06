@@ -1,10 +1,4 @@
-# per-member-projected-earnings Specification
-
-## Purpose
-
-TBD - created by archiving change 'income-allocation-analytics'. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Per-member projected net earnings
 
@@ -32,19 +26,3 @@ The "需匯款金額" (amount to transfer) calculation SHALL use the updated 年
 
 - **WHEN** all transactions have excluded members
 - **THEN** common fund = $0, and each member's 年度分配淨利 equals only their non-shared portion
-
-<!-- @trace
-source: common-fund
-updated: 2026-04-06
-code:
-  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
-  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
-  - .spectra.yaml
-  - RAW DATA/.DS_Store
-  - gas/Code.gs
-  - analytics.html
-  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
-  - js/analytics.js
-  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
-  - .DS_Store
--->
