@@ -184,6 +184,9 @@ function handleRequest(e) {
       case 'addSettlement':
         result = addSettlement(postData);
         break;
+      case 'getCommonFund':
+        result = getCommonFund();
+        break;
       default:
         result = { success: false, error: '未知的 action: ' + action };
     }
@@ -581,6 +584,41 @@ function getSettlements() {
     notes: row[3],
   }));
   return { success: true, data: settlements };
+}
+
+function getCommonFund() {
+  const ss = getSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+  if (!sheet) return { success: true, data: { commonIncome: 0, commonExpense: 0, commonNetProfit: 0, commonFund: 0 } };
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { success: true, data: { commonIncome: 0, commonExpense: 0, commonNetProfit: 0, commonFund: 0 } };
+
+  const data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+  // Col index: 0=專案名稱, 1=分類, 2=備註, 3=金額, 4=墊款人, 5=排除成員, 6=結清狀態, 7=日期, 8=登記人
+  let commonIncome = 0;
+  let commonExpense = 0;
+  data.forEach(row => {
+    const amount = row[3];
+    const excludedMembers = (row[5] || '').toString().trim();
+    if (excludedMembers === '') {
+      if (amount > 0) commonIncome += amount;
+      else commonExpense += amount;
+    }
+  });
+
+  const commonNetProfit = commonIncome + commonExpense;
+  const commonFund = commonNetProfit * 0.2;
+
+  // Write summary to 共同基金 sheet
+  const fundSheet = getOrCreateSheet(ss, '共同基金', ['項目', '金額']);
+  fundSheet.getRange(2, 1, 4, 2).setValues([
+    ['共同收入', commonIncome],
+    ['共同支出', commonExpense],
+    ['共同淨利', commonNetProfit],
+    ['提撥 20%', commonFund],
+  ]);
+
+  return { success: true, data: { commonIncome, commonExpense, commonNetProfit, commonFund } };
 }
 
 function addSettlement(payload) {

@@ -42,6 +42,15 @@ async function loadAnalytics() {
   const totalExpense = transactions.filter(t => t.amount < 0).reduce((s, t) => s + t.amount, 0);
   const netProfit = totalIncome + totalExpense;
 
+  // ---- Common Fund (共同基金) ----
+  const COMMON_FUND_RATE = 0.2;
+  const isShared = t => !t.excludedMembers || t.excludedMembers.trim() === '';
+  const commonIncome = transactions.filter(t => t.amount > 0 && isShared(t)).reduce((s, t) => s + t.amount, 0);
+  const commonExpense = transactions.filter(t => t.amount < 0 && isShared(t)).reduce((s, t) => s + t.amount, 0);
+  const commonNetProfit = commonIncome + commonExpense;
+  const commonFund = commonNetProfit * COMMON_FUND_RATE;
+  const distributableCommonNet = commonNetProfit * (1 - COMMON_FUND_RATE);
+
   summaryEl.innerHTML = `
     <div class="stat-grid">
       <div class="stat-card">
@@ -59,6 +68,8 @@ async function loadAnalytics() {
     </div>
   `;
 
+  renderCommonFund(commonIncome, commonExpense, commonNetProfit, commonFund, document.getElementById('common-fund'));
+
   renderShowPnl(transactions, showPnlEl);
 
   renderPieChart(
@@ -70,7 +81,36 @@ async function loadAnalytics() {
     EXPENSE_CATEGORIES, expenseEl, '支出佔比', 'expense'
   );
 
-  renderMemberEarnings(transactions, settlements, earningsEl);
+  renderMemberEarnings(transactions, settlements, distributableCommonNet, earningsEl);
+}
+
+// ---- Common Fund ----
+
+function renderCommonFund(income, expense, netProfit, fund, el) {
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title">看我笑話共同基金</div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">共同收入</div>
+          <div class="stat-value positive">${formatAmount(income)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">共同支出</div>
+          <div class="stat-value negative">${formatAmount(expense)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">共同淨利</div>
+          <div class="stat-value ${netProfit >= 0 ? 'positive' : 'negative'}">${formatAmount(netProfit)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">提撥 20%</div>
+          <div class="stat-value ${fund >= 0 ? 'positive' : 'negative'}">${formatAmount(fund)}</div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // ---- Per-show P&L ----
@@ -188,27 +228,30 @@ function drawPie(canvasId, data, colors) {
 
 // ---- Member Earnings (5 columns + settlement) ----
 
-function renderMemberEarnings(transactions, settlements, el) {
+function renderMemberEarnings(transactions, settlements, distributableCommonNet, el) {
   if (!el) return;
 
-  // Allocated income per member
-  const memberIncome = {};
-  MEMBERS.forEach(m => { memberIncome[m] = 0; });
-  transactions.filter(t => t.amount > 0).forEach(t => {
-    const excluded = t.excludedMembers ? t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean) : [];
+  // Split transactions into shared (all members) vs non-shared
+  const isShared = t => !t.excludedMembers || t.excludedMembers.trim() === '';
+
+  // Non-shared income per member (only transactions with excludedMembers)
+  const memberNonSharedIncome = {};
+  MEMBERS.forEach(m => { memberNonSharedIncome[m] = 0; });
+  transactions.filter(t => t.amount > 0 && !isShared(t)).forEach(t => {
+    const excluded = t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean);
     const included = MEMBERS.filter(m => !excluded.includes(m));
     const share = included.length > 0 ? t.amount / included.length : 0;
-    included.forEach(m => { memberIncome[m] += share; });
+    included.forEach(m => { memberNonSharedIncome[m] += share; });
   });
 
-  // Allocated expense per member (same logic as income)
-  const memberExpense = {};
-  MEMBERS.forEach(m => { memberExpense[m] = 0; });
-  transactions.filter(t => t.amount < 0).forEach(t => {
-    const excluded = t.excludedMembers ? t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean) : [];
+  // Non-shared expense per member
+  const memberNonSharedExpense = {};
+  MEMBERS.forEach(m => { memberNonSharedExpense[m] = 0; });
+  transactions.filter(t => t.amount < 0 && !isShared(t)).forEach(t => {
+    const excluded = t.excludedMembers.split(',').map(s => s.trim()).filter(Boolean);
     const included = MEMBERS.filter(m => !excluded.includes(m));
     const share = included.length > 0 ? t.amount / included.length : 0;
-    included.forEach(m => { memberExpense[m] += share; });
+    included.forEach(m => { memberNonSharedExpense[m] += share; });
   });
 
   // Settlements per member
@@ -226,7 +269,9 @@ function renderMemberEarnings(transactions, settlements, el) {
   });
 
   const members = MEMBERS.map(m => {
-    const annualNet = Math.round(memberIncome[m] + memberExpense[m]);
+    const commonShare = distributableCommonNet / MEMBERS.length;
+    const nonSharedShare = memberNonSharedIncome[m] + memberNonSharedExpense[m];
+    const annualNet = Math.round(commonShare + nonSharedShare);
     const settled = Math.round(memberSettled[m]);
     const unsettledNet = annualNet - settled;
     const advances = Math.round(memberAdvances[m]);
@@ -244,7 +289,7 @@ function renderMemberEarnings(transactions, settlements, el) {
           <th style="text-align:right">未收款淨利</th>
           <th style="text-align:right">代墊未結清</th>
           <th style="text-align:right">需匯款金額</th>
-          <th style="text-align:right">年度淨利</th>
+          <th style="text-align:right">年度分配淨利</th>
         </tr></thead>
         <tbody>
           ${members.map(m => `<tr>
