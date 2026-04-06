@@ -8,12 +8,12 @@ TBD - created by archiving change 'build-platform'. Update Purpose after archive
 
 ### Requirement: Record transaction by show
 
-The system SHALL allow users to record income and expense entries associated with a specific show. Each transaction SHALL include: show name, category, notes (optional), amount (positive for income, negative for expense), date, and the person who recorded it. For expense transactions, an optional advance payment person (墊款人) field SHALL be available. For income transactions, a member allocation checkbox grid SHALL be displayed instead of the advance payment field.
+The system SHALL allow users to record income and expense entries associated with a specific show. Each transaction SHALL include: show name, category, notes (optional), amount (positive for income, negative for expense), date, and the person who recorded it. For expense transactions, an optional advance payment person (墊款人) field AND a member allocation checkbox grid SHALL both be available. For income transactions, only the member allocation checkbox grid SHALL be displayed.
 
 #### Scenario: Add an expense entry
 
 - **WHEN** user selects "支出" mode, selects a show, chooses a category, enters an amount, and submits
-- **THEN** the transaction is saved with a negative amount and optional advance payment person
+- **THEN** the transaction is saved with a negative amount, optional advance payment person, and the member allocation (excluded members stored as comma-separated names)
 
 #### Scenario: Add an income entry
 
@@ -22,19 +22,18 @@ The system SHALL allow users to record income and expense entries associated wit
 
 
 <!-- @trace
-source: income-allocation-analytics
-updated: 2026-03-17
+source: expense-allocation
+updated: 2026-03-24
 code:
-  - analytics.html
-  - js/shared.js
-  - js/checklist.js
-  - js/transaction.js
-  - gas/Code.gs
+  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
   - .DS_Store
+  - RAW DATA/.DS_Store
   - js/analytics.js
+  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
+  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
+  - js/transaction.js
   - index.html
-  - css/style.css
-  - js/api.js
 -->
 
 ---
@@ -97,28 +96,32 @@ code:
 ---
 ### Requirement: View transactions by show
 
-The system SHALL allow users to filter and view all transactions for a selected show. The transaction list SHALL display category, notes, amount, date, settlement status, and a combined allocation/advance column. For income transactions, the column SHALL show "全員" or "N/8 人" (with hover tooltip for included members). For expense transactions, the column SHALL show the advance payment person or "—".
+The system SHALL allow users to filter and view all transactions for a selected show. The transaction list SHALL display category, notes, amount, date, settlement status, and a combined allocation/advance column. For income transactions, the column SHALL show "全員" or "N/8 人" (with hover tooltip for included members). For expense transactions, the column SHALL show the allocation info ("全員" or "N/8 人") and the advance payment person if present.
 
 #### Scenario: Select a show to view transactions
 
 - **WHEN** user selects a show from the dropdown
 - **THEN** all transactions for that show are displayed with the combined allocation/advance column
 
+#### Scenario: View expense with partial allocation and advance payment
+
+- **WHEN** user views a transaction list containing an expense with 5 members sharing and a specific advance payment person
+- **THEN** the column displays both the allocation "5/8 人" and the advance payment person name
+
 
 <!-- @trace
-source: income-allocation-analytics
-updated: 2026-03-17
+source: expense-allocation
+updated: 2026-03-24
 code:
-  - analytics.html
-  - js/shared.js
-  - js/checklist.js
-  - js/transaction.js
-  - gas/Code.gs
+  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
   - .DS_Store
+  - RAW DATA/.DS_Store
   - js/analytics.js
+  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
+  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
+  - js/transaction.js
   - index.html
-  - css/style.css
-  - js/api.js
 -->
 
 ---
