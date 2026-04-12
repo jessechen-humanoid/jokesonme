@@ -9,6 +9,7 @@ renderNav('import');
 
 let cashflowFiles = [];     // [{ name, rows: [] }]
 let orderFiles = [];         // [{ name, orderType: 'ticket'|'merchandise', rows: [] }]
+let activityFiles = [];      // [{ name, eventName, rows: [] }]
 let matchResults = null;
 let showsList = [];
 
@@ -27,6 +28,8 @@ function setupUploadZones() {
   const cfInput = document.getElementById('cashflow-input');
   const orderZone = document.getElementById('order-zone');
   const orderInput = document.getElementById('order-input');
+  const actZone = document.getElementById('activity-zone');
+  const actInput = document.getElementById('activity-input');
 
   cfZone.addEventListener('click', () => cfInput.click());
   cfZone.addEventListener('dragover', e => { e.preventDefault(); cfZone.style.borderColor = 'var(--accent)'; });
@@ -56,6 +59,21 @@ function setupUploadZones() {
   orderInput.addEventListener('change', () => {
     Array.from(orderInput.files).forEach(f => handleOrderFile(f));
     orderInput.value = '';
+  });
+
+  actZone.addEventListener('click', () => actInput.click());
+  actZone.addEventListener('dragover', e => { e.preventDefault(); actZone.style.borderColor = 'var(--accent)'; });
+  actZone.addEventListener('dragleave', () => { actZone.style.borderColor = ''; });
+  actZone.addEventListener('drop', e => {
+    e.preventDefault();
+    actZone.style.borderColor = '';
+    Array.from(e.dataTransfer.files).forEach(f => {
+      if (f.name.endsWith('.xlsx')) handleActivityFile(f);
+    });
+  });
+  actInput.addEventListener('change', () => {
+    Array.from(actInput.files).forEach(f => handleActivityFile(f));
+    actInput.value = '';
   });
 }
 
@@ -97,12 +115,19 @@ function parseCsv(file) {
   });
 }
 
-// ---- Order Type Detection ----
+// ---- Order Type / Event Name Detection ----
 
 function detectOrderType(filename) {
   if (filename.includes('票券訂單')) return 'ticket';
   if (filename.includes('應援訂單')) return 'merchandise';
-  return 'ticket'; // default
+  return 'ticket';
+}
+
+function extractEventName(filename) {
+  const base = filename.replace(/\.xlsx$/i, '');
+  const match = base.match(/^\d+_(.+?)_活動報名狀態/);
+  if (match) return match[1];
+  return base.replace(/^\d+_/, '').replace(/_\d+筆$/, '');
 }
 
 // ---- Cashflow Deduplication ----
@@ -156,20 +181,40 @@ async function handleOrderFile(file) {
   }
 }
 
+async function handleActivityFile(file) {
+  if (activityFiles.some(f => f.name === file.name)) {
+    alert('此檔案已上傳過：' + file.name);
+    return;
+  }
+  try {
+    const rows = await parseXlsx(file);
+    const eventName = extractEventName(file.name);
+    activityFiles.push({ name: file.name, eventName, rows });
+    document.getElementById('activity-zone').classList.add('has-file');
+    renderUploadStatus();
+    tryRunMatching();
+  } catch (err) {
+    alert('活動報名狀態解析失敗：' + err.message);
+  }
+}
+
 function removeCashflowFile(idx) {
   cashflowFiles.splice(idx, 1);
-  if (cashflowFiles.length === 0) {
-    document.getElementById('cashflow-zone').classList.remove('has-file');
-  }
+  if (cashflowFiles.length === 0) document.getElementById('cashflow-zone').classList.remove('has-file');
   renderUploadStatus();
   tryRunMatching();
 }
 
 function removeOrderFile(idx) {
   orderFiles.splice(idx, 1);
-  if (orderFiles.length === 0) {
-    document.getElementById('order-zone').classList.remove('has-file');
-  }
+  if (orderFiles.length === 0) document.getElementById('order-zone').classList.remove('has-file');
+  renderUploadStatus();
+  tryRunMatching();
+}
+
+function removeActivityFile(idx) {
+  activityFiles.splice(idx, 1);
+  if (activityFiles.length === 0) document.getElementById('activity-zone').classList.remove('has-file');
   renderUploadStatus();
   tryRunMatching();
 }
@@ -215,37 +260,113 @@ function renderUploadStatus() {
     </div>`;
   });
 
+  activityFiles.forEach((af, i) => {
+    html += `<div class="upload-status-item">
+      <div class="status-left">📋 ${escapeHtml(af.eventName)} <span class="status-badge">(${af.rows.length} 筆)</span></div>
+      <button class="btn-remove" onclick="removeActivityFile(${i})">移除</button>
+    </div>`;
+  });
+
   container.innerHTML = html;
+}
+
+// ---- Price Table & Event Mapping from Activity Registration ----
+
+function buildPriceTable(activityFiles) {
+  const priceTable = new Map();     // ticketFullName → price
+  const eventMapping = new Map();   // ticketFullName → [{ eventName, saleStart, saleEnd }]
+
+  activityFiles.forEach(af => {
+    const dates = af.rows.map(r => r['報名日期'] || '').filter(Boolean).sort();
+    const saleStart = dates[0] || '';
+    const saleEnd = dates[dates.length - 1] || '';
+
+    af.rows.forEach(r => {
+      const tName = (r['票券名稱'] || '').trim();
+      const spec = (r['規格名稱'] || '').trim();
+      const price = Number(r['票券金額']) || 0;
+      const fullName = spec ? `${tName} ${spec}` : tName;
+      if (!fullName) return;
+
+      priceTable.set(fullName, price);
+
+      if (!eventMapping.has(fullName)) eventMapping.set(fullName, []);
+      const events = eventMapping.get(fullName);
+      if (!events.some(e => e.eventName === af.eventName)) {
+        events.push({ eventName: af.eventName, saleStart, saleEnd });
+      }
+    });
+  });
+
+  return { priceTable, eventMapping };
+}
+
+// ---- Multi-Ticket Splitting ----
+
+function splitMultiTicket(rawField) {
+  if (!rawField) return [{ ticketFullName: '未知', quantity: 1 }];
+  const trimmed = rawField.trim();
+  const xMatches = trimmed.match(/\s+x\s+\d+/gi);
+  if (!xMatches || xMatches.length <= 1) {
+    return [{ ticketFullName: extractItemName(trimmed), quantity: 1 }];
+  }
+  // Split by double-space boundaries before each ticket segment
+  // Pattern: "AAA x N  BBB x M" — split on double spaces
+  const segments = trimmed.split(/\s{2,}/);
+  return segments.map(seg => {
+    const match = seg.match(/^(.+?)\s+x\s+(\d+)$/i);
+    if (match) {
+      return { ticketFullName: match[1].trim(), quantity: Number(match[2]) };
+    }
+    return { ticketFullName: seg.trim().replace(/\s*x\s*\d+$/i, '').trim(), quantity: 1 };
+  }).filter(s => s.ticketFullName);
 }
 
 // ---- Order Index ----
 
 function extractItemName(rawField) {
   if (!rawField) return '未知';
-  // Remove leading/trailing whitespace, then strip " x N" quantity suffix
   return rawField.trim().replace(/\s*x\s*\d+$/i, '').trim();
 }
 
 function extractGroupName(itemName) {
-  // Strip seat-specific info (e.g., "B25 高腳圓桌位" → just the ticket category)
-  // Pattern: " B{number} {seat type}" at any position
   return itemName.replace(/\s+B\d+\s+\S+$/, '').trim();
 }
 
-function buildOrderIndex(orderFiles) {
+function buildOrderIndex(orderFiles, priceTable) {
+  // Returns Map: orderId → single entry OR array of entries (for multi-ticket)
   const index = new Map();
   orderFiles.forEach(of => {
     of.rows.forEach(r => {
       const orderId = (r['訂單編號'] || '').trim();
       if (!orderId) return;
-      let itemName;
+
       if (of.orderType === 'ticket') {
-        itemName = extractItemName(r['票券名稱及數量']);
+        const rawField = r['票券名稱及數量'] || '';
+        const tickets = splitMultiTicket(rawField);
+
+        if (tickets.length > 1 && priceTable && priceTable.size > 0) {
+          // Multi-ticket: store as array
+          const entries = tickets.map(t => ({
+            orderType: 'ticket',
+            itemName: t.ticketFullName,
+            groupName: extractGroupName(t.ticketFullName),
+            ticketFullName: t.ticketFullName,
+            quantity: t.quantity,
+            unitPrice: priceTable.get(t.ticketFullName) || 0
+          }));
+          index.set(orderId, entries);
+        } else {
+          // Single ticket
+          const itemName = extractItemName(rawField);
+          const groupName = extractGroupName(itemName);
+          index.set(orderId, { orderType: 'ticket', itemName, groupName, ticketFullName: itemName });
+        }
       } else {
-        itemName = extractItemName(r['訂購商品名稱及數量']);
+        const itemName = extractItemName(r['訂購商品名稱及數量']);
+        const groupName = extractGroupName(itemName);
+        index.set(orderId, { orderType: 'merchandise', itemName, groupName });
       }
-      const groupName = extractGroupName(itemName);
-      index.set(orderId, { orderType: of.orderType, itemName, groupName, sourceFile: of.name });
     });
   });
   return index;
@@ -279,25 +400,103 @@ function runMatching() {
     }
   });
 
-  const orderIndex = buildOrderIndex(orderFiles);
+  const { priceTable, eventMapping } = buildPriceTable(activityFiles);
+  const orderIndex = buildOrderIndex(orderFiles, priceTable);
   const byName = {};
   const unmatched = [];
 
   purchases.forEach(cfRow => {
     const orderId = (cfRow['訂單編號'] || '').trim();
     const match = orderIndex.get(orderId);
-    if (match) {
-      const name = match.groupName;
-      if (!byName[name]) byName[name] = { orderType: match.orderType, rows: [] };
-      byName[name].rows.push(cfRow);
-    } else {
+    if (!match) {
       unmatched.push(cfRow);
+      return;
+    }
+
+    if (Array.isArray(match)) {
+      // Multi-ticket order: split amount proportionally
+      const totalPrice = match.reduce((s, e) => s + e.unitPrice * e.quantity, 0);
+      const cfAmount = Number(cfRow['收取金額']) || 0;
+      const cfFee = Number(cfRow['手續費']) || 0;
+      const cfNet = Number(cfRow['實際收取金額']) || 0;
+
+      match.forEach(entry => {
+        const entryTotal = entry.unitPrice * entry.quantity;
+        const ratio = totalPrice > 0 ? entryTotal / totalPrice : 1 / match.length;
+        const splitRow = {
+          ...cfRow,
+          '收取金額': Math.round(cfAmount * ratio),
+          '手續費': Math.round(cfFee * ratio),
+          '實際收取金額': Math.round(cfNet * ratio),
+          _splitFrom: orderId
+        };
+        const name = entry.groupName;
+        if (!byName[name]) byName[name] = { orderType: entry.orderType, rows: [], ticketFullNames: new Set() };
+        byName[name].rows.push(splitRow);
+        byName[name].ticketFullNames.add(entry.ticketFullName);
+      });
+    } else {
+      const name = match.groupName;
+      if (!byName[name]) byName[name] = { orderType: match.orderType, rows: [], ticketFullNames: new Set() };
+      byName[name].rows.push(cfRow);
+      if (match.ticketFullName) byName[name].ticketFullNames.add(match.ticketFullName);
     }
   });
 
-  matchResults = { membership, byName, unmatched, refunds };
+  // Convert ticketFullNames sets to arrays for easier use
+  Object.values(byName).forEach(v => { v.ticketFullNames = [...v.ticketFullNames]; });
+
+  matchResults = { membership, byName, unmatched, refunds, eventMapping };
   renderMappingSection();
   renderDashboard();
+}
+
+// ---- Event Attribution ----
+
+function parseDate(str) {
+  if (!str) return null;
+  const m = str.match(/(\d{4})\/(\d{2})\/(\d{2})/);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+}
+
+function resolveEventAttribution(groupName, info, eventMapping, orderRows) {
+  if (!eventMapping || eventMapping.size === 0) return null;
+
+  // Collect all events that any ticketFullName in this group maps to
+  const eventCandidates = new Map(); // eventName → { saleStart, saleEnd }
+  info.ticketFullNames.forEach(fn => {
+    const events = eventMapping.get(fn);
+    if (events) {
+      events.forEach(e => {
+        if (!eventCandidates.has(e.eventName)) {
+          eventCandidates.set(e.eventName, e);
+        }
+      });
+    }
+  });
+
+  if (eventCandidates.size === 0) return null;
+  if (eventCandidates.size === 1) return [...eventCandidates.keys()][0];
+
+  // Ambiguous: try date-based resolution using the median order date
+  const orderDates = orderRows
+    .map(r => parseDate(r['建立日期'] || r['付款時間']))
+    .filter(Boolean)
+    .sort((a, b) => a - b);
+  if (orderDates.length === 0) return null;
+  const medianDate = orderDates[Math.floor(orderDates.length / 2)];
+
+  const matching = [];
+  eventCandidates.forEach((info, name) => {
+    const start = parseDate(info.saleStart);
+    const end = parseDate(info.saleEnd);
+    if (start && end && medianDate >= start && medianDate <= end) {
+      matching.push(name);
+    }
+  });
+
+  if (matching.length === 1) return matching[0];
+  return null; // unresolvable
 }
 
 // ---- Ticket/Merchandise → Project Mapping ----
@@ -307,7 +506,7 @@ function getNameProjectMap() {
   if (!matchResults) return map;
   Object.keys(matchResults.byName).forEach(name => {
     const select = document.getElementById(`mapping-${CSS.escape(name)}`);
-    map[name] = select ? select.value : name;
+    map[name] = select ? select.value : '';
   });
   return map;
 }
@@ -318,19 +517,46 @@ function renderMappingSection() {
   const names = Object.keys(matchResults.byName);
   if (names.length === 0) { section.style.display = 'none'; return; }
 
+  const { eventMapping } = matchResults;
+
   section.style.display = '';
   list.innerHTML = names.map(name => {
     const info = matchResults.byName[name];
     const icon = info.orderType === 'ticket' ? '🎫' : '🛍️';
     const count = info.rows.length;
-    const options = showsList.map(s =>
-      `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`
-    ).join('');
+
+    // Attempt auto-attribution
+    const autoEvent = resolveEventAttribution(name, info, eventMapping, info.rows);
+
+    // Check if ambiguous (has activity files but couldn't resolve)
+    const hasActivityData = eventMapping && eventMapping.size > 0;
+    const hasMultipleEvents = info.ticketFullNames.some(fn => {
+      const events = eventMapping?.get(fn);
+      return events && events.length > 1;
+    });
+    const isAmbiguous = hasActivityData && hasMultipleEvents && !autoEvent;
+
+    let badge = '';
+    if (autoEvent) badge = '<span class="status-badge" style="color:var(--success)">自動對應</span>';
+    else if (isAmbiguous) badge = '<span class="status-badge" style="color:var(--danger,#e74c3c)">需手動確認</span>';
+
+    const options = showsList.map(s => {
+      const selected = autoEvent === s.name ? ' selected' : '';
+      return `<option value="${escapeHtml(s.name)}"${selected}>${escapeHtml(s.name)}</option>`;
+    }).join('');
+
+    // If auto-attributed to an event name not in showsList, add it as an option
+    let extraOption = '';
+    if (autoEvent && !showsList.some(s => s.name === autoEvent)) {
+      extraOption = `<option value="${escapeHtml(autoEvent)}" selected>${escapeHtml(autoEvent)}</option>`;
+    }
+
     return `<div class="mapping-row">
-      <span>${icon} ${escapeHtml(name)} <span class="status-badge">(${count} 筆)</span></span>
+      <span>${icon} ${escapeHtml(name)} <span class="status-badge">(${count} 筆)</span> ${badge}</span>
       <span class="mapping-arrow">→</span>
       <select id="mapping-${CSS.escape(name)}" onchange="renderDashboard()">
         <option value="">— 選擇專案 —</option>
+        ${extraOption}
         ${options}
       </select>
     </div>`;
@@ -366,7 +592,6 @@ function renderDashboard() {
     <thead><tr><th>來源</th><th>筆數</th><th>收取金額</th><th>手續費</th><th>實際收取</th></tr></thead><tbody>`;
   const groups = [];
 
-  // Membership
   if (membership.length > 0) {
     const mAmt = membership.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     const mFee = membership.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
@@ -382,11 +607,10 @@ function renderDashboard() {
     groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
-  // Group byName entries by project
   const projectGroups = {};
   Object.entries(byName).forEach(([name, info]) => {
     const projectName = nameProjectMap[name] || name;
-    if (!projectName) return; // not yet mapped
+    if (!projectName) return;
     if (!projectGroups[projectName]) projectGroups[projectName] = { ticket: [], merchandise: [] };
     if (info.orderType === 'ticket') {
       projectGroups[projectName].ticket.push({ name, rows: info.rows });
@@ -395,7 +619,6 @@ function renderDashboard() {
     }
   });
 
-  // Render ticket groups
   Object.entries(projectGroups).forEach(([projectName, pg]) => {
     if (pg.ticket.length > 0) {
       const allTicketRows = pg.ticket.flatMap(t => t.rows);
@@ -421,7 +644,6 @@ function renderDashboard() {
     }
   });
 
-  // Refunds
   if (refunds.length > 0) {
     const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
     breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
@@ -473,7 +695,6 @@ function updateImportButton() {
   actions.style.display = '';
   if (!matchResults) { btn.disabled = true; return; }
 
-  // Check if all mapping selects have a value
   const nameProjectMap = getNameProjectMap();
   const unmappedNames = Object.keys(matchResults.byName).filter(name => !nameProjectMap[name]);
 
@@ -510,7 +731,6 @@ async function doImport() {
     }
   });
 
-  // Manual assignments for unmatched items
   const assignments = getUnmatchedAssignments();
   const manualGroups = {};
   assignments.forEach(a => {
@@ -521,7 +741,6 @@ async function doImport() {
     manualGroups[a.showName].items.push(a.row['品項數量'] || '未知');
   });
   Object.entries(manualGroups).forEach(([showName, g]) => {
-    // Determine category based on item content (default to 演出票房)
     const category = '演出票房';
     transactions.push({ showName, category, notes: `應援匯入（手動指定）：${g.items.length}筆`, amount: g.amount, date: today, recordedBy: '應援匯入' });
     if (g.fee > 0) {
