@@ -23,11 +23,11 @@
           <div class="upload-hint">可上傳多個 .xlsx</div>
           <input type="file" accept=".xlsx" id="cashflow-input" multiple hidden>
         </div>
-        <div class="import-upload-zone" id="event-zone">
+        <div class="import-upload-zone" id="order-zone">
           <div class="upload-icon">🎫</div>
-          <div class="upload-label">活動報名狀態</div>
-          <div class="upload-hint">可上傳多個 .xlsx</div>
-          <input type="file" accept=".xlsx" id="event-input" multiple hidden>
+          <div class="upload-label">票券與周邊訂單</div>
+          <div class="upload-hint">從應援後台下載票券訂單及周邊訂單 CSV</div>
+          <input type="file" accept=".csv" id="order-input" multiple hidden>
         </div>
       </div>
       <div id="upload-status"></div>
@@ -35,7 +35,7 @@
 
     <!-- Event Mapping -->
     <div class="card" id="mapping-section" style="display:none;">
-      <div class="card-title">活動對應專案</div>
+      <div class="card-title">票券／商品對應專案</div>
       <div id="mapping-list"></div>
     </div>
 

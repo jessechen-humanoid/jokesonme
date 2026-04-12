@@ -8,7 +8,7 @@ renderNav('import');
 // ---- State ----
 
 let cashflowFiles = [];     // [{ name, rows: [] }]
-let eventFiles = [];        // [{ name, eventName, rows: [] }]
+let orderFiles = [];         // [{ name, orderType: 'ticket'|'merchandise', rows: [] }]
 let matchResults = null;
 let showsList = [];
 
@@ -25,8 +25,8 @@ let showsList = [];
 function setupUploadZones() {
   const cfZone = document.getElementById('cashflow-zone');
   const cfInput = document.getElementById('cashflow-input');
-  const evZone = document.getElementById('event-zone');
-  const evInput = document.getElementById('event-input');
+  const orderZone = document.getElementById('order-zone');
+  const orderInput = document.getElementById('order-input');
 
   cfZone.addEventListener('click', () => cfInput.click());
   cfZone.addEventListener('dragover', e => { e.preventDefault(); cfZone.style.borderColor = 'var(--accent)'; });
@@ -43,23 +43,23 @@ function setupUploadZones() {
     cfInput.value = '';
   });
 
-  evZone.addEventListener('click', () => evInput.click());
-  evZone.addEventListener('dragover', e => { e.preventDefault(); evZone.style.borderColor = 'var(--accent)'; });
-  evZone.addEventListener('dragleave', () => { evZone.style.borderColor = ''; });
-  evZone.addEventListener('drop', e => {
+  orderZone.addEventListener('click', () => orderInput.click());
+  orderZone.addEventListener('dragover', e => { e.preventDefault(); orderZone.style.borderColor = 'var(--accent)'; });
+  orderZone.addEventListener('dragleave', () => { orderZone.style.borderColor = ''; });
+  orderZone.addEventListener('drop', e => {
     e.preventDefault();
-    evZone.style.borderColor = '';
+    orderZone.style.borderColor = '';
     Array.from(e.dataTransfer.files).forEach(f => {
-      if (f.name.endsWith('.xlsx')) handleEventFile(f);
+      if (f.name.endsWith('.csv')) handleOrderFile(f);
     });
   });
-  evInput.addEventListener('change', () => {
-    Array.from(evInput.files).forEach(f => handleEventFile(f));
-    evInput.value = '';
+  orderInput.addEventListener('change', () => {
+    Array.from(orderInput.files).forEach(f => handleOrderFile(f));
+    orderInput.value = '';
   });
 }
 
-// ---- XLSX Parsing ----
+// ---- File Parsing ----
 
 function parseXlsx(file) {
   return new Promise((resolve, reject) => {
@@ -79,13 +79,30 @@ function parseXlsx(file) {
   });
 }
 
-// ---- Event Name Extraction ----
+function parseCsv(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'string' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { raw: false });
+        resolve(rows);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
 
-function extractEventName(filename) {
-  const base = filename.replace(/\.xlsx$/i, '');
-  const match = base.match(/^\d+_(.+?)_活動報名狀態/);
-  if (match) return match[1];
-  return base.replace(/^\d+_/, '').replace(/_\d+筆$/, '');
+// ---- Order Type Detection ----
+
+function detectOrderType(filename) {
+  if (filename.includes('票券訂單')) return 'ticket';
+  if (filename.includes('應援訂單')) return 'merchandise';
+  return 'ticket'; // default
 }
 
 // ---- Cashflow Deduplication ----
@@ -122,20 +139,20 @@ async function handleCashflowFile(file) {
   }
 }
 
-async function handleEventFile(file) {
-  if (eventFiles.some(f => f.name === file.name)) {
+async function handleOrderFile(file) {
+  if (orderFiles.some(f => f.name === file.name)) {
     alert('此檔案已上傳過：' + file.name);
     return;
   }
   try {
-    const rows = await parseXlsx(file);
-    const eventName = extractEventName(file.name);
-    eventFiles.push({ name: file.name, eventName, rows });
-    document.getElementById('event-zone').classList.add('has-file');
+    const rows = await parseCsv(file);
+    const orderType = detectOrderType(file.name);
+    orderFiles.push({ name: file.name, orderType, rows });
+    document.getElementById('order-zone').classList.add('has-file');
     renderUploadStatus();
     tryRunMatching();
   } catch (err) {
-    alert('活動檔案解析失敗：' + err.message);
+    alert('訂單檔案解析失敗：' + err.message);
   }
 }
 
@@ -148,10 +165,10 @@ function removeCashflowFile(idx) {
   tryRunMatching();
 }
 
-function removeEventFile(idx) {
-  eventFiles.splice(idx, 1);
-  if (eventFiles.length === 0) {
-    document.getElementById('event-zone').classList.remove('has-file');
+function removeOrderFile(idx) {
+  orderFiles.splice(idx, 1);
+  if (orderFiles.length === 0) {
+    document.getElementById('order-zone').classList.remove('has-file');
   }
   renderUploadStatus();
   tryRunMatching();
@@ -184,34 +201,60 @@ function renderUploadStatus() {
     const total = cf.rows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     const dates = cf.rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
     const dateRange = dates.length ? `${dates[0].slice(0, 10)} ~ ${dates[dates.length - 1].slice(0, 10)}` : '';
-    // Replace the single file item with a summary style
     html = `<div class="upload-status-item">
       <div class="status-left">✅ ${escapeHtml(cf.name)}</div>
       <span class="status-badge">${cf.rows.length} 筆 ｜ ${dateRange} ｜ $${total.toLocaleString()}</span>
     </div>`;
   }
 
-  eventFiles.forEach((ef, i) => {
+  orderFiles.forEach((of, i) => {
+    const icon = of.orderType === 'ticket' ? '🎫' : '🛍️';
     html += `<div class="upload-status-item">
-      <div class="status-left">🎫 ${escapeHtml(ef.eventName)} <span class="status-badge">(${ef.rows.length} 筆)</span></div>
-      <button class="btn-remove" onclick="removeEventFile(${i})">移除</button>
+      <div class="status-left">${icon} ${escapeHtml(of.name)} <span class="status-badge">(${of.rows.length} 筆)</span></div>
+      <button class="btn-remove" onclick="removeOrderFile(${i})">移除</button>
     </div>`;
   });
 
   container.innerHTML = html;
 }
 
-// ---- Matching Logic ----
+// ---- Order Index ----
 
-function parseTime(str) {
-  if (!str) return null;
-  const parts = str.trim().match(/(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})/);
-  if (!parts) return null;
-  return new Date(+parts[1], +parts[2] - 1, +parts[3], +parts[4], +parts[5]);
+function extractItemName(rawField) {
+  if (!rawField) return '未知';
+  // Remove leading/trailing whitespace, then strip " x N" quantity suffix
+  return rawField.trim().replace(/\s*x\s*\d+$/i, '').trim();
 }
 
+function extractGroupName(itemName) {
+  // Strip seat-specific info (e.g., "B25 高腳圓桌位" → just the ticket category)
+  // Pattern: " B{number} {seat type}" at any position
+  return itemName.replace(/\s+B\d+\s+\S+$/, '').trim();
+}
+
+function buildOrderIndex(orderFiles) {
+  const index = new Map();
+  orderFiles.forEach(of => {
+    of.rows.forEach(r => {
+      const orderId = (r['訂單編號'] || '').trim();
+      if (!orderId) return;
+      let itemName;
+      if (of.orderType === 'ticket') {
+        itemName = extractItemName(r['票券名稱及數量']);
+      } else {
+        itemName = extractItemName(r['訂購商品名稱及數量']);
+      }
+      const groupName = extractGroupName(itemName);
+      index.set(orderId, { orderType: of.orderType, itemName, groupName, sourceFile: of.name });
+    });
+  });
+  return index;
+}
+
+// ---- Matching Logic ----
+
 function tryRunMatching() {
-  if (cashflowFiles.length === 0 || eventFiles.length === 0) {
+  if (cashflowFiles.length === 0 || orderFiles.length === 0) {
     matchResults = null;
     document.getElementById('mapping-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'none';
@@ -236,87 +279,35 @@ function runMatching() {
     }
   });
 
-  const matched = {};
+  const orderIndex = buildOrderIndex(orderFiles);
+  const byName = {};
   const unmatched = [];
-  const usedEventRows = new Set();
-
-  const eventRowsByName = {};
-  const eventRowsByEmail = {};
-  eventFiles.forEach(ef => {
-    ef.rows.forEach((er, idx) => {
-      const key = `${ef.name}:${idx}`;
-      const name = (er['購買人名稱'] || '').trim();
-      const email = (er['購買人 Email'] || '').trim().toLowerCase();
-      const time = parseTime(er['報名日期']);
-      if (!eventRowsByName[name]) eventRowsByName[name] = [];
-      eventRowsByName[name].push({ key, time, eventName: ef.eventName, email });
-      if (email) {
-        if (!eventRowsByEmail[email]) eventRowsByEmail[email] = [];
-        eventRowsByEmail[email].push({ key, time, eventName: ef.eventName });
-      }
-    });
-  });
 
   purchases.forEach(cfRow => {
-    const cfName = (cfRow['付款人'] || '').trim();
-    const cfEmail = (cfRow['電子郵件'] || '').trim().toLowerCase();
-    const cfTime = parseTime(cfRow['付款時間']);
-    let matchedEvent = null;
-
-    if (cfTime && eventRowsByName[cfName]) {
-      let bestDiff = Infinity;
-      let bestEntry = null;
-      eventRowsByName[cfName].forEach(entry => {
-        if (usedEventRows.has(entry.key) || !entry.time) return;
-        const diff = Math.abs(cfTime - entry.time) / 1000;
-        if (diff <= 300 && diff < bestDiff) {
-          bestDiff = diff;
-          bestEntry = entry;
-        }
-      });
-      if (bestEntry) {
-        matchedEvent = bestEntry.eventName;
-        usedEventRows.add(bestEntry.key);
-      }
-    }
-
-    if (!matchedEvent && cfEmail && eventRowsByEmail[cfEmail]) {
-      let bestDiff = Infinity;
-      let bestEntry = null;
-      eventRowsByEmail[cfEmail].forEach(entry => {
-        if (usedEventRows.has(entry.key) || !entry.time || !cfTime) return;
-        const diff = Math.abs(cfTime - entry.time) / 1000;
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          bestEntry = entry;
-        }
-      });
-      if (bestEntry) {
-        matchedEvent = bestEntry.eventName;
-        usedEventRows.add(bestEntry.key);
-      }
-    }
-
-    if (matchedEvent) {
-      if (!matched[matchedEvent]) matched[matchedEvent] = [];
-      matched[matchedEvent].push(cfRow);
+    const orderId = (cfRow['訂單編號'] || '').trim();
+    const match = orderIndex.get(orderId);
+    if (match) {
+      const name = match.groupName;
+      if (!byName[name]) byName[name] = { orderType: match.orderType, rows: [] };
+      byName[name].rows.push(cfRow);
     } else {
       unmatched.push(cfRow);
     }
   });
 
-  matchResults = { membership, matched, unmatched, refunds };
+  matchResults = { membership, byName, unmatched, refunds };
   renderMappingSection();
   renderDashboard();
 }
 
-// ---- Event → Show Mapping ----
+// ---- Ticket/Merchandise → Project Mapping ----
 
-function getEventShowMap() {
+function getNameProjectMap() {
   const map = {};
-  eventFiles.forEach(ef => {
-    const select = document.getElementById(`mapping-${ef.eventName}`);
-    map[ef.eventName] = select ? select.value : ef.eventName;
+  if (!matchResults) return map;
+  Object.keys(matchResults.byName).forEach(name => {
+    const select = document.getElementById(`mapping-${CSS.escape(name)}`);
+    map[name] = select ? select.value : name;
   });
   return map;
 }
@@ -324,19 +315,22 @@ function getEventShowMap() {
 function renderMappingSection() {
   const section = document.getElementById('mapping-section');
   const list = document.getElementById('mapping-list');
-  const eventNames = [...new Set(eventFiles.map(f => f.eventName))];
-  if (eventNames.length === 0) { section.style.display = 'none'; return; }
+  const names = Object.keys(matchResults.byName);
+  if (names.length === 0) { section.style.display = 'none'; return; }
 
   section.style.display = '';
-  list.innerHTML = eventNames.map(en => {
+  list.innerHTML = names.map(name => {
+    const info = matchResults.byName[name];
+    const icon = info.orderType === 'ticket' ? '🎫' : '🛍️';
+    const count = info.rows.length;
     const options = showsList.map(s =>
       `<option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>`
     ).join('');
     return `<div class="mapping-row">
-      <span>${escapeHtml(en)}</span>
+      <span>${icon} ${escapeHtml(name)} <span class="status-badge">(${count} 筆)</span></span>
       <span class="mapping-arrow">→</span>
-      <select id="mapping-${en}" onchange="renderDashboard()">
-        <option value="${escapeHtml(en)}">${escapeHtml(en)}（保持原名）</option>
+      <select id="mapping-${CSS.escape(name)}" onchange="renderDashboard()">
+        <option value="">— 選擇專案 —</option>
         ${options}
       </select>
     </div>`;
@@ -353,8 +347,8 @@ function escapeHtml(s) {
 
 function renderDashboard() {
   if (!matchResults) return;
-  const showMap = getEventShowMap();
-  const { membership, matched, unmatched, refunds } = matchResults;
+  const nameProjectMap = getNameProjectMap();
+  const { membership, byName, unmatched, refunds } = matchResults;
   document.getElementById('dashboard-section').style.display = '';
 
   const allRows = getMergedCashflowRows().filter(r => r['金流狀態'] !== '撥款後退款');
@@ -372,6 +366,7 @@ function renderDashboard() {
     <thead><tr><th>來源</th><th>筆數</th><th>收取金額</th><th>手續費</th><th>實際收取</th></tr></thead><tbody>`;
   const groups = [];
 
+  // Membership
   if (membership.length > 0) {
     const mAmt = membership.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     const mFee = membership.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
@@ -387,25 +382,46 @@ function renderDashboard() {
     groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
 
-  Object.entries(matched).forEach(([eventName, rows]) => {
-    const showName = showMap[eventName] || eventName;
-    const eAmt = rows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
-    const eFee = rows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
-    const eNet = rows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
-    const types = {};
-    rows.forEach(r => {
-      const item = r['品項數量'] || '未知';
-      const typeName = item.replace(/（.+$/, '').replace(/\s*x\s*\d+$/i, '').trim();
-      if (!types[typeName]) types[typeName] = 0;
-      types[typeName]++;
-    });
-    const typeStr = Object.entries(types).map(([t, c]) => `${t}×${c}`).join('、');
-    breakdownHtml += `<tr>
-      <td>🎫 ${escapeHtml(showName)}</td><td>${rows.length}</td>
-      <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td></tr>`;
-    groups.push({ showName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
+  // Group byName entries by project
+  const projectGroups = {};
+  Object.entries(byName).forEach(([name, info]) => {
+    const projectName = nameProjectMap[name] || name;
+    if (!projectName) return; // not yet mapped
+    if (!projectGroups[projectName]) projectGroups[projectName] = { ticket: [], merchandise: [] };
+    if (info.orderType === 'ticket') {
+      projectGroups[projectName].ticket.push({ name, rows: info.rows });
+    } else {
+      projectGroups[projectName].merchandise.push({ name, rows: info.rows });
+    }
   });
 
+  // Render ticket groups
+  Object.entries(projectGroups).forEach(([projectName, pg]) => {
+    if (pg.ticket.length > 0) {
+      const allTicketRows = pg.ticket.flatMap(t => t.rows);
+      const eAmt = allTicketRows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
+      const eFee = allTicketRows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
+      const eNet = allTicketRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
+      const typeStr = pg.ticket.map(t => `${t.name}×${t.rows.length}`).join('、');
+      breakdownHtml += `<tr>
+        <td>🎫 ${escapeHtml(projectName)}</td><td>${allTicketRows.length}</td>
+        <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td></tr>`;
+      groups.push({ showName: projectName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
+    }
+    if (pg.merchandise.length > 0) {
+      const allMerchRows = pg.merchandise.flatMap(m => m.rows);
+      const mAmt = allMerchRows.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
+      const mFee = allMerchRows.reduce((s, r) => s + (Number(r['手續費']) || 0), 0);
+      const mNet = allMerchRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
+      const typeStr = pg.merchandise.map(m => `${m.name}×${m.rows.length}`).join('、');
+      breakdownHtml += `<tr>
+        <td>🛍️ ${escapeHtml(projectName)}</td><td>${allMerchRows.length}</td>
+        <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
+      groups.push({ showName: projectName, category: '周邊商品', amount: mAmt, fee: mFee, notes: `應援匯入：${typeStr}` });
+    }
+  });
+
+  // Refunds
   if (refunds.length > 0) {
     const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
     breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
@@ -416,7 +432,7 @@ function renderDashboard() {
   breakdownHtml += '</tbody></table>';
   document.getElementById('breakdown-list').innerHTML = breakdownHtml;
   window._importGroups = groups;
-  renderUnmatched(unmatched, showMap);
+  renderUnmatched(unmatched);
   updateImportButton();
 }
 
@@ -456,9 +472,18 @@ function updateImportButton() {
   const hint = document.getElementById('import-hint');
   actions.style.display = '';
   if (!matchResults) { btn.disabled = true; return; }
+
+  // Check if all mapping selects have a value
+  const nameProjectMap = getNameProjectMap();
+  const unmappedNames = Object.keys(matchResults.byName).filter(name => !nameProjectMap[name]);
+
   const assignments = getUnmatchedAssignments();
   const unresolved = assignments.filter(a => !a.showName).length;
-  if (unresolved > 0) {
+
+  if (unmappedNames.length > 0) {
+    btn.disabled = true;
+    hint.textContent = `還有 ${unmappedNames.length} 個票券／商品名稱需要對應專案`;
+  } else if (unresolved > 0) {
     btn.disabled = true;
     hint.textContent = `還有 ${unresolved} 筆未配對項目需要指定專案`;
   } else {
@@ -485,6 +510,7 @@ async function doImport() {
     }
   });
 
+  // Manual assignments for unmatched items
   const assignments = getUnmatchedAssignments();
   const manualGroups = {};
   assignments.forEach(a => {
@@ -495,7 +521,9 @@ async function doImport() {
     manualGroups[a.showName].items.push(a.row['品項數量'] || '未知');
   });
   Object.entries(manualGroups).forEach(([showName, g]) => {
-    transactions.push({ showName, category: '演出票房', notes: `應援匯入（手動指定）：${g.items.length}筆`, amount: g.amount, date: today, recordedBy: '應援匯入' });
+    // Determine category based on item content (default to 演出票房)
+    const category = '演出票房';
+    transactions.push({ showName, category, notes: `應援匯入（手動指定）：${g.items.length}筆`, amount: g.amount, date: today, recordedBy: '應援匯入' });
     if (g.fee > 0) {
       transactions.push({ showName, category: '平台手續', notes: '應援手續費（手動指定）', amount: -g.fee, date: today, recordedBy: '應援匯入' });
     }
