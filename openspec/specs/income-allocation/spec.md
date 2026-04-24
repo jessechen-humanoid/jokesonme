@@ -56,3 +56,41 @@ code:
   - js/transaction.js
   - index.html
 -->
+
+---
+### Requirement: paidByFund expenses excluded from member allocation
+
+The system SHALL exclude any expense transaction with `paidByFund = true` from all per-member allocation calculations. Such transactions SHALL NOT contribute to any member's 年度分配淨利, regardless of their `excludedMembers` value.
+
+#### Scenario: paidByFund expense does not reduce any member's share
+
+- **WHEN** an expense of $13,000 is recorded with `paidByFund = true`
+- **THEN** no member's 年度分配淨利 changes as a result of that transaction
+
+#### Scenario: excludedMembers on paidByFund expense is ignored in allocation
+
+- **WHEN** an expense transaction has `paidByFund = true` (regardless of its stored `excludedMembers` value)
+- **THEN** the allocation engine treats the transaction as irrelevant and does not distribute any share to any member
+
+<!-- @trace
+source: tax-reserve-and-fund-payment
+updated: 2026-04-24
+code:
+  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260412_應援訂單_85筆.csv
+  - js/api.js
+  - js/analytics.js
+  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
+  - js/import.js
+  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
+  - js/transaction.js
+  - .DS_Store
+  - js/shared.js
+  - gas/Code.gs
+  - index.html
+  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
+  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
+  - css/style.css
+  - RAW DATA/20260412_應援票券訂單_515筆.csv
+  - import.html
+-->

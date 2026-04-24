@@ -229,7 +229,7 @@ function renderUploadStatus() {
     const dates = cf.rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
     const dateRange = dates.length ? `${dates[0].slice(0, 10)} ~ ${dates[dates.length - 1].slice(0, 10)}` : '';
     html += `<div class="upload-status-item">
-      <div class="status-left">📄 ${escapeHtml(cf.name)} <span class="status-badge">(${cf.rows.length} 筆 ｜ ${dateRange})</span></div>
+      <div class="status-left">${escapeHtml(cf.name)} <span class="status-badge">(${cf.rows.length} 筆 ｜ ${dateRange})</span></div>
       <button class="btn-remove" onclick="removeCashflowFile(${i})">移除</button>
     </div>`;
   });
@@ -238,7 +238,7 @@ function renderUploadStatus() {
     const merged = getMergedCashflowRows();
     const total = merged.reduce((s, r) => s + (Number(r['收取金額']) || 0), 0);
     html += `<div class="upload-status-item">
-      <div class="status-left">✅ 合併後（去重）</div>
+      <div class="status-left">合併後（去重）</div>
       <span class="status-badge">${merged.length} 筆 ｜ $${total.toLocaleString()}</span>
     </div>`;
   } else if (cashflowFiles.length === 1) {
@@ -247,22 +247,22 @@ function renderUploadStatus() {
     const dates = cf.rows.map(r => r['建立日期'] || '').filter(Boolean).sort();
     const dateRange = dates.length ? `${dates[0].slice(0, 10)} ~ ${dates[dates.length - 1].slice(0, 10)}` : '';
     html = `<div class="upload-status-item">
-      <div class="status-left">✅ ${escapeHtml(cf.name)}</div>
+      <div class="status-left">${escapeHtml(cf.name)}</div>
       <span class="status-badge">${cf.rows.length} 筆 ｜ ${dateRange} ｜ $${total.toLocaleString()}</span>
     </div>`;
   }
 
   orderFiles.forEach((of, i) => {
-    const icon = of.orderType === 'ticket' ? '🎫' : '🛍️';
+    const label = of.orderType === 'ticket' ? '票券' : '周邊';
     html += `<div class="upload-status-item">
-      <div class="status-left">${icon} ${escapeHtml(of.name)} <span class="status-badge">(${of.rows.length} 筆)</span></div>
+      <div class="status-left">[${label}] ${escapeHtml(of.name)} <span class="status-badge">(${of.rows.length} 筆)</span></div>
       <button class="btn-remove" onclick="removeOrderFile(${i})">移除</button>
     </div>`;
   });
 
   activityFiles.forEach((af, i) => {
     html += `<div class="upload-status-item">
-      <div class="status-left">📋 ${escapeHtml(af.eventName)} <span class="status-badge">(${af.rows.length} 筆)</span></div>
+      <div class="status-left">${escapeHtml(af.eventName)} <span class="status-badge">(${af.rows.length} 筆)</span></div>
       <button class="btn-remove" onclick="removeActivityFile(${i})">移除</button>
     </div>`;
   });
@@ -522,7 +522,7 @@ function renderMappingSection() {
   section.style.display = '';
   list.innerHTML = names.map(name => {
     const info = matchResults.byName[name];
-    const icon = info.orderType === 'ticket' ? '🎫' : '🛍️';
+    const label = info.orderType === 'ticket' ? '票券' : '周邊';
     const count = info.rows.length;
 
     // Attempt auto-attribution
@@ -538,7 +538,7 @@ function renderMappingSection() {
 
     let badge = '';
     if (autoEvent) badge = '<span class="status-badge" style="color:var(--success)">自動對應</span>';
-    else if (isAmbiguous) badge = '<span class="status-badge" style="color:var(--danger,#e74c3c)">需手動確認</span>';
+    else if (isAmbiguous) badge = '<span class="status-badge" style="color:var(--red)">需手動確認</span>';
 
     const options = showsList.map(s => {
       const selected = autoEvent === s.name ? ' selected' : '';
@@ -552,7 +552,7 @@ function renderMappingSection() {
     }
 
     return `<div class="mapping-row">
-      <span>${icon} ${escapeHtml(name)} <span class="status-badge">(${count} 筆)</span> ${badge}</span>
+      <span>[${label}] ${escapeHtml(name)} <span class="status-badge">(${count} 筆)</span> ${badge}</span>
       <span class="mapping-arrow">→</span>
       <select id="mapping-${CSS.escape(name)}" onchange="renderDashboard()">
         <option value="">— 選擇專案 —</option>
@@ -602,7 +602,7 @@ function renderDashboard() {
     if (plan149.length) detail.push(`149元×${plan149.length}`);
     if (plan1699.length) detail.push(`1,699元×${plan1699.length}`);
     breakdownHtml += `<tr>
-      <td>💳 付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
+      <td>付費會員（${detail.join('、')}）</td><td>${membership.length}</td>
       <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
     groups.push({ showName: '看我笑話會員', category: '付費會員', amount: mAmt, fee: mFee, notes: `應援匯入：${detail.join('、')}` });
   }
@@ -627,7 +627,7 @@ function renderDashboard() {
       const eNet = allTicketRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
       const typeStr = pg.ticket.map(t => `${t.name}×${t.rows.length}`).join('、');
       breakdownHtml += `<tr>
-        <td>🎫 ${escapeHtml(projectName)}</td><td>${allTicketRows.length}</td>
+        <td>${escapeHtml(projectName)}（票券）</td><td>${allTicketRows.length}</td>
         <td class="amount-positive">$${eAmt.toLocaleString()}</td><td class="amount-negative">-$${eFee.toLocaleString()}</td><td>$${eNet.toLocaleString()}</td></tr>`;
       groups.push({ showName: projectName, category: '演出票房', amount: eAmt, fee: eFee, notes: `應援匯入：${typeStr}` });
     }
@@ -638,7 +638,7 @@ function renderDashboard() {
       const mNet = allMerchRows.reduce((s, r) => s + (Number(r['實際收取金額']) || 0), 0);
       const typeStr = pg.merchandise.map(m => `${m.name}×${m.rows.length}`).join('、');
       breakdownHtml += `<tr>
-        <td>🛍️ ${escapeHtml(projectName)}</td><td>${allMerchRows.length}</td>
+        <td>${escapeHtml(projectName)}（周邊）</td><td>${allMerchRows.length}</td>
         <td class="amount-positive">$${mAmt.toLocaleString()}</td><td class="amount-negative">-$${mFee.toLocaleString()}</td><td>$${mNet.toLocaleString()}</td></tr>`;
       groups.push({ showName: projectName, category: '周邊商品', amount: mAmt, fee: mFee, notes: `應援匯入：${typeStr}` });
     }
@@ -646,7 +646,7 @@ function renderDashboard() {
 
   if (refunds.length > 0) {
     const rAmt = refunds.reduce((s, r) => s + (Number(r['退款金額']) || 0), 0);
-    breakdownHtml += `<tr><td>↩️ 退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
+    breakdownHtml += `<tr><td>退款（不匯入）</td><td>${refunds.length}</td><td colspan="3" class="amount-negative">-$${rAmt.toLocaleString()}</td></tr>`;
   }
 
   breakdownHtml += `<tr class="totals-row"><td>合計</td><td>${allRows.length}</td>
@@ -751,7 +751,7 @@ async function doImport() {
   try {
     const res = await API.batchImportTransactions(transactions);
     if (res.success) {
-      btn.textContent = `✅ 已匯入 ${res.data.count} 筆`;
+      btn.textContent = `已匯入 ${res.data.count} 筆`;
       btn.classList.add('btn-secondary');
       btn.classList.remove('btn-primary');
     } else {

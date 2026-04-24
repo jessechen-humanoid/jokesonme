@@ -18,14 +18,15 @@ Income categories (6):
 5. 品牌贊助
 6. 其他收入
 
-Expense categories (7):
+Expense categories (8):
 1. 場地租借
 2. 工作人員
 3. 設備道具
 4. 剪輯製作
 5. 行政雜支
 6. 平台手續
-7. 其他支出
+7. 稅務預留
+8. 其他支出
 
 #### Scenario: Income categories displayed when income mode selected
 
@@ -35,23 +36,35 @@ Expense categories (7):
 #### Scenario: Expense categories displayed when expense mode selected
 
 - **WHEN** user selects "支出" mode on the transaction form
-- **THEN** the category dropdown displays exactly 7 expense categories
+- **THEN** the category dropdown displays exactly 8 expense categories
+
+#### Scenario: 稅務預留 category available for manual selection
+
+- **WHEN** user opens the expense category dropdown
+- **THEN** "稅務預留" appears as one of the selectable options
 
 
 <!-- @trace
-source: platform-v2
-updated: 2026-03-17
+source: tax-reserve-and-fund-payment
+updated: 2026-04-24
 code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
+  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260412_應援訂單_85筆.csv
   - js/api.js
+  - js/analytics.js
+  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
+  - js/import.js
+  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
+  - js/transaction.js
+  - .DS_Store
   - js/shared.js
   - gas/Code.gs
+  - index.html
+  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
+  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
   - css/style.css
+  - RAW DATA/20260412_應援票券訂單_515筆.csv
+  - import.html
 -->
 
 ---
