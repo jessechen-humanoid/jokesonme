@@ -84,6 +84,16 @@ const API = {
     return this.post('batchImportTransactions', { transactions });
   },
 
+  // Common fund summary (includes fundReserved / fundUsed / fundBalance)
+  getCommonFund() {
+    return this.get('getCommonFund');
+  },
+
+  // One-time migration: 稅務預留 + 共同基金支付
+  migrateTaxAndFundSetup() {
+    return this.get('migrateTaxAndFundSetup');
+  },
+
   // Setup
   setup() {
     return this.get('setup');

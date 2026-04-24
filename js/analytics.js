@@ -45,10 +45,13 @@ async function loadAnalytics() {
   // ---- Common Fund (共同基金) ----
   const COMMON_FUND_RATE = 0.2;
   const isShared = t => !t.excludedMembers || t.excludedMembers.trim() === '';
-  const commonIncome = transactions.filter(t => t.amount > 0 && isShared(t)).reduce((s, t) => s + t.amount, 0);
-  const commonExpense = transactions.filter(t => t.amount < 0 && isShared(t)).reduce((s, t) => s + t.amount, 0);
+  // paidByFund 支出不計入共同支出（避免雙扣）；保留用於計算基金已動用
+  const commonIncome = transactions.filter(t => t.amount > 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
+  const commonExpense = transactions.filter(t => t.amount < 0 && isShared(t) && !t.paidByFund).reduce((s, t) => s + t.amount, 0);
   const commonNetProfit = commonIncome + commonExpense;
-  const commonFund = commonNetProfit * COMMON_FUND_RATE;
+  const fundReserved = commonNetProfit * COMMON_FUND_RATE;
+  const fundUsed = transactions.filter(t => t.amount < 0 && t.paidByFund).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const fundBalance = fundReserved - fundUsed;
   const distributableCommonNet = commonNetProfit * (1 - COMMON_FUND_RATE);
 
   summaryEl.innerHTML = `
@@ -68,7 +71,7 @@ async function loadAnalytics() {
     </div>
   `;
 
-  renderCommonFund(commonIncome, commonExpense, commonNetProfit, commonFund, document.getElementById('common-fund'));
+  renderCommonFund(commonIncome, commonExpense, commonNetProfit, fundReserved, fundUsed, fundBalance, document.getElementById('common-fund'));
 
   renderShowPnl(transactions, showPnlEl);
 
@@ -86,7 +89,7 @@ async function loadAnalytics() {
 
 // ---- Common Fund ----
 
-function renderCommonFund(income, expense, netProfit, fund, el) {
+function renderCommonFund(income, expense, netProfit, fundReserved, fundUsed, fundBalance, el) {
   if (!el) return;
   el.innerHTML = `
     <div class="card">
@@ -105,8 +108,16 @@ function renderCommonFund(income, expense, netProfit, fund, el) {
           <div class="stat-value ${netProfit >= 0 ? 'positive' : 'negative'}">${formatAmount(netProfit)}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">提撥 20%</div>
-          <div class="stat-value ${fund >= 0 ? 'positive' : 'negative'}">${formatAmount(fund)}</div>
+          <div class="stat-label">提撥 20%（累積）</div>
+          <div class="stat-value ${fundReserved >= 0 ? 'positive' : 'negative'}">${formatAmount(fundReserved)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">基金已動用</div>
+          <div class="stat-value negative">${formatAmount(-fundUsed)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">基金餘額</div>
+          <div class="stat-value ${fundBalance >= 0 ? 'positive' : 'negative'}">${formatAmount(fundBalance)}</div>
         </div>
       </div>
     </div>
