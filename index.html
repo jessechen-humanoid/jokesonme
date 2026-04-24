@@ -35,6 +35,12 @@
         <label class="form-label">備註（選填）</label>
         <input type="text" class="form-control" id="tx-notes" placeholder="例：三創場地4月">
       </div>
+      <div class="form-group" id="tx-fund-group" style="display:none;">
+        <label class="checkbox-item" style="display:inline-flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="tx-paid-by-fund">
+          <span>由共同基金支付（不計入共同支出、不影響成員分配）</span>
+        </label>
+      </div>
       <div class="form-group" id="tx-allocation-group">
         <label class="form-label">分擔成員</label>
         <div id="tx-allocation-container"></div>
