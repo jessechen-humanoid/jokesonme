@@ -126,6 +126,24 @@ function renderCommonFund(income, expense, netProfit, fundReserved, fundUsed, fu
 
 // ---- Per-show P&L ----
 
+let showPnlSortState = { column: 'net', direction: 'desc' };
+
+function getDefaultDirection(column) {
+  return column === 'name' ? 'asc' : 'desc';
+}
+
+function sortShows(shows, sortState) {
+  const { column, direction } = sortState;
+  const mul = direction === 'asc' ? 1 : -1;
+  const sorted = shows.slice();
+  sorted.sort((a, b) => {
+    if (column === 'name') return a.name.localeCompare(b.name, 'zh-Hant') * mul;
+    if (column === 'expense') return (Math.abs(a.expense) - Math.abs(b.expense)) * mul;
+    return (a[column] - b[column]) * mul;
+  });
+  return sorted;
+}
+
 function renderShowPnl(transactions, el) {
   const showMap = {};
   transactions.forEach(t => {
@@ -142,30 +160,63 @@ function renderShowPnl(transactions, el) {
     income: acc.income + s.income, expense: acc.expense + s.expense, net: acc.net + s.net,
   }), { income: 0, expense: 0, net: 0 });
 
-  el.innerHTML = `
-    <div class="card">
-      <div class="card-title">各專案損益</div>
-      <div class="table-wrapper"><table>
-        <thead><tr>
-          <th>專案</th><th style="text-align:right">收入</th><th style="text-align:right">支出</th><th style="text-align:right">淨利</th>
-        </tr></thead>
-        <tbody>
-          ${shows.map(s => `<tr>
-            <td>${escapeHtml(s.name)}</td>
-            <td class="amount-positive" style="text-align:right">${formatAmount(s.income)}</td>
-            <td class="amount-negative" style="text-align:right">${formatAmount(s.expense)}</td>
-            <td class="${s.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(s.net)}</td>
-          </tr>`).join('')}
-          <tr class="totals-row">
-            <td>合計</td>
-            <td class="amount-positive" style="text-align:right">${formatAmount(totals.income)}</td>
-            <td class="amount-negative" style="text-align:right">${formatAmount(totals.expense)}</td>
-            <td class="${totals.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">${formatAmount(totals.net)}</td>
-          </tr>
-        </tbody>
-      </table></div>
-    </div>
-  `;
+  function renderHeader(key, label, align) {
+    const active = showPnlSortState.column === key;
+    const arrow = active ? (showPnlSortState.direction === 'asc' ? ' ▲' : ' ▼') : '';
+    const style = [
+      align === 'right' ? 'text-align:right' : '',
+      'cursor:pointer',
+      'user-select:none',
+      active ? 'font-weight:600' : '',
+    ].filter(Boolean).join(';');
+    return `<th data-sort-key="${key}" style="${style}">${label}${arrow}</th>`;
+  }
+
+  function rerender() {
+    const sorted = sortShows(shows, showPnlSortState);
+    el.innerHTML = `
+      <div class="card">
+        <div class="card-title">各專案損益</div>
+        <div class="table-wrapper"><table>
+          <thead><tr>
+            ${renderHeader('name', '專案', 'left')}
+            ${renderHeader('income', '收入', 'right')}
+            ${renderHeader('expense', '支出', 'right')}
+            ${renderHeader('net', '淨利', 'right')}
+          </tr></thead>
+          <tbody>
+            ${sorted.map(s => `<tr>
+              <td>${escapeHtml(s.name)}</td>
+              <td class="amount-positive" style="text-align:right">${formatAmount(s.income)}</td>
+              <td class="amount-negative" style="text-align:right">${formatAmount(s.expense)}</td>
+              <td class="${s.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(s.net)}</td>
+            </tr>`).join('')}
+            <tr class="totals-row">
+              <td>合計</td>
+              <td class="amount-positive" style="text-align:right">${formatAmount(totals.income)}</td>
+              <td class="amount-negative" style="text-align:right">${formatAmount(totals.expense)}</td>
+              <td class="${totals.net >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">${formatAmount(totals.net)}</td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>
+    `;
+    el.querySelectorAll('th[data-sort-key]').forEach(th => {
+      th.addEventListener('click', () => handleSortClick(th.dataset.sortKey));
+    });
+  }
+
+  function handleSortClick(column) {
+    if (showPnlSortState.column === column) {
+      showPnlSortState.direction = showPnlSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      showPnlSortState.column = column;
+      showPnlSortState.direction = getDefaultDirection(column);
+    }
+    rerender();
+  }
+
+  rerender();
 }
 
 // ---- Pie Chart ----
