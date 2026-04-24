@@ -22,7 +22,7 @@
 
 - [x] 4.1 更新 `--red: #B04237`、`--green: #4A7C59`、`--yellow: #B89056`，落實 Semantic colour exception for financial state 與 Decision: 降飽和語義色的具體取值
 - [x] 4.2 更新對應 light 變數 `--red-light` / `--green-light` / `--yellow-light` 為 alpha 0.1 版本
-- [ ] 4.3 驗證淨利正負、收支標籤、未結清 / 已結清 / 部分結清 badge、預算警示等所有使用點呈現正確
+- [x] 4.3 驗證淨利正負、收支標籤、未結清 / 已結清 / 部分結清 badge、預算警示等所有使用點呈現正確
 - [x] 4.4 採 Decision: 語義色保留（D2 方案）而非純 MUJI 單色——確認語義色僅用於功能提示，未做裝飾用途
 
 ## 5. 字體與 Typography
@@ -48,6 +48,6 @@
 
 ## 9. 驗證
 
-- [ ] 9.1 本地瀏覽 8 個頁面（`index.html`、`analytics.html`、`forecast.html`、`checklist.html`、`import.html`、`opentix.html`、`opentix-analytics.html`、`demo.html`），肉眼驗收
-- [ ] 9.2 Jesse 視覺審查降飽和紅綠黃是否協調，必要時微調 hex 值
-- [ ] 9.3 確認沒有殘留的 `rgba(255,255,255,...)` 毛玻璃色、沒有漸層背景、沒有 `box-shadow`
+- [x] 9.1 本地瀏覽 8 個頁面（`index.html`、`analytics.html`、`forecast.html`、`checklist.html`、`import.html`、`opentix.html`、`opentix-analytics.html`、`demo.html`），肉眼驗收
+- [x] 9.2 Jesse 視覺審查降飽和紅綠黃是否協調，必要時微調 hex 值
+- [x] 9.3 確認沒有殘留的 `rgba(255,255,255,...)` 毛玻璃色、沒有漸層背景、沒有 `box-shadow`
