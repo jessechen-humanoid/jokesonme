@@ -28,42 +28,55 @@ code:
 ---
 ### Requirement: Pre-loaded default shows
 
-The system SHALL pre-populate the show list with the following 13 shows:
+The system SHALL pre-populate the show list with the following 14 shows:
 
 1. 會員與其他收支
 2. 周邊商品收支
-3. 看我笑話第 2 季 Opening Party
-4. 看我笑話 4 月號
-5. 看我笑話 5 月號
-6. 看我笑話 6 月號
-7. 看我笑話 7 月號
-8. 看我笑話 8 月號
-9. 看我笑話 9 月號
-10. 看我笑話 10 月號
-11. 看我笑話 11 月號
-12. 看我笑話 12 月號
-13. 看我笑話第 2 季 After Party
+3. 共同基金支出
+4. 看我笑話第 2 季 Opening Party
+5. 看我笑話 4 月號
+6. 看我笑話 5 月號
+7. 看我笑話 6 月號
+8. 看我笑話 7 月號
+9. 看我笑話 8 月號
+10. 看我笑話 9 月號
+11. 看我笑話 10 月號
+12. 看我笑話 11 月號
+13. 看我笑話 12 月號
+14. 看我笑話第 2 季 After Party
 
 #### Scenario: Default shows available on first use
 
 - **WHEN** user opens the platform for the first time
-- **THEN** all 13 default shows are available in the show dropdown
+- **THEN** all 14 default shows are available in the show dropdown
+
+#### Scenario: Virtual show "共同基金支出" is selectable
+
+- **WHEN** user opens the show dropdown on the transaction page
+- **THEN** "共同基金支出" is listed as a selectable option
 
 
 <!-- @trace
-source: platform-v2
-updated: 2026-03-17
+source: tax-reserve-and-fund-payment
+updated: 2026-04-24
 code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
+  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260412_應援訂單_85筆.csv
   - js/api.js
+  - js/analytics.js
+  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
+  - js/import.js
+  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
+  - js/transaction.js
+  - .DS_Store
   - js/shared.js
   - gas/Code.gs
+  - index.html
+  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
+  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
   - css/style.css
+  - RAW DATA/20260412_應援票券訂單_515筆.csv
+  - import.html
 -->
 
 ---

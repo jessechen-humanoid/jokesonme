@@ -6,57 +6,55 @@
   <title>功能展示 — 表演團體財務管理平台</title>
   <style>
 /* ============================================================
-   看我笑話工作室 — Liquid Glass Style (inlined for standalone demo)
+   看我笑話工作室 — MUJI Design System (inlined for standalone demo)
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --white: #FFFFFF; --bg: #F5F5F5; --text: #2D2D2D; --text-light: #777777;
-  --border: rgba(255,255,255,0.3); --border-light: rgba(255,255,255,0.15); --border-solid: #E0E0E0;
-  --red: #E74C3C; --yellow: #F39C12; --green: #27AE60;
-  --red-light: rgba(231,76,60,0.1); --yellow-light: rgba(243,156,18,0.1); --green-light: rgba(39,174,96,0.1);
-  --accent: #5B6EF5;
-  --shadow: 0 8px 32px rgba(0,0,0,0.08); --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
-  --radius: 16px; --radius-sm: 10px;
-  --glass-bg: rgba(255,255,255,0.55); --glass-border: 1px solid rgba(255,255,255,0.3); --glass-blur: blur(20px);
+  --white: #ffffff; --bg: #fafaf8; --bg-secondary: #f6f6f3; --text: #1a1a1a; --text-light: #6b6b6b; --text-meta: #a0a09b;
+  --border: #e8e8e5; --border-hover: #c8c8c5; --border-solid: #e8e8e5;
+  --red: #B04237; --yellow: #B89056; --green: #4A7C59;
+  --red-light: rgba(176,66,55,0.1); --yellow-light: rgba(184,144,86,0.1); --green-light: rgba(74,124,89,0.1);
+  --accent: #c9a96e;
+  --radius: 0; --radius-sm: 0;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%); background-attachment: fixed; color: var(--text); line-height: 1.6; min-height: 100vh; }
-.nav { background: rgba(255,255,255,0.6); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border-bottom: var(--glass-border); padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+.nav { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; }
 .nav-brand { font-size: 16px; font-weight: 600; color: var(--text); text-decoration: none; margin-right: 40px; white-space: nowrap; }
 .nav-links { display: flex; gap: 0; height: 100%; }
 .nav-link { display: flex; align-items: center; padding: 0 20px; height: 100%; text-decoration: none; color: var(--text-light); font-size: 14px; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
 .nav-link:hover { color: var(--text); }
-.nav-link.active { color: var(--accent); border-bottom-color: var(--accent); }
+.nav-link.active { color: var(--text); border-bottom-color: var(--accent); }
 .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
 .page-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text); }
-.card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
-.card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+.card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
 .form-group { margin-bottom: 16px; }
-.form-label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
-.form-control { width: 100%; padding: 10px 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-family: inherit; }
+.form-label { display: block; font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 400; }
+.form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: var(--white); font-family: inherit; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .show-selector { margin-bottom: 24px; }
-.show-select { padding: 10px 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); min-width: 280px; font-family: inherit; }
-.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; cursor: pointer; }
+.show-select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: var(--white); min-width: 280px; font-family: inherit; }
+.btn { padding: 10px 20px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; cursor: pointer; background: var(--white); color: var(--text); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: var(--accent); color: var(--white); }
+.btn-primary { background: var(--text); color: var(--white); border-color: var(--text); }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn-settle { padding: 4px 10px; font-size: 12px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); background: rgba(255,255,255,0.6); color: var(--text-light); font-family: inherit; }
-.btn-settle.settled { background: var(--green-light); color: var(--green); border-color: rgba(39,174,96,0.3); }
+.btn-settle { padding: 4px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text-light); font-family: inherit; }
+.btn-settle.settled { background: var(--green-light); color: var(--green); border-color: var(--green); }
 .table-wrapper { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 500; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.08); }
-td { padding: 10px 12px; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+th { text-align: left; padding: 10px 12px; font-size: 12px; font-weight: 400; color: var(--text-light); border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
-tr.unsettled { background: rgba(255,248,230,0.5); }
+tr.unsettled { background: var(--yellow-light); }
 .amount-positive { color: var(--green); font-weight: 600; }
 .amount-negative { color: var(--red); font-weight: 600; }
-tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.3); }
+tr.totals-row td { font-weight: 600; border-top: 1px solid var(--border-hover); background: var(--bg-secondary); }
 .checklist-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.checklist-table th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 500; color: var(--text-light); border-bottom: 1px solid rgba(0,0,0,0.08); }
-.checklist-table td { padding: 8px 12px; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+.checklist-table th { text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 400; color: var(--text-light); border-bottom: 1px solid var(--border); }
+.checklist-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .checklist-table tr:last-child td { border-bottom: none; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: var(--glass-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; text-align: center; }
+.stat-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
 .stat-label { font-size: 12px; color: var(--text-light); margin-bottom: 8px; }
 .stat-value { font-size: 24px; font-weight: 600; }
 .stat-value.positive { color: var(--green); }
@@ -65,23 +63,18 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
 .pie-chart-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pie-legend { width: 100%; font-size: 13px; }
 .pie-legend-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-.pie-legend-color { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.pie-legend-color { width: 12px; height: 12px; border-radius: 0; flex-shrink: 0; }
 .pie-legend-label { flex: 1; }
 .pie-legend-value { text-align: right; color: var(--text-light); font-size: 12px; }
 .checkbox-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.checkbox-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.08); border-radius: var(--radius-sm); font-size: 13px; }
-.checkbox-item input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
-.toggle-group { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
-.toggle-btn { padding: 8px 24px; border: none; background: rgba(255,255,255,0.5); color: var(--text-light); font-size: 14px; font-family: inherit; }
-.toggle-btn:not(:last-child) { border-right: 1px solid rgba(0,0,0,0.1); }
+.checkbox-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; }
+.checkbox-item input[type="checkbox"] { accent-color: var(--text); width: 16px; height: 16px; }
+.toggle-group { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
+.toggle-btn { padding: 8px 24px; border: none; background: var(--white); color: var(--text-light); font-size: 14px; font-family: inherit; }
+.toggle-btn:not(:last-child) { border-right: 1px solid var(--border); }
 .toggle-btn.active[data-type="expense"] { background: var(--red); color: var(--white); }
 .toggle-btn.active[data-type="income"] { background: var(--green); color: var(--white); }
 .form-actions { display: flex; gap: 8px; align-items: center; }
-@supports not (backdrop-filter: blur(20px)) {
-  .nav { background: rgba(255,255,255,0.95); }
-  .card, .stat-card { background: rgba(255,255,255,0.92); }
-  .form-control, .show-select { background: rgba(255,255,255,0.95); }
-}
 @media (max-width: 768px) {
   .nav { padding: 0 16px; } .nav-brand { margin-right: 16px; font-size: 14px; } .nav-link { padding: 0 12px; font-size: 13px; }
   .container { padding: 20px 16px; } .form-row { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: 1fr; }
@@ -89,51 +82,36 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
 }
     /* Demo annotation callouts */
     .demo-banner {
-      background: linear-gradient(135deg, var(--accent), #7B68EE);
-      color: #fff;
+      background: var(--bg-secondary);
+      color: var(--text-light);
       text-align: center;
       padding: 12px 24px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 400;
       letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
     }
 
     .annotation {
       position: relative;
-      background: rgba(91, 110, 245, 0.08);
-      border: 1.5px solid rgba(91, 110, 245, 0.25);
-      border-radius: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 0;
       padding: 14px 18px;
       margin-bottom: 16px;
       font-size: 13px;
       line-height: 1.6;
     }
 
-    .annotation::before {
-      content: '💡';
-      position: absolute;
-      top: -10px;
-      left: 16px;
-      background: #fff;
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-
     .annotation-title {
       font-weight: 600;
-      color: var(--accent);
+      color: var(--text);
       margin-bottom: 4px;
       font-size: 13px;
     }
 
     .annotation-text {
-      color: var(--text);
+      color: var(--text-light);
       font-size: 12px;
     }
 
@@ -164,28 +142,28 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
       width: 50%;
       height: 50%;
       border-radius: 50%;
-      background: rgba(255,255,255,0.85);
+      background: var(--white);
     }
 
     .pie-income {
       background: conic-gradient(
-        #1B7A3D 0% 35%,
-        #27AE60 35% 55%,
-        #52C77E 55% 72%,
-        #7ED9A0 72% 85%,
-        #A8E6BF 85% 95%,
-        #D0F0DD 95% 100%
+        #2d4d37 0% 35%,
+        #4A7C59 35% 55%,
+        #6a9879 55% 72%,
+        #8fb29a 72% 85%,
+        #b4ccba 85% 95%,
+        #d9e6dc 95% 100%
       );
     }
 
     .pie-expense {
       background: conic-gradient(
-        #A93226 0% 30%,
-        #E74C3C 30% 52%,
-        #EF7B6E 52% 68%,
-        #F4A39A 68% 82%,
-        #F8C9C4 82% 93%,
-        #FCE4E1 93% 100%
+        #6b2820 0% 30%,
+        #B04237 30% 52%,
+        #c56d62 52% 68%,
+        #d6958d 68% 82%,
+        #e6bdb8 82% 93%,
+        #f2dbd7 93% 100%
       );
     }
 
@@ -193,9 +171,9 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
     .demo-status {
       display: inline-block;
       padding: 3px 10px;
-      border-radius: 12px;
+      border-radius: 0;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 400;
       color: #fff;
     }
   </style>
@@ -203,7 +181,7 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
 <body>
   <!-- Demo Banner -->
   <div class="demo-banner">
-    ✦ 功能展示模式 — 以下為模擬資料，非真實財務數據 ✦
+    功能展示模式 — 以下為模擬資料，非真實財務數據
   </div>
 
   <!-- Nav (Tab Switcher) -->
@@ -491,32 +469,32 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
             <div class="pie-placeholder pie-income"></div>
             <div class="pie-legend">
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#1B7A3D"></div>
+                <div class="pie-legend-color" style="background:#2d4d37"></div>
                 <span class="pie-legend-label">演出票房</span>
                 <span class="pie-legend-value">$260,000 (35.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#27AE60"></div>
+                <div class="pie-legend-color" style="background:#4A7C59"></div>
                 <span class="pie-legend-label">付費會員</span>
                 <span class="pie-legend-value">$148,000 (20.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#52C77E"></div>
+                <div class="pie-legend-color" style="background:#6a9879"></div>
                 <span class="pie-legend-label">商演合作</span>
                 <span class="pie-legend-value">$126,000 (17.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#7ED9A0"></div>
+                <div class="pie-legend-color" style="background:#8fb29a"></div>
                 <span class="pie-legend-label">品牌贊助</span>
                 <span class="pie-legend-value">$96,000 (13.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#A8E6BF"></div>
+                <div class="pie-legend-color" style="background:#b4ccba"></div>
                 <span class="pie-legend-label">周邊商品</span>
                 <span class="pie-legend-value">$74,000 (10.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#D0F0DD"></div>
+                <div class="pie-legend-color" style="background:#d9e6dc"></div>
                 <span class="pie-legend-label">其他收入</span>
                 <span class="pie-legend-value">$38,000 (5.0%)</span>
               </div>
@@ -529,32 +507,32 @@ tr.totals-row td { font-weight: 600; border-top: 2px solid rgba(0,0,0,0.1); back
             <div class="pie-placeholder pie-expense"></div>
             <div class="pie-legend">
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#A93226"></div>
+                <div class="pie-legend-color" style="background:#6b2820"></div>
                 <span class="pie-legend-label">場地租借</span>
                 <span class="pie-legend-value">$89,500 (30.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#E74C3C"></div>
+                <div class="pie-legend-color" style="background:#B04237"></div>
                 <span class="pie-legend-label">工作人員</span>
                 <span class="pie-legend-value">$65,700 (22.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#EF7B6E"></div>
+                <div class="pie-legend-color" style="background:#c56d62"></div>
                 <span class="pie-legend-label">設備道具</span>
                 <span class="pie-legend-value">$47,800 (16.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#F4A39A"></div>
+                <div class="pie-legend-color" style="background:#d6958d"></div>
                 <span class="pie-legend-label">剪輯製作</span>
                 <span class="pie-legend-value">$41,800 (14.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#F8C9C4"></div>
+                <div class="pie-legend-color" style="background:#e6bdb8"></div>
                 <span class="pie-legend-label">行政雜支</span>
                 <span class="pie-legend-value">$32,800 (11.0%)</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-color" style="background:#FCE4E1"></div>
+                <div class="pie-legend-color" style="background:#f2dbd7"></div>
                 <span class="pie-legend-label">平台手續</span>
                 <span class="pie-legend-value">$20,900 (7.0%)</span>
               </div>

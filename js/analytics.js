@@ -2,8 +2,8 @@
 // 看我笑話工作室 — 財務分析頁
 // ============================================================
 
-const PIE_COLORS_INCOME = ['#1B7A3D', '#27AE60', '#52C77E', '#7ED9A0', '#A8E6BF', '#D0F0DD'];
-const PIE_COLORS_EXPENSE = ['#A93226', '#E74C3C', '#EF7B6E', '#F4A39A', '#F8C9C4', '#FCE4E1'];
+const PIE_COLORS_INCOME = ['#2d4d37', '#4A7C59', '#6a9879', '#8fb29a', '#b4ccba', '#d9e6dc'];
+const PIE_COLORS_EXPENSE = ['#6b2820', '#B04237', '#c56d62', '#d6958d', '#e6bdb8', '#f2dbd7'];
 
 (async function () {
   checkAuth();
@@ -233,7 +233,7 @@ function drawPie(canvasId, data, colors) {
   // White center for donut effect
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillStyle = '#ffffff';
   ctx.fill();
 }
 

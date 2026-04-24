@@ -1,5 +1,5 @@
 /* ============================================================
-   看我笑話工作室 — Liquid Glass Style
+   看我笑話工作室 — MUJI Design System
    ============================================================ */
 
 /* Reset & Base */
@@ -10,44 +10,38 @@
 }
 
 :root {
-  --white: #FFFFFF;
-  --bg: #F5F5F5;
-  --text: #2D2D2D;
-  --text-light: #777777;
-  --border: rgba(255, 255, 255, 0.3);
-  --border-light: rgba(255, 255, 255, 0.15);
-  --border-solid: #E0E0E0;
-  --red: #E74C3C;
-  --yellow: #F39C12;
-  --green: #27AE60;
-  --red-light: rgba(231, 76, 60, 0.1);
-  --yellow-light: rgba(243, 156, 18, 0.1);
-  --green-light: rgba(39, 174, 96, 0.1);
-  --accent: #5B6EF5;
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
-  --radius: 16px;
-  --radius-sm: 10px;
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.3);
-  --glass-blur: blur(20px);
+  --white: #ffffff;
+  --bg: #fafaf8;
+  --bg-secondary: #f6f6f3;
+  --text: #1a1a1a;
+  --text-light: #6b6b6b;
+  --text-meta: #a0a09b;
+  --border: #e8e8e5;
+  --border-hover: #c8c8c5;
+  --border-solid: #e8e8e5;
+  --red: #B04237;
+  --yellow: #B89056;
+  --green: #4A7C59;
+  --red-light: rgba(176, 66, 55, 0.1);
+  --yellow-light: rgba(184, 144, 86, 0.1);
+  --green-light: rgba(74, 124, 89, 0.1);
+  --accent: #c9a96e;
+  --radius: 0;
+  --radius-sm: 0;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-  background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%);
-  background-attachment: fixed;
+  background: var(--bg);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
 }
 
-/* Navigation — Frosted Glass */
+/* Navigation — Flat */
 .nav {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: var(--glass-border);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   padding: 0 24px;
   display: flex;
   align-items: center;
@@ -89,7 +83,7 @@ body {
 }
 
 .nav-link.active {
-  color: var(--accent);
+  color: var(--text);
   border-bottom-color: var(--accent);
 }
 
@@ -107,14 +101,11 @@ body {
   color: var(--text);
 }
 
-/* Card — Frosted Glass */
+/* Card — Flat */
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: 24px;
   margin-bottom: 20px;
 }
@@ -125,7 +116,7 @@ body {
   color: var(--text);
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Forms */
@@ -138,27 +129,28 @@ body {
   font-size: 12px;
   color: var(--text-light);
   margin-bottom: 6px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .form-control {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--white);
+  transition: border-color 0.2s;
   font-family: inherit;
+}
+
+.form-control:hover {
+  border-color: var(--border-hover);
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(91, 110, 245, 0.1);
 }
 
 .form-row {
@@ -180,15 +172,17 @@ body {
 
 .show-select {
   padding: 10px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--white);
   min-width: 280px;
   font-family: inherit;
+}
+
+.show-select:hover {
+  border-color: var(--border-hover);
 }
 
 .show-select:focus {
@@ -199,37 +193,40 @@ body {
 /* Buttons */
 .btn {
   padding: 10px 20px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  background: var(--white);
+  color: var(--text);
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .btn:hover {
-  opacity: 0.88;
-}
-
-.btn:active {
-  transform: scale(0.98);
+  border-color: var(--border-hover);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--text);
   color: var(--white);
+  border-color: var(--text);
+}
+
+.btn-primary:hover {
+  background: #000;
+  border-color: #000;
 }
 
 .btn-secondary {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--bg-secondary);
   color: var(--text);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
 }
 
 .btn-sm {
@@ -240,37 +237,36 @@ body {
 .btn-settle {
   padding: 4px 10px;
   font-size: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--white);
   cursor: pointer;
   color: var(--text-light);
   font-family: inherit;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-settle:hover {
+  border-color: var(--border-hover);
 }
 
 .btn-settle.settled {
   background: var(--green-light);
   color: var(--green);
-  border-color: rgba(39, 174, 96, 0.3);
+  border-color: var(--green);
 }
 
 /* Status badges */
 .status {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--white);
   cursor: pointer;
   border: none;
   font-family: inherit;
-  transition: transform 0.1s;
-}
-
-.status:active {
-  transform: scale(0.95);
 }
 
 .status-未開始 {
@@ -300,14 +296,14 @@ th {
   text-align: left;
   padding: 10px 12px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-light);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -316,7 +312,7 @@ tr:last-child td {
 }
 
 tr.unsettled {
-  background: rgba(255, 248, 230, 0.5);
+  background: var(--yellow-light);
 }
 
 .amount-positive {
@@ -332,8 +328,8 @@ tr.unsettled {
 /* Totals row */
 tr.totals-row td {
   font-weight: 600;
-  border-top: 2px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.3);
+  border-top: 1px solid var(--border-hover);
+  background: var(--bg-secondary);
 }
 
 /* Checklist — Table Layout */
@@ -351,14 +347,14 @@ tr.totals-row td {
   text-align: left;
   padding: 8px 12px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-light);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .checklist-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -374,7 +370,7 @@ tr.totals-row td {
 
 .checklist-table .item-name input {
   border: none;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid var(--border);
   padding: 2px 4px;
   font-size: 14px;
   font-family: inherit;
@@ -390,29 +386,29 @@ tr.totals-row td {
 
 .checklist-table select {
   padding: 4px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--white);
   width: 100%;
 }
 
 .notes-row td {
   padding-top: 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
 }
 
 .notes-field {
   width: 100%;
   padding: 6px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--white);
   resize: none;
 }
 
@@ -425,12 +421,9 @@ tr.totals-row td {
 }
 
 .stat-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   padding: 20px;
   text-align: center;
 }
@@ -474,14 +467,14 @@ tr.totals-row td {
 .breakdown-track {
   flex: 1;
   height: 20px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 10px;
+  background: var(--bg-secondary);
+  border-radius: 0;
   overflow: hidden;
 }
 
 .breakdown-fill {
   height: 100%;
-  border-radius: 10px;
+  border-radius: 0;
   transition: width 0.3s;
 }
 
@@ -536,7 +529,7 @@ tr.totals-row td {
 .pie-legend-color {
   width: 12px;
   height: 12px;
-  border-radius: 3px;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
@@ -569,7 +562,7 @@ tr.totals-row td {
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #E8E0F0 0%, #D6E4F0 35%, #E0EAF0 65%, #F0E4E8 100%);
+  background: var(--bg);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -577,12 +570,9 @@ tr.totals-row td {
 }
 
 .auth-box {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
   padding: 40px 32px;
   width: 100%;
   max-width: 360px;
@@ -631,20 +621,21 @@ tr.totals-row td {
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .checkbox-item:hover {
-  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--border-hover);
+  background: var(--bg-secondary);
 }
 
 .checkbox-item input[type="checkbox"] {
-  accent-color: var(--accent);
+  accent-color: var(--text);
   width: 16px;
   height: 16px;
   cursor: pointer;
@@ -662,10 +653,10 @@ tr.totals-row td {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(45, 45, 45, 0.92);
-  color: #fff;
+  background: var(--text);
+  color: var(--white);
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 12px;
   white-space: nowrap;
   z-index: 10;
@@ -681,9 +672,7 @@ tr.totals-row td {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(26, 26, 26, 0.4);
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -694,15 +683,12 @@ tr.totals-row td {
 }
 
 .modal {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
 }
 
 .modal-title {
@@ -723,7 +709,7 @@ tr.totals-row td {
   display: flex;
   gap: 0;
   margin-bottom: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   width: fit-content;
@@ -732,7 +718,7 @@ tr.totals-row td {
 .toggle-btn {
   padding: 8px 24px;
   border: none;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--white);
   color: var(--text-light);
   font-size: 14px;
   font-family: inherit;
@@ -741,7 +727,7 @@ tr.totals-row td {
 }
 
 .toggle-btn:not(:last-child) {
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid var(--border);
 }
 
 .toggle-btn.active[data-type="expense"] {
@@ -768,19 +754,19 @@ tr.totals-row td {
 
 .btn-actions {
   padding: 4px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--white);
   cursor: pointer;
   font-size: 14px;
   font-family: inherit;
   color: var(--text-light);
   line-height: 1;
-  transition: background 0.2s;
+  transition: border-color 0.2s;
 }
 
 .btn-actions:hover {
-  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--border-hover);
 }
 
 .action-menu {
@@ -789,12 +775,9 @@ tr.totals-row td {
   right: 0;
   top: 100%;
   margin-top: 4px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: var(--white);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   z-index: 50;
   min-width: 100px;
   overflow: hidden;
@@ -819,7 +802,7 @@ tr.totals-row td {
 }
 
 .action-menu-item:hover {
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--bg-secondary);
 }
 
 .action-menu-item.danger {
@@ -834,32 +817,6 @@ tr.totals-row td {
 
 .member-other-input.active {
   display: block;
-}
-
-/* Glassmorphism fallback */
-@supports not (backdrop-filter: blur(20px)) {
-  .nav {
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .card,
-  .stat-card,
-  .modal {
-    background: rgba(255, 255, 255, 0.92);
-  }
-
-  .form-control,
-  .show-select {
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .action-menu {
-    background: rgba(255, 255, 255, 0.97);
-  }
-
-  .modal-overlay {
-    background: rgba(0, 0, 0, 0.4);
-  }
 }
 
 /* Responsive */
@@ -924,7 +881,7 @@ tr.totals-row td {
 }
 
 .import-upload-zone {
-  border: 2px dashed rgba(0, 0, 0, 0.12);
+  border: 1px dashed var(--border-hover);
   border-radius: var(--radius);
   padding: 32px 16px;
   text-align: center;
@@ -934,7 +891,7 @@ tr.totals-row td {
 
 .import-upload-zone:hover {
   border-color: var(--accent);
-  background: rgba(91, 110, 245, 0.04);
+  background: var(--bg-secondary);
 }
 
 .import-upload-zone.has-file {
@@ -965,8 +922,8 @@ tr.totals-row td {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   margin-bottom: 8px;
   font-size: 13px;
@@ -985,8 +942,8 @@ tr.totals-row td {
 
 .upload-status-item .btn-remove {
   padding: 2px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 0;
   background: none;
   cursor: pointer;
   font-size: 12px;
@@ -1005,7 +962,7 @@ tr.totals-row td {
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
   font-size: 14px;
 }
 
@@ -1020,11 +977,11 @@ tr.totals-row td {
 
 .mapping-row select {
   padding: 6px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--white);
 }
 
 /* Breakdown table in import */
@@ -1038,14 +995,14 @@ tr.totals-row td {
   text-align: left;
   padding: 8px 12px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-light);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .import-breakdown-table td {
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
 }
 
 .import-breakdown-table tr:last-child td {
@@ -1054,8 +1011,8 @@ tr.totals-row td {
 
 .import-breakdown-table tr.totals-row td {
   font-weight: 600;
-  border-top: 2px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.3);
+  border-top: 1px solid var(--border-hover);
+  background: var(--bg-secondary);
 }
 
 /* Import actions */
@@ -1077,7 +1034,7 @@ tr.totals-row td {
   align-items: center;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
 
@@ -1091,11 +1048,11 @@ tr.totals-row td {
 
 .unmatched-row select {
   padding: 6px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--white);
 }
 
 /* Forecast Input */
@@ -1107,10 +1064,9 @@ tr.totals-row td {
   font-size: 13px;
   font-family: inherit;
   text-align: right;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--white);
 }
 .forecast-input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(66, 82, 168, 0.15);
+  border-color: var(--accent);
 }
