@@ -202,6 +202,9 @@ function handleRequest(e) {
       case 'addSettlement':
         result = addSettlement(postData);
         break;
+      case 'fixAdvanceSettlements':
+        result = fixAdvanceSettlements(postData);
+        break;
       case 'getCommonFund':
         result = getCommonFund();
         break;
@@ -807,33 +810,124 @@ function getCommonFund() {
 
 function addSettlement(payload) {
   const member = (payload.member || '').trim();
-  const amount = Number(payload.amount);
-  if (!member || isNaN(amount) || amount <= 0) {
+  const totalAmount = Number(payload.amount);
+  const includeAdvances = payload.includeAdvances === true;
+  if (!member || isNaN(totalAmount) || totalAmount <= 0) {
     return { success: false, error: '成員和金額為必填' };
   }
   const ss = getSpreadsheet();
   const sheet = getOrCreateSheet(ss, SHEET_NAMES.SETTLEMENTS, ['成員', '金額', '日期', '備註']);
   const date = payload.date || new Date().toISOString().split('T')[0];
   const notes = (payload.notes || '').trim();
-  sheet.appendRow([member, amount, date, notes]);
 
-  // Auto-settle all unsettled advances for this member
   const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+  let advanceTotal = 0;
   let settledCount = 0;
+  let advanceRows = [];
+
   if (txSheet) {
     const lastRow = txSheet.getLastRow();
     if (lastRow > 1) {
-      const data = txSheet.getRange(2, 5, lastRow - 1, 3).getValues(); // cols 5-7: 墊款人, 排除成員, 結清狀態
+      const data = txSheet.getRange(2, 1, lastRow - 1, 9).getValues(); // cols 1-9
       data.forEach((row, i) => {
-        if (row[0] === member && row[2] === '未結清') {
-          txSheet.getRange(i + 2, 7).setValue('已結清');
-          settledCount++;
+        const advancedBy = (row[4] || '').toString().trim(); // col 5
+        const status = (row[6] || '').toString().trim();     // col 7
+        if (advancedBy === member && status === '未結清') {
+          const txAmount = Number(row[2]) || 0; // col 3: amount
+          advanceTotal += Math.abs(txAmount);
+          advanceRows.push(i + 2);
         }
       });
     }
   }
 
-  return { success: true, data: { member, amount, advancesSettled: settledCount } };
+  // When includeAdvances, record only the profit portion (total - advances)
+  const settlementAmount = includeAdvances ? Math.max(0, totalAmount - advanceTotal) : totalAmount;
+  sheet.appendRow([member, settlementAmount, date, notes]);
+
+  // Clear advance transactions when includeAdvances is requested
+  if (includeAdvances && txSheet) {
+    advanceRows.forEach(rowNum => {
+      txSheet.getRange(rowNum, 7).setValue('已結清');
+      settledCount++;
+    });
+  }
+
+  return { success: true, data: { member, amount: settlementAmount, advancesSettled: settledCount, advanceTotal } };
+}
+
+// ============================================================
+// Fix Historical Advance Settlements
+// ============================================================
+
+function fixAdvanceSettlements(payload) {
+  const dryRun = payload && payload.dryRun === true;
+  const ss = getSpreadsheet();
+  const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
+  const stSheet = ss.getSheetByName(SHEET_NAMES.SETTLEMENTS);
+
+  if (!txSheet || !stSheet) {
+    return { success: false, error: '找不到交易或結算工作表' };
+  }
+
+  // Step 1: Sum cleared advances per member
+  const memberAdvances = {};
+  const txLastRow = txSheet.getLastRow();
+  if (txLastRow > 1) {
+    const txData = txSheet.getRange(2, 1, txLastRow - 1, 9).getValues();
+    txData.forEach(row => {
+      const advancedBy = (row[4] || '').toString().trim();
+      const status = (row[6] || '').toString().trim();
+      if (advancedBy && status === '已結清') {
+        const txAmount = Number(row[2]) || 0;
+        memberAdvances[advancedBy] = (memberAdvances[advancedBy] || 0) + Math.abs(txAmount);
+      }
+    });
+  }
+
+  const corrections = [];
+  const warnings = [];
+
+  // Step 2: For each member with cleared advances, reduce their largest settlement
+  const stLastRow = stSheet.getLastRow();
+  if (stLastRow <= 1) {
+    return { success: true, data: { corrections, warnings: ['沒有結算紀錄'] } };
+  }
+  const stData = stSheet.getRange(2, 1, stLastRow - 1, 4).getValues();
+
+  Object.entries(memberAdvances).forEach(([member, advanceTotal]) => {
+    const memberRows = [];
+    stData.forEach((row, i) => {
+      if ((row[0] || '').toString().trim() === member) {
+        memberRows.push({ rowNum: i + 2, amount: Number(row[1]) || 0 });
+      }
+    });
+
+    if (memberRows.length === 0) {
+      warnings.push(`${member}：有已結清代墊 $${advanceTotal}，但無結算紀錄，略過`);
+      return;
+    }
+
+    memberRows.sort((a, b) => b.amount - a.amount);
+    let remaining = advanceTotal;
+
+    for (const row of memberRows) {
+      if (remaining <= 0) break;
+      const deduct = Math.min(row.amount, remaining);
+      const newAmount = row.amount - deduct;
+      if (!dryRun) {
+        stSheet.getRange(row.rowNum, 2).setValue(newAmount);
+      }
+      corrections.push({ member, rowNum: row.rowNum, before: row.amount, after: newAmount, deducted: deduct });
+      remaining -= deduct;
+    }
+
+    if (remaining > 0) {
+      warnings.push(`${member}：代墊 $${advanceTotal} 超過結算總額，已盡量扣除，剩餘 $${remaining} 無法修正`);
+    }
+  });
+
+  return { success: true, data: { corrections, warnings } };
 }
 
 // ============================================================

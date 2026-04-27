@@ -79,6 +79,10 @@ const API = {
     return this.post('addSettlement', data);
   },
 
+  fixAdvanceSettlements(dryRun = false) {
+    return this.post('fixAdvanceSettlements', { dryRun });
+  },
+
   // Import
   batchImportTransactions(transactions) {
     return this.post('batchImportTransactions', { transactions });
