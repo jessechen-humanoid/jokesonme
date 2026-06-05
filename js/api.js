@@ -83,6 +83,10 @@ const API = {
     return this.post('fixAdvanceSettlements', { dryRun });
   },
 
+  previewAdvanceFix() {
+    return this.post('previewAdvanceFix', {});
+  },
+
   // Import
   batchImportTransactions(transactions) {
     return this.post('batchImportTransactions', { transactions });

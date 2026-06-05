@@ -510,6 +510,8 @@ async function submitSettlement() {
 
 // ---- Fix Advance Settlements Modal ----
 
+const ADVANCE_CORRECTION_NOTE_LABEL = '代墊還款修正';
+
 async function showFixAdvanceModal() {
   let overlay = document.getElementById('modal-overlay');
   if (!overlay) {
@@ -520,22 +522,21 @@ async function showFixAdvanceModal() {
   }
 
   overlay.innerHTML = `
-    <div class="modal">
+    <div class="modal" style="max-width:760px">
       <div class="modal-title">修正代墊帳</div>
       <div id="fix-advance-content">
-        <div class="loading">掃描中...</div>
+        <div class="loading" style="color:var(--text-light);padding:12px 0">掃描中...</div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" id="fix-advance-cancel">關閉</button>
-        <button class="btn btn-primary" id="fix-advance-confirm" style="display:none">確認修正</button>
+        <button class="btn btn-secondary" id="fix-advance-cancel">取消</button>
+        <button class="btn btn-primary" id="fix-advance-confirm" style="display:none">確認執行</button>
       </div>
     </div>
   `;
   overlay.classList.add('active');
   document.getElementById('fix-advance-cancel').addEventListener('click', () => overlay.classList.remove('active'));
 
-  // Preview first (dryRun)
-  const res = await API.fixAdvanceSettlements(true);
+  const res = await API.previewAdvanceFix();
   const content = document.getElementById('fix-advance-content');
 
   if (!res.success) {
@@ -543,40 +544,61 @@ async function showFixAdvanceModal() {
     return;
   }
 
-  const { corrections, warnings } = res.data;
+  const previews = res.data.previews || [];
+  const needsCount = previews.filter(p => p.status === 'needs-correction').length;
+  const overflowCount = previews.filter(p => p.status === 'skip-overflow').length;
 
-  if (corrections.length === 0 && warnings.length === 0) {
-    content.innerHTML = `<div style="color:var(--text-light)">沒有需要修正的代墊紀錄。</div>`;
-    return;
-  }
+  let html = `<p style="margin:0 0 12px;font-size:14px;color:var(--text-light)">
+    掃描全 ${previews.length} 位成員。需修正：<strong style="color:var(--text)">${needsCount}</strong> 位${overflowCount > 0 ? `，異常跳過：<strong style="color:var(--red)">${overflowCount}</strong> 位` : ''}。
+  </p>`;
 
-  let html = '';
-  if (corrections.length > 0) {
-    html += `<p style="margin:0 0 8px;font-size:14px">以下結算紀錄將被修正（代墊已還款但未從結算金額中扣除）：</p>`;
-    html += `<table style="width:100%;font-size:13px;border-collapse:collapse">
-      <thead><tr>
-        <th style="text-align:left;padding:4px 8px">成員</th>
-        <th style="text-align:right;padding:4px 8px">修正前</th>
-        <th style="text-align:right;padding:4px 8px">修正後</th>
-      </tr></thead><tbody>`;
-    corrections.forEach(c => {
-      html += `<tr>
-        <td style="padding:4px 8px">${escapeHtml(c.member)}</td>
-        <td style="text-align:right;padding:4px 8px;color:var(--red)">$${c.before.toLocaleString()}</td>
-        <td style="text-align:right;padding:4px 8px;color:var(--green)">$${c.after.toLocaleString()}</td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-  }
-  if (warnings.length > 0) {
-    html += `<div style="margin-top:10px;font-size:13px;color:var(--text-light)">`;
-    warnings.forEach(w => { html += `<div>⚠ ${escapeHtml(w)}</div>`; });
-    html += `</div>`;
+  html += `<table style="width:100%;font-size:13px;border-collapse:collapse">
+    <thead><tr>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">成員</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">歷史結算總額</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">已結清代墊</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">將新增修正</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">修正後預期</th>
+    </tr></thead><tbody>`;
+
+  previews.forEach(p => {
+    let actionCell;
+    let rowStyle = '';
+    if (p.status === 'needs-correction') {
+      actionCell = `<span style="color:var(--red)">$${p.correctionAmount.toLocaleString()}</span>`;
+    } else if (p.status === 'no-correction-needed') {
+      actionCell = `<span style="color:var(--text-light)">無需修正</span>`;
+      rowStyle = 'color:var(--text-light)';
+    } else if (p.status === 'already-corrected') {
+      actionCell = `<span style="color:var(--text-light)">已修正過</span>`;
+      rowStyle = 'color:var(--text-light)';
+    } else if (p.status === 'skip-overflow') {
+      actionCell = `<span style="color:var(--red)" title="${escapeHtml(p.reason)}">⚠ 跳過：代墊金額超過結算總額</span>`;
+    } else {
+      actionCell = escapeHtml(p.status);
+    }
+
+    html += `<tr style="${rowStyle}">
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">${escapeHtml(p.member)}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">$${p.settlementTotal.toLocaleString()}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">$${p.advanceTotal.toLocaleString()}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">${actionCell}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee);font-weight:600">$${p.expectedSettledAfter.toLocaleString()}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+
+  if (needsCount === 0) {
+    html += `<p style="margin:12px 0 0;font-size:13px;color:var(--text-light)">沒有成員需要修正，可直接取消。</p>`;
+  } else {
+    html += `<p style="margin:12px 0 0;font-size:12px;color:var(--text-light)">
+      按「確認執行」會在 <strong>成員結算</strong> 工作表新增 ${needsCount} 筆負數修正紀錄（備註：${escapeHtml(ADVANCE_CORRECTION_NOTE_LABEL)}），不會修改任何既有列。
+    </p>`;
   }
 
   content.innerHTML = html;
 
-  if (corrections.length > 0) {
+  if (needsCount > 0) {
     const confirmBtn = document.getElementById('fix-advance-confirm');
     confirmBtn.style.display = '';
     confirmBtn.addEventListener('click', async () => {
@@ -585,7 +607,13 @@ async function showFixAdvanceModal() {
       const applyRes = await API.fixAdvanceSettlements(false);
       overlay.classList.remove('active');
       if (applyRes.success) {
+        const appended = applyRes.data.corrections.length;
         await loadAnalytics();
+        if (typeof showToast === 'function') {
+          showToast(`已新增 ${appended} 筆修正紀錄`);
+        } else {
+          alert(`已新增 ${appended} 筆修正紀錄`);
+        }
       } else {
         alert('修正失敗：' + (applyRes.error || '未知錯誤'));
       }
