@@ -10,6 +10,7 @@ const SHEET_NAMES = {
   CHECKLIST: 'Checklist',
   TEMPLATE: 'Checklist模板',
   SETTLEMENTS: '成員結算',
+  ADVANCE_REPAYMENTS: '代墊還款',
 };
 
 // 稅率常數（所有收入依此比例自動提列稅務預留支出）
@@ -205,11 +206,14 @@ function handleRequest(e) {
       case 'addSettlement':
         result = addSettlement(postData);
         break;
-      case 'fixAdvanceSettlements':
-        result = fixAdvanceSettlements(postData);
+      case 'getAdvanceReimbursements':
+        result = getAdvanceReimbursements();
         break;
-      case 'previewAdvanceFix':
-        result = previewAdvanceFix(postData);
+      case 'addAdvanceReimbursement':
+        result = addAdvanceReimbursement(postData);
+        break;
+      case 'migrateAdvanceLedger':
+        result = migrateAdvanceLedger();
         break;
       case 'getCommonFund':
         result = getCommonFund();
@@ -814,11 +818,11 @@ function getCommonFund() {
   };
 }
 
+// 結算只記利潤分配，不夾帶代墊還款；代墊還款由 代墊還款 帳本獨立記錄。
 function addSettlement(payload) {
   const member = (payload.member || '').trim();
-  const totalAmount = Number(payload.amount);
-  const includeAdvances = payload.includeAdvances === true;
-  if (!member || isNaN(totalAmount) || totalAmount <= 0) {
+  const amount = Number(payload.amount);
+  if (!member || isNaN(amount) || amount <= 0) {
     return { success: false, error: '成員和金額為必填' };
   }
   const ss = getSpreadsheet();
@@ -826,222 +830,147 @@ function addSettlement(payload) {
   const date = payload.date || new Date().toISOString().split('T')[0];
   const notes = (payload.notes || '').trim();
 
-  const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
-  let advanceTotal = 0;
-  let settledCount = 0;
-  let advanceRows = [];
+  sheet.appendRow([member, amount, date, notes]);
+  return { success: true, data: { member, amount } };
+}
 
-  if (txSheet) {
-    const lastRow = txSheet.getLastRow();
-    if (lastRow > 1) {
-      const data = txSheet.getRange(2, 1, lastRow - 1, 9).getValues(); // cols 1-9
-      data.forEach((row, i) => {
-        const advancedBy = (row[4] || '').toString().trim(); // col 5
-        const status = (row[6] || '').toString().trim();     // col 7
-        if (advancedBy === member && status === '未結清') {
-          const txAmount = Number(row[2]) || 0; // col 3: amount
-          advanceTotal += Math.abs(txAmount);
-          advanceRows.push(i + 2);
-        }
-      });
+// ============================================================
+// Advance Reimbursement Ledger (代墊還款帳本)
+// ============================================================
+
+// 讀取代墊還款帳本所有列
+function getAdvanceReimbursements() {
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.ADVANCE_REPAYMENTS, ['成員', '金額', '日期', '備註']);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return { success: true, data: [] };
+  const data = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+  const rows = data.map((row, i) => ({
+    id: i + 2,
+    member: row[0],
+    amount: row[1],
+    date: row[2],
+    notes: row[3],
+  }));
+  return { success: true, data: rows };
+}
+
+// 新增一筆代墊還款（金額為正數，代表還了多少代墊）
+function addAdvanceReimbursement(payload) {
+  const member = (payload.member || '').trim();
+  const amount = Number(payload.amount);
+  if (!member || isNaN(amount) || amount <= 0) {
+    return { success: false, error: '成員和金額為必填' };
+  }
+  const ss = getSpreadsheet();
+  const sheet = getOrCreateSheet(ss, SHEET_NAMES.ADVANCE_REPAYMENTS, ['成員', '金額', '日期', '備註']);
+  const date = payload.date || new Date().toISOString().split('T')[0];
+  const notes = (payload.notes || '').trim();
+  sheet.appendRow([member, amount, date, notes]);
+  return { success: true, data: { member, amount } };
+}
+
+// ============================================================
+// One-time Migration: Advance Reimbursement Ledger
+// ============================================================
+
+const ADVANCE_LEDGER_SEED_NOTE = '歷史代墊還款';
+const ADVANCE_LEDGER_CORRECTION_NOTE = '代墊還款移轉至代墊還款帳本';
+
+// 一次性遷移：把被舊自動偵測改錯的 production 資料導回正確狀態。
+// 1) 刪除機器跑錯的修正列（柏文 -15745、又又 -14380）
+// 2) 補正確的利潤校正列（柏文 -7665、又又 -8380）
+// 3) 芭樂 -1600、兔子 -6000 既有修正列保留不動
+// 4) 植入 代墊還款 帳本初始資料（柏文 7665 / 又又 8380 / 芭樂 1600 / 兔子 6000）
+// 冪等：代墊還款 已有「歷史代墊還款」列則整個跳過。
+function migrateAdvanceLedger() {
+  const ss = getSpreadsheet();
+  const stSheet = ss.getSheetByName(SHEET_NAMES.SETTLEMENTS);
+  if (!stSheet) {
+    return { success: false, error: '找不到交易或結算工作表' };
+  }
+  const ledgerSheet = getOrCreateSheet(ss, SHEET_NAMES.ADVANCE_REPAYMENTS, ['成員', '金額', '日期', '備註']);
+
+  // 冪等保護：已有「歷史代墊還款」標記列則跳過
+  const ledgerLastRow = ledgerSheet.getLastRow();
+  if (ledgerLastRow > 1) {
+    const ledgerData = ledgerSheet.getRange(2, 1, ledgerLastRow - 1, 4).getValues();
+    const alreadySeeded = ledgerData.some(r => (r[3] || '').toString().trim() === ADVANCE_LEDGER_SEED_NOTE);
+    if (alreadySeeded) {
+      return { success: true, data: { settlementsAdjusted: [], reimbursementsSeeded: [], status: 'already-migrated' } };
     }
   }
 
-  // When includeAdvances, record only the profit portion (total - advances)
-  const settlementAmount = includeAdvances ? Math.max(0, totalAmount - advanceTotal) : totalAmount;
-  sheet.appendRow([member, settlementAmount, date, notes]);
+  // 要刪除的錯誤修正列：member -> 錯誤金額（備註為「代墊還款修正」）
+  const wrongRows = { '柏文': -15745, '又又': -14380 };
+  // 要補的正確利潤校正列：member -> 正確金額
+  const correctRows = { '柏文': -7665, '又又': -8380 };
+  // 要植入帳本的代墊還款：member -> 金額
+  const reimbursements = { '柏文': 7665, '又又': 8380, '芭樂': 1600, '兔子': 6000 };
 
-  // Clear advance transactions when includeAdvances is requested
-  if (includeAdvances && txSheet) {
-    advanceRows.forEach(rowNum => {
-      txSheet.getRange(rowNum, 7).setValue('已結清');
-      settledCount++;
-    });
-  }
+  const settlementsAdjusted = [];
+  const reimbursementsSeeded = [];
 
-  return { success: true, data: { member, amount: settlementAmount, advancesSettled: settledCount, advanceTotal } };
-}
-
-// ============================================================
-// Advance Settlement Correction (append-only)
-// ============================================================
-
-function _formatSettlementDate(d) {
-  if (d instanceof Date) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + day;
-  }
-  return (d || '').toString().trim();
-}
-
-function _analyzeAdvanceSettlements() {
-  const ss = getSpreadsheet();
-  const txSheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
-  const stSheet = ss.getSheetByName(SHEET_NAMES.SETTLEMENTS);
-
-  if (!txSheet || !stSheet) {
-    return { error: '找不到交易或結算工作表' };
-  }
-
-  const advanceTotalsByMember = {};
-  const txLastRow = txSheet.getLastRow();
-  if (txLastRow > 1) {
-    const txData = txSheet.getRange(2, 1, txLastRow - 1, 9).getValues();
-    txData.forEach(row => {
-      const advancedBy = (row[TX_COL.ADVANCED_BY - 1] || '').toString().trim();
-      const status = (row[TX_COL.SETTLED - 1] || '').toString().trim();
-      if (advancedBy && status === '已結清') {
-        const txAmount = Number(row[TX_COL.AMOUNT - 1]) || 0;
-        advanceTotalsByMember[advancedBy] = (advanceTotalsByMember[advancedBy] || 0) + Math.abs(txAmount);
-      }
-    });
-  }
-
-  const settlementInfoByMember = {};
   const stLastRow = stSheet.getLastRow();
-  if (stLastRow > 1) {
-    const stData = stSheet.getRange(2, 1, stLastRow - 1, 4).getValues();
+  const stData = stLastRow > 1 ? stSheet.getRange(2, 1, stLastRow - 1, 4).getValues() : [];
+
+  // 某成員「最大筆（非修正）結算」的日期 → 作為補上的校正列日期
+  function largestSettlementDate(member) {
+    let best = null;
     stData.forEach(row => {
-      const member = (row[0] || '').toString().trim();
-      if (!member) return;
-      const amt = Number(row[1]) || 0;
-      const dateVal = row[2];
+      const m = (row[0] || '').toString().trim();
       const note = (row[3] || '').toString().trim();
-
-      if (!settlementInfoByMember[member]) {
-        settlementInfoByMember[member] = {
-          settlementTotal: 0,
-          hasCorrectionMarker: false,
-          largestSettlementRow: null,
-        };
-      }
-      const info = settlementInfoByMember[member];
-      info.settlementTotal += amt;
-
-      if (note === ADVANCE_CORRECTION_NOTE) {
-        info.hasCorrectionMarker = true;
-      } else {
-        if (!info.largestSettlementRow || Math.abs(amt) > Math.abs(info.largestSettlementRow.amount)) {
-          info.largestSettlementRow = { amount: amt, date: dateVal };
-        }
-      }
+      if (m !== member) return;
+      if (note === ADVANCE_CORRECTION_NOTE || note === ADVANCE_LEDGER_CORRECTION_NOTE) return;
+      const amt = Number(row[1]) || 0;
+      if (!best || Math.abs(amt) > Math.abs(best.amount)) best = { amount: amt, date: row[2] };
     });
+    return best ? best.date : (new Date().toISOString().split('T')[0]);
   }
-
-  return { advanceTotalsByMember, settlementInfoByMember };
-}
-
-function _classifyMember(member, analysis) {
-  const advanceTotal = analysis.advanceTotalsByMember[member] || 0;
-  const info = analysis.settlementInfoByMember[member] || {
-    settlementTotal: 0,
-    hasCorrectionMarker: false,
-    largestSettlementRow: null,
-  };
-  const settlementTotal = info.settlementTotal;
-
-  if (advanceTotal === 0) {
-    return {
-      member,
-      settlementTotal,
-      advanceTotal: 0,
-      correctionAmount: 0,
-      correctionDate: '',
-      expectedSettledAfter: settlementTotal,
-      status: 'no-correction-needed',
-      reason: '',
-    };
-  }
-
-  if (info.hasCorrectionMarker) {
-    return {
-      member,
-      settlementTotal,
-      advanceTotal,
-      correctionAmount: 0,
-      correctionDate: '',
-      expectedSettledAfter: settlementTotal,
-      status: 'already-corrected',
-      reason: '已存在「' + ADVANCE_CORRECTION_NOTE + '」紀錄，跳過',
-    };
-  }
-
-  if (advanceTotal > settlementTotal) {
-    return {
-      member,
-      settlementTotal,
-      advanceTotal,
-      correctionAmount: 0,
-      correctionDate: '',
-      expectedSettledAfter: settlementTotal,
-      status: 'skip-overflow',
-      reason: '代墊 $' + advanceTotal + ' 超過結算總額 $' + settlementTotal + '，跳過',
-    };
-  }
-
-  const correctionDate = info.largestSettlementRow
-    ? _formatSettlementDate(info.largestSettlementRow.date)
-    : '';
-
-  return {
-    member,
-    settlementTotal,
-    advanceTotal,
-    correctionAmount: -advanceTotal,
-    correctionDate,
-    expectedSettledAfter: settlementTotal - advanceTotal,
-    status: 'needs-correction',
-    reason: '',
-  };
-}
-
-function previewAdvanceFix(payload) {
-  const analysis = _analyzeAdvanceSettlements();
-  if (analysis.error) {
-    return { success: false, error: analysis.error };
-  }
-  const previews = MEMBERS.map(m => _classifyMember(m, analysis));
-  return { success: true, data: { previews } };
-}
-
-function fixAdvanceSettlements(payload) {
-  const dryRun = payload && payload.dryRun === true;
-  const analysis = _analyzeAdvanceSettlements();
-  if (analysis.error) {
-    return { success: false, error: analysis.error };
-  }
-
-  const ss = getSpreadsheet();
-  const stSheet = ss.getSheetByName(SHEET_NAMES.SETTLEMENTS);
-
-  const corrections = [];
-  const skipped = [];
-
-  MEMBERS.forEach(member => {
-    const entry = _classifyMember(member, analysis);
-
-    if (entry.status === 'no-correction-needed') {
-      return;
-    }
-    if (entry.status === 'already-corrected' || entry.status === 'skip-overflow') {
-      skipped.push({ member, reason: entry.status });
-      return;
-    }
-
-    if (!dryRun) {
-      stSheet.appendRow([member, entry.correctionAmount, entry.correctionDate, ADVANCE_CORRECTION_NOTE]);
-    }
-    corrections.push({
-      member,
-      amount: entry.correctionAmount,
-      date: entry.correctionDate,
+  // 某成員最近一筆結算的日期 → 作為代墊還款植入日期
+  function latestSettlementDate(member) {
+    let best = null;
+    stData.forEach(row => {
+      const m = (row[0] || '').toString().trim();
+      if (m !== member) return;
+      const d = row[2] instanceof Date ? row[2] : new Date(row[2]);
+      if (!best || d > best.d) best = { d: d, raw: row[2] };
     });
+    return best ? best.raw : (new Date().toISOString().split('T')[0]);
+  }
+
+  // 1) 刪除錯誤修正列（由下而上刪，避免列號位移）
+  const toDelete = [];
+  stData.forEach((row, i) => {
+    const m = (row[0] || '').toString().trim();
+    const amt = Number(row[1]) || 0;
+    const note = (row[3] || '').toString().trim();
+    if (note === ADVANCE_CORRECTION_NOTE && wrongRows[m] !== undefined && amt === wrongRows[m]) {
+      toDelete.push({ rowNum: i + 2, member: m, amount: amt });
+    }
+  });
+  toDelete.sort((a, b) => b.rowNum - a.rowNum).forEach(d => {
+    stSheet.deleteRow(d.rowNum);
+    settlementsAdjusted.push({ member: d.member, action: 'deleted-wrong-correction', amount: d.amount });
   });
 
-  return { success: true, data: { corrections, skipped } };
+  // 2) 補正確的利潤校正列
+  Object.keys(correctRows).forEach(member => {
+    const date = largestSettlementDate(member);
+    stSheet.appendRow([member, correctRows[member], date, ADVANCE_LEDGER_CORRECTION_NOTE]);
+    settlementsAdjusted.push({ member: member, action: 'added-correct-correction', amount: correctRows[member] });
+  });
+
+  // 4) 植入 代墊還款 帳本初始資料
+  Object.keys(reimbursements).forEach(member => {
+    const date = latestSettlementDate(member);
+    ledgerSheet.appendRow([member, reimbursements[member], date, ADVANCE_LEDGER_SEED_NOTE]);
+    reimbursementsSeeded.push({ member: member, amount: reimbursements[member] });
+  });
+
+  return { success: true, data: { settlementsAdjusted, reimbursementsSeeded, status: 'migrated' } };
 }
+
 
 // ============================================================
 // Forecast (財務預估)

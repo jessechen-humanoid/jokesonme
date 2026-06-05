@@ -79,12 +79,17 @@ const API = {
     return this.post('addSettlement', data);
   },
 
-  fixAdvanceSettlements(dryRun = false) {
-    return this.post('fixAdvanceSettlements', { dryRun });
+  // Advance reimbursement ledger (代墊還款帳本)
+  getAdvanceReimbursements() {
+    return this.get('getAdvanceReimbursements');
   },
 
-  previewAdvanceFix() {
-    return this.post('previewAdvanceFix', {});
+  addAdvanceReimbursement(data) {
+    return this.post('addAdvanceReimbursement', data);
+  },
+
+  migrateAdvanceLedger() {
+    return this.post('migrateAdvanceLedger', {});
   },
 
   // Import

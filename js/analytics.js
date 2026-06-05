@@ -22,7 +22,11 @@ async function loadAnalytics() {
 
   summaryEl.innerHTML = '<div class="loading">載入中...</div>';
 
-  const [txRes, stRes] = await Promise.all([API.getTransactions(), API.getSettlements()]);
+  const [txRes, stRes, reRes] = await Promise.all([
+    API.getTransactions(),
+    API.getSettlements(),
+    API.getAdvanceReimbursements(),
+  ]);
   if (!txRes.success) {
     summaryEl.innerHTML = '<div class="empty-state">載入失敗</div>';
     return;
@@ -31,6 +35,7 @@ async function loadAnalytics() {
   _transactions = txRes.data;
   const transactions = _transactions;
   const settlements = stRes.success ? stRes.data : [];
+  const reimbursements = reRes.success ? reRes.data : [];
 
   // Legacy compatibility
   transactions.forEach(t => {
@@ -87,7 +92,7 @@ async function loadAnalytics() {
     EXPENSE_CATEGORIES, expenseEl, '支出佔比', 'expense'
   );
 
-  renderMemberEarnings(transactions, settlements, distributableCommonNet, earningsEl);
+  renderMemberEarnings(transactions, settlements, reimbursements, distributableCommonNet, earningsEl);
 }
 
 // ---- Common Fund ----
@@ -293,7 +298,7 @@ function drawPie(canvasId, data, colors) {
 
 // ---- Member Earnings (5 columns + settlement) ----
 
-function renderMemberEarnings(transactions, settlements, distributableCommonNet, el) {
+function renderMemberEarnings(transactions, settlements, reimbursements, distributableCommonNet, el) {
   if (!el) return;
 
   // Split transactions into shared (all members) vs non-shared
@@ -326,11 +331,18 @@ function renderMemberEarnings(transactions, settlements, distributableCommonNet,
     if (memberSettled[s.member] !== undefined) memberSettled[s.member] += Number(s.amount) || 0;
   });
 
-  // Unsettled advances per member
-  const memberAdvances = {};
-  MEMBERS.forEach(m => { memberAdvances[m] = 0; });
-  transactions.filter(t => t.advancedBy && !t.settled).forEach(t => {
-    if (memberAdvances[t.advancedBy] !== undefined) memberAdvances[t.advancedBy] += Math.abs(t.amount);
+  // 代墊總額 per member：所有「墊款人」交易金額加總，不分結清狀態
+  const memberAdvanceTotal = {};
+  MEMBERS.forEach(m => { memberAdvanceTotal[m] = 0; });
+  transactions.filter(t => t.advancedBy).forEach(t => {
+    if (memberAdvanceTotal[t.advancedBy] !== undefined) memberAdvanceTotal[t.advancedBy] += Math.abs(t.amount);
+  });
+
+  // 代墊已結清 per member：代墊還款帳本加總
+  const memberReimbursed = {};
+  MEMBERS.forEach(m => { memberReimbursed[m] = 0; });
+  reimbursements.forEach(r => {
+    if (memberReimbursed[r.member] !== undefined) memberReimbursed[r.member] += Number(r.amount) || 0;
   });
 
   const members = MEMBERS.map(m => {
@@ -339,9 +351,10 @@ function renderMemberEarnings(transactions, settlements, distributableCommonNet,
     const annualNet = Math.round(commonShare + nonSharedShare);
     const settled = Math.round(memberSettled[m]);
     const unsettledNet = annualNet - settled;
-    const advances = Math.round(memberAdvances[m]);
-    const toPay = unsettledNet + advances;
-    return { name: m, settled, unsettledNet, advances, toPay, annualNet };
+    const advanceTotal = Math.round(memberAdvanceTotal[m]);
+    const advanceCleared = Math.round(memberReimbursed[m]);
+    const advanceUnsettled = advanceTotal - advanceCleared;
+    return { name: m, settled, unsettledNet, advanceTotal, advanceCleared, advanceUnsettled, annualNet };
   });
 
   el.innerHTML = `
@@ -353,7 +366,7 @@ function renderMemberEarnings(transactions, settlements, distributableCommonNet,
           <th style="text-align:right">已收款淨利</th>
           <th style="text-align:right">未收款淨利</th>
           <th style="text-align:right">代墊未結清</th>
-          <th style="text-align:right">需匯款金額</th>
+          <th style="text-align:right">代墊已結清</th>
           <th style="text-align:right">年度分配淨利</th>
         </tr></thead>
         <tbody>
@@ -361,15 +374,15 @@ function renderMemberEarnings(transactions, settlements, distributableCommonNet,
             <td>${escapeHtml(m.name)}</td>
             <td style="text-align:right;color:var(--text-light)">${formatAmount(m.settled)}</td>
             <td class="${m.unsettledNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">${formatAmount(m.unsettledNet)}</td>
-            <td style="text-align:right;${m.advances > 0 ? 'color:var(--red)' : 'color:var(--text-light)'}">${m.advances > 0 ? '$' + m.advances.toLocaleString() : '$0'}</td>
-            <td class="${m.toPay >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(m.toPay)}</td>
+            <td style="text-align:right;${m.advanceUnsettled > 0 ? 'color:var(--red)' : (m.advanceUnsettled < 0 ? 'color:var(--red);font-weight:600' : 'color:var(--text-light)')}"${m.advanceUnsettled < 0 ? ' title="超還：代墊已結清大於代墊總額"' : ''}>${m.advanceUnsettled < 0 ? '⚠ ' : ''}$${m.advanceUnsettled.toLocaleString()}</td>
+            <td style="text-align:right;${m.advanceCleared > 0 ? 'color:var(--text-light)' : 'color:var(--text-light)'}">$${m.advanceCleared.toLocaleString()}</td>
             <td class="${m.annualNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(m.annualNet)}</td>
           </tr>`).join('')}
         </tbody>
       </table></div>
       <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-primary btn-sm" onclick="showSettlementModal()">新增結算</button>
-        <button class="btn btn-secondary btn-sm" onclick="showFixAdvanceModal()">修正代墊帳</button>
+        <button class="btn btn-secondary btn-sm" onclick="showAddReimbursementModal()">新增代墊還款</button>
       </div>
     </div>
   `;
@@ -394,20 +407,8 @@ function showSettlementModal() {
         <label class="form-label">成員</label>
         ${createMemberSelect('settlement-member', '', { includeEmpty: true, includeOther: false })}
       </div>
-      <div id="settlement-advance-block" style="display:none">
-        <div style="background:var(--bg-card,#f5f5f5);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span>代墊未結清：<strong id="settlement-advance-amount"></strong></span>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0">
-              <input type="checkbox" id="settlement-include-advances" checked>
-              <span>一起結清代墊</span>
-            </label>
-          </div>
-          <div id="settlement-breakdown" style="margin-top:6px;color:var(--text-light,#888);font-size:13px"></div>
-        </div>
-      </div>
       <div class="form-group">
-        <label class="form-label" id="settlement-amount-label">金額</label>
+        <label class="form-label">金額（利潤）</label>
         <input type="number" class="form-control" id="settlement-amount" min="0" placeholder="例：10000">
       </div>
       <div class="form-row">
@@ -430,65 +431,15 @@ function showSettlementModal() {
 
   document.getElementById('settlement-cancel').addEventListener('click', () => overlay.classList.remove('active'));
   document.getElementById('settlement-submit').addEventListener('click', submitSettlement);
-
-  const memberSelect = document.getElementById('settlement-member');
-  memberSelect.addEventListener('change', () => updateSettlementAdvanceBlock(memberSelect.value));
-
-  const amountInput = document.getElementById('settlement-amount');
-  const includeCheckbox = document.getElementById('settlement-include-advances');
-  amountInput.addEventListener('input', updateSettlementBreakdown);
-  includeCheckbox.addEventListener('change', () => {
-    document.getElementById('settlement-amount-label').textContent =
-      includeCheckbox.checked ? '總匯款金額' : '金額';
-    updateSettlementBreakdown();
-  });
-}
-
-function _getMemberUnsettledAdvances(member) {
-  return _transactions
-    .filter(t => t.advancedBy === member && !t.settled)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-}
-
-function updateSettlementAdvanceBlock(member) {
-  const block = document.getElementById('settlement-advance-block');
-  const amountLabel = document.getElementById('settlement-amount-label');
-  if (!member) { block.style.display = 'none'; return; }
-  const advances = _getMemberUnsettledAdvances(member);
-  if (advances <= 0) {
-    block.style.display = 'none';
-    amountLabel.textContent = '金額';
-    return;
-  }
-  document.getElementById('settlement-advance-amount').textContent = '$' + advances.toLocaleString();
-  block.style.display = 'block';
-  const includeCheckbox = document.getElementById('settlement-include-advances');
-  amountLabel.textContent = includeCheckbox.checked ? '總匯款金額' : '金額';
-  updateSettlementBreakdown();
-}
-
-function updateSettlementBreakdown() {
-  const member = document.getElementById('settlement-member').value;
-  const total = Number(document.getElementById('settlement-amount').value) || 0;
-  const include = document.getElementById('settlement-include-advances').checked;
-  const breakdown = document.getElementById('settlement-breakdown');
-  if (!breakdown) return;
-  if (!include || !member) { breakdown.textContent = ''; return; }
-  const advances = _getMemberUnsettledAdvances(member);
-  if (advances <= 0) { breakdown.textContent = ''; return; }
-  const profit = Math.max(0, total - advances);
-  breakdown.textContent = `利潤結算 $${profit.toLocaleString()} ／ 代墊還款 $${Math.min(total, advances).toLocaleString()}`;
 }
 
 async function submitSettlement() {
   const member = document.getElementById('settlement-member').value;
-  const totalAmount = Number(document.getElementById('settlement-amount').value);
+  const amount = Number(document.getElementById('settlement-amount').value);
   const date = document.getElementById('settlement-date').value;
   const notes = document.getElementById('settlement-notes').value.trim();
-  const includeCheckbox = document.getElementById('settlement-include-advances');
-  const includeAdvances = includeCheckbox ? includeCheckbox.checked : false;
 
-  if (!member || !totalAmount || totalAmount <= 0) {
+  if (!member || !amount || amount <= 0) {
     alert('請選擇成員並輸入金額');
     return;
   }
@@ -497,7 +448,7 @@ async function submitSettlement() {
   btn.disabled = true;
   btn.textContent = '送出中...';
 
-  const res = await API.addSettlement({ member, amount: totalAmount, date, notes, includeAdvances });
+  const res = await API.addSettlement({ member, amount, date, notes });
   if (res.success) {
     document.getElementById('modal-overlay').classList.remove('active');
     await loadAnalytics();
@@ -508,11 +459,9 @@ async function submitSettlement() {
   }
 }
 
-// ---- Fix Advance Settlements Modal ----
+// ---- Add Advance Reimbursement Modal (新增代墊還款) ----
 
-const ADVANCE_CORRECTION_NOTE_LABEL = '代墊還款修正';
-
-async function showFixAdvanceModal() {
+function showAddReimbursementModal() {
   let overlay = document.getElementById('modal-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -521,103 +470,63 @@ async function showFixAdvanceModal() {
     document.body.appendChild(overlay);
   }
 
+  const today = new Date().toISOString().split('T')[0];
   overlay.innerHTML = `
-    <div class="modal" style="max-width:760px">
-      <div class="modal-title">修正代墊帳</div>
-      <div id="fix-advance-content">
-        <div class="loading" style="color:var(--text-light);padding:12px 0">掃描中...</div>
+    <div class="modal">
+      <div class="modal-title">新增代墊還款</div>
+      <div class="form-group">
+        <label class="form-label">成員</label>
+        ${createMemberSelect('reimburse-member', '', { includeEmpty: true, includeOther: false })}
+      </div>
+      <div class="form-group">
+        <label class="form-label">還款金額</label>
+        <input type="number" class="form-control" id="reimburse-amount" min="0" placeholder="例：5000">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">日期</label>
+          <input type="date" class="form-control" id="reimburse-date" value="${today}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">備註（選填）</label>
+          <input type="text" class="form-control" id="reimburse-notes" placeholder="例：6月還款">
+        </div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" id="fix-advance-cancel">取消</button>
-        <button class="btn btn-primary" id="fix-advance-confirm" style="display:none">確認執行</button>
+        <button class="btn btn-secondary" id="reimburse-cancel">取消</button>
+        <button class="btn btn-primary" id="reimburse-submit">新增</button>
       </div>
     </div>
   `;
   overlay.classList.add('active');
-  document.getElementById('fix-advance-cancel').addEventListener('click', () => overlay.classList.remove('active'));
 
-  const res = await API.previewAdvanceFix();
-  const content = document.getElementById('fix-advance-content');
+  document.getElementById('reimburse-cancel').addEventListener('click', () => overlay.classList.remove('active'));
+  document.getElementById('reimburse-submit').addEventListener('click', submitReimbursement);
+}
 
-  if (!res.success) {
-    content.innerHTML = `<div style="color:var(--red)">掃描失敗：${escapeHtml(res.error || '未知錯誤')}</div>`;
+async function submitReimbursement() {
+  const member = document.getElementById('reimburse-member').value;
+  const amount = Number(document.getElementById('reimburse-amount').value);
+  const date = document.getElementById('reimburse-date').value;
+  const notes = document.getElementById('reimburse-notes').value.trim();
+
+  if (!member || !amount || amount <= 0) {
+    alert('請選擇成員並輸入還款金額');
     return;
   }
 
-  const previews = res.data.previews || [];
-  const needsCount = previews.filter(p => p.status === 'needs-correction').length;
-  const overflowCount = previews.filter(p => p.status === 'skip-overflow').length;
+  const btn = document.getElementById('reimburse-submit');
+  btn.disabled = true;
+  btn.textContent = '送出中...';
 
-  let html = `<p style="margin:0 0 12px;font-size:14px;color:var(--text-light)">
-    掃描全 ${previews.length} 位成員。需修正：<strong style="color:var(--text)">${needsCount}</strong> 位${overflowCount > 0 ? `，異常跳過：<strong style="color:var(--red)">${overflowCount}</strong> 位` : ''}。
-  </p>`;
-
-  html += `<table style="width:100%;font-size:13px;border-collapse:collapse">
-    <thead><tr>
-      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">成員</th>
-      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">歷史結算總額</th>
-      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">已結清代墊</th>
-      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">將新增修正</th>
-      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border)">修正後預期</th>
-    </tr></thead><tbody>`;
-
-  previews.forEach(p => {
-    let actionCell;
-    let rowStyle = '';
-    if (p.status === 'needs-correction') {
-      actionCell = `<span style="color:var(--red)">$${p.correctionAmount.toLocaleString()}</span>`;
-    } else if (p.status === 'no-correction-needed') {
-      actionCell = `<span style="color:var(--text-light)">無需修正</span>`;
-      rowStyle = 'color:var(--text-light)';
-    } else if (p.status === 'already-corrected') {
-      actionCell = `<span style="color:var(--text-light)">已修正過</span>`;
-      rowStyle = 'color:var(--text-light)';
-    } else if (p.status === 'skip-overflow') {
-      actionCell = `<span style="color:var(--red)" title="${escapeHtml(p.reason)}">⚠ 跳過：代墊金額超過結算總額</span>`;
-    } else {
-      actionCell = escapeHtml(p.status);
-    }
-
-    html += `<tr style="${rowStyle}">
-      <td style="padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">${escapeHtml(p.member)}</td>
-      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">$${p.settlementTotal.toLocaleString()}</td>
-      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">$${p.advanceTotal.toLocaleString()}</td>
-      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee)">${actionCell}</td>
-      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border-light, #eee);font-weight:600">$${p.expectedSettledAfter.toLocaleString()}</td>
-    </tr>`;
-  });
-  html += `</tbody></table>`;
-
-  if (needsCount === 0) {
-    html += `<p style="margin:12px 0 0;font-size:13px;color:var(--text-light)">沒有成員需要修正，可直接取消。</p>`;
+  const res = await API.addAdvanceReimbursement({ member, amount, date, notes });
+  if (res.success) {
+    document.getElementById('modal-overlay').classList.remove('active');
+    await loadAnalytics();
   } else {
-    html += `<p style="margin:12px 0 0;font-size:12px;color:var(--text-light)">
-      按「確認執行」會在 <strong>成員結算</strong> 工作表新增 ${needsCount} 筆負數修正紀錄（備註：${escapeHtml(ADVANCE_CORRECTION_NOTE_LABEL)}），不會修改任何既有列。
-    </p>`;
-  }
-
-  content.innerHTML = html;
-
-  if (needsCount > 0) {
-    const confirmBtn = document.getElementById('fix-advance-confirm');
-    confirmBtn.style.display = '';
-    confirmBtn.addEventListener('click', async () => {
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = '修正中...';
-      const applyRes = await API.fixAdvanceSettlements(false);
-      overlay.classList.remove('active');
-      if (applyRes.success) {
-        const appended = applyRes.data.corrections.length;
-        await loadAnalytics();
-        if (typeof showToast === 'function') {
-          showToast(`已新增 ${appended} 筆修正紀錄`);
-        } else {
-          alert(`已新增 ${appended} 筆修正紀錄`);
-        }
-      } else {
-        alert('修正失敗：' + (applyRes.error || '未知錯誤'));
-      }
-    });
+    alert('新增失敗：' + (res.error || '未知錯誤'));
+    btn.disabled = false;
+    btn.textContent = '新增';
   }
 }
 
