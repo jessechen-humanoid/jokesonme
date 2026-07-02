@@ -1,2 +1,9 @@
 .spectra/
 openspec/.vector-search.db*
+
+# 含粉絲個資的原始資料，永不進版控（見 openspec/specs/repo-data-hygiene）
+RAW DATA/
+
+# macOS 目錄中繼檔
+.DS_Store
+**/.DS_Store
