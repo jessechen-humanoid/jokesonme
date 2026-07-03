@@ -128,6 +128,43 @@ function setupSheets() {
 }
 
 // ============================================================
+// Authentication（共用密碼 + API token）
+// 授權設定存於 Script Properties，不進版控：
+//   APP_PASSWORD：團隊輸入的共用密碼
+//   API_TOKEN：驗證通過後前端隨每次請求夾帶的授權字串
+// 團隊只需輸入密碼；token 由前端自動處理、成員不會看到。
+// ============================================================
+
+const AUTH_PROP_PASSWORD = 'APP_PASSWORD';
+const AUTH_PROP_TOKEN = 'API_TOKEN';
+
+function getAuthProp_(key) {
+  const val = PropertiesService.getScriptProperties().getProperty(key);
+  return val === null ? '' : val;
+}
+
+// 比對送入密碼與 APP_PASSWORD，相符回傳 API_TOKEN。
+// APP_PASSWORD 未設定時一律回失敗（安全預設）。
+function verifyPassword(payload) {
+  const password = (payload.password || '').toString();
+  const expected = getAuthProp_(AUTH_PROP_PASSWORD);
+  if (!expected || password !== expected) {
+    return { success: false, error: '密碼錯誤' };
+  }
+  return { success: true, token: getAuthProp_(AUTH_PROP_TOKEN) };
+}
+
+// 檢查請求 token 是否有效。
+// 過渡相容：API_TOKEN 未設定時放行（讓舊前端在 property 尚未設定前仍可用）。
+// 一旦設定 API_TOKEN，token 不符即拒絕。
+function isAuthorized_(params, postData) {
+  const expected = getAuthProp_(AUTH_PROP_TOKEN);
+  if (!expected) return true;
+  const token = (params.token || (postData && postData.token) || '').toString();
+  return token === expected;
+}
+
+// ============================================================
 // Router
 // ============================================================
 
@@ -154,78 +191,74 @@ function handleRequest(e) {
 
   let result;
   try {
-    switch (action) {
-      case 'setup':
-        result = setupSheets();
-        break;
-      case 'getShows':
-        result = getShows();
-        break;
-      case 'addShow':
-        result = addShow(postData);
-        break;
-      case 'getTransactions':
-        result = getTransactions(params);
-        break;
-      case 'addTransaction':
-        result = addTransaction(postData);
-        break;
-      case 'updateTransaction':
-        result = updateTransaction(postData);
-        break;
-      case 'deleteTransaction':
-        result = deleteTransaction(postData);
-        break;
-      case 'getChecklist':
-        result = getChecklist(params);
-        break;
-      case 'initChecklist':
-        result = initChecklist(postData);
-        break;
-      case 'updateChecklistItem':
-        result = updateChecklistItem(postData);
-        break;
-      case 'addChecklistItem':
-        result = addChecklistItem(postData);
-        break;
-      case 'batchImportTransactions':
-        result = batchImportTransactions(postData);
-        break;
-      case 'migrateRenameShowToProject':
-        result = migrateRenameShowToProject();
-        break;
-      case 'migrateAnalyticsCleanup':
-        result = migrateAnalyticsCleanup();
-        break;
-      case 'migrateTaxAndFundSetup':
-        result = migrateTaxAndFundSetup();
-        break;
-      case 'getSettlements':
-        result = getSettlements();
-        break;
-      case 'addSettlement':
-        result = addSettlement(postData);
-        break;
-      case 'getAdvanceReimbursements':
-        result = getAdvanceReimbursements();
-        break;
-      case 'addAdvanceReimbursement':
-        result = addAdvanceReimbursement(postData);
-        break;
-      case 'migrateAdvanceLedger':
-        result = migrateAdvanceLedger();
-        break;
-      case 'getCommonFund':
-        result = getCommonFund();
-        break;
-      case 'getForecast':
-        result = getForecast();
-        break;
-      case 'updateForecast':
-        result = updateForecast(postData);
-        break;
-      default:
-        result = { success: false, error: '未知的 action: ' + action };
+    if (action === 'verifyPassword') {
+      // 密碼驗證本身不需 token
+      result = verifyPassword(postData);
+    } else if (!isAuthorized_(params, postData)) {
+      // 其餘所有 action 一律需要有效 token（API_TOKEN 未設時放行，見 isAuthorized_）
+      result = { success: false, error: 'unauthorized' };
+    } else {
+      switch (action) {
+        case 'getShows':
+          result = getShows();
+          break;
+        case 'addShow':
+          result = addShow(postData);
+          break;
+        case 'getTransactions':
+          result = getTransactions(params);
+          break;
+        case 'addTransaction':
+          result = addTransaction(postData);
+          break;
+        case 'updateTransaction':
+          result = updateTransaction(postData);
+          break;
+        case 'deleteTransaction':
+          result = deleteTransaction(postData);
+          break;
+        case 'getChecklist':
+          result = getChecklist(params);
+          break;
+        case 'initChecklist':
+          result = initChecklist(postData);
+          break;
+        case 'updateChecklistItem':
+          result = updateChecklistItem(postData);
+          break;
+        case 'addChecklistItem':
+          result = addChecklistItem(postData);
+          break;
+        case 'batchImportTransactions':
+          result = batchImportTransactions(postData);
+          break;
+        case 'getSettlements':
+          result = getSettlements();
+          break;
+        case 'addSettlement':
+          result = addSettlement(postData);
+          break;
+        case 'getAdvanceReimbursements':
+          result = getAdvanceReimbursements();
+          break;
+        case 'addAdvanceReimbursement':
+          result = addAdvanceReimbursement(postData);
+          break;
+        case 'getCommonFund':
+          result = getCommonFund();
+          break;
+        case 'getForecast':
+          result = getForecast();
+          break;
+        case 'updateForecast':
+          result = updateForecast(postData);
+          break;
+        // 已下架的一次性 migration（函式本體保留於檔案供查閱，路由已移除）：
+        //   setup, migrateRenameShowToProject, migrateAnalyticsCleanup,
+        //   migrateTaxAndFundSetup, migrateAdvanceLedger
+        default:
+          result = { success: false, error: '未知的 action: ' + action };
+      }
     }
   } catch (err) {
     result = { success: false, error: err.message };

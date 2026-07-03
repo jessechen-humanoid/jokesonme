@@ -5,7 +5,15 @@
 // ---- Password Gate ----
 
 function checkAuth() {
-  if (sessionStorage.getItem('authenticated') === 'true') return;
+  // 已持有 token 即視為已登入；否則顯示密碼閘門
+  if (sessionStorage.getItem('apiToken')) return;
+  showAuthGate();
+}
+
+// 顯示密碼閘門；密碼送後端 verifyPassword 驗證，成功後存 token 並重載頁面
+// （設為全域，api.js 收到 unauthorized 時會呼叫它重新要求登入）
+function showAuthGate() {
+  if (document.querySelector('.auth-overlay')) return; // 避免重複疊加
 
   const overlay = document.createElement('div');
   overlay.className = 'auth-overlay';
@@ -24,15 +32,25 @@ function checkAuth() {
   const error = document.getElementById('auth-error');
   const submit = document.getElementById('auth-submit');
 
-  function tryAuth() {
-    if (input.value === 'joke0321') {
-      sessionStorage.setItem('authenticated', 'true');
-      overlay.remove();
-    } else {
+  async function tryAuth() {
+    submit.disabled = true;
+    error.textContent = '';
+    try {
+      const res = await API.verifyPassword(input.value);
+      if (res.success && res.token) {
+        sessionStorage.setItem('apiToken', res.token);
+        overlay.remove();
+        // 重載以帶著 token 重新載入資料
+        window.location.reload();
+        return;
+      }
       error.textContent = '密碼錯誤，請重試';
-      input.value = '';
-      input.focus();
+    } catch (_) {
+      error.textContent = '連線失敗，請重試';
     }
+    input.value = '';
+    input.focus();
+    submit.disabled = false;
   }
 
   submit.addEventListener('click', tryAuth);

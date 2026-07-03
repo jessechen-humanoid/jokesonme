@@ -5,26 +5,51 @@
 // 部署 Google Apps Script 後，將下方 URL 替換為你的 Web App URL
 const API_URL = 'https://script.google.com/macros/s/AKfycbxVUewb5wFvxM1PgJBXJm36Gv8lN47UyVLijFjupH4UgMrZpVhpxGppy_YnH-pW9_2y/exec';
 
+// 讀取登入後存於 sessionStorage 的 API token（由 shared.js 的密碼閘門寫入）
+function getApiToken() {
+  try { return sessionStorage.getItem('apiToken') || ''; } catch (_) { return ''; }
+}
+
+// 後端回傳 unauthorized 時：清除失效 token 並重新顯示密碼閘門
+function handleUnauthorized(data) {
+  if (data && data.success === false && data.error === 'unauthorized') {
+    try { sessionStorage.removeItem('apiToken'); } catch (_) {}
+    if (typeof showAuthGate === 'function') showAuthGate();
+  }
+  return data;
+}
+
 const API = {
   async get(action, params = {}) {
     const url = new URL(API_URL);
     url.searchParams.set('action', action);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const token = getApiToken();
+    if (token) url.searchParams.set('token', token);
 
     const res = await fetch(url.toString());
-    return res.json();
+    return handleUnauthorized(await res.json());
   },
 
   async post(action, payload = {}) {
     const url = new URL(API_URL);
     url.searchParams.set('action', action);
 
+    const body = { ...payload };
+    const token = getApiToken();
+    if (token) body.token = token;
+
     const res = await fetch(url.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
-    return res.json();
+    return handleUnauthorized(await res.json());
+  },
+
+  // Auth
+  verifyPassword(password) {
+    return this.post('verifyPassword', { password });
   },
 
   // Show Management
@@ -88,27 +113,8 @@ const API = {
     return this.post('addAdvanceReimbursement', data);
   },
 
-  migrateAdvanceLedger() {
-    return this.post('migrateAdvanceLedger', {});
-  },
-
   // Import
   batchImportTransactions(transactions) {
     return this.post('batchImportTransactions', { transactions });
-  },
-
-  // Common fund summary (includes fundReserved / fundUsed / fundBalance)
-  getCommonFund() {
-    return this.get('getCommonFund');
-  },
-
-  // One-time migration: 稅務預留 + 共同基金支付
-  migrateTaxAndFundSetup() {
-    return this.get('migrateTaxAndFundSetup');
-  },
-
-  // Setup
-  setup() {
-    return this.get('setup');
   },
 };
