@@ -217,7 +217,7 @@ async function loadTransactions() {
   // Bind settle buttons (Optimistic UI)
   list.querySelectorAll('.btn-settle').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const id = Number(btn.dataset.id);
+      const id = btn.dataset.id;
       const currentlySettled = btn.dataset.settled === 'true';
       const newSettled = !currentlySettled;
 
@@ -260,7 +260,7 @@ async function loadTransactions() {
   list.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', () => {
       const data = btn.dataset;
-      startEdit(Number(data.id), data.category, data.notes, Number(data.amount), data.advancedBy, data.excludedMembers, data.date, data.recordedBy, data.paidByFund === '1');
+      startEdit(data.id, data.category, data.notes, Number(data.amount), data.advancedBy, data.excludedMembers, data.date, data.recordedBy, data.paidByFund === '1');
       document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
     });
   });
@@ -270,7 +270,7 @@ async function loadTransactions() {
     btn.addEventListener('click', async () => {
       document.querySelectorAll('.action-menu.open').forEach(m => m.classList.remove('open'));
       if (!confirm('確定要刪除這筆紀錄嗎？')) return;
-      const id = Number(btn.dataset.id);
+      const id = btn.dataset.id;
       const res = await API.deleteTransaction(id);
       if (res.success) {
         await loadTransactions();
@@ -416,14 +416,13 @@ async function submitTransaction() {
   btn.textContent = editingId ? '更新中...' : '新增中...';
 
   if (editingId) {
-    // Update existing
+    // Update existing — 不送 date，保留交易原始日期（後端對 undefined 欄位不動作）
     await API.updateTransaction(editingId, {
       category,
       notes,
       amount,
       advancedBy,
       excludedMembers,
-      date,
       recordedBy,
       paidByFund,
     });
