@@ -19,6 +19,18 @@ function handleUnauthorized(data) {
   return data;
 }
 
+// 統一的請求包裝：逾時、非 2xx、網路錯誤、JSON 解析失敗一律正規化為
+// { success: false, error }，讓呼叫端只需檢查 success。GAS 冷啟動慢，逾時取 30 秒。
+async function safeFetchJson(url, options) {
+  try {
+    const res = await fetch(url, Object.assign({ signal: AbortSignal.timeout(30000) }, options || {}));
+    if (!res.ok) return { success: false, error: '網路錯誤，請重試' };
+    return handleUnauthorized(await res.json());
+  } catch (_) {
+    return { success: false, error: '網路錯誤，請重試' };
+  }
+}
+
 const API = {
   async get(action, params = {}) {
     const url = new URL(API_URL);
@@ -27,8 +39,7 @@ const API = {
     const token = getApiToken();
     if (token) url.searchParams.set('token', token);
 
-    const res = await fetch(url.toString());
-    return handleUnauthorized(await res.json());
+    return safeFetchJson(url.toString());
   },
 
   async post(action, payload = {}) {
@@ -39,12 +50,11 @@ const API = {
     const token = getApiToken();
     if (token) body.token = token;
 
-    const res = await fetch(url.toString(), {
+    return safeFetchJson(url.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body),
     });
-    return handleUnauthorized(await res.json());
   },
 
   // Auth

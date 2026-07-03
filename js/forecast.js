@@ -240,10 +240,3 @@ function parseInputValue(str) {
   }
   return Number(str) || 0;
 }
-
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}

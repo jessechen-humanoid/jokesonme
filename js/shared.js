@@ -121,7 +121,7 @@ async function renderShowSelector(containerId, onChange) {
   container.innerHTML = `
     <select class="show-select" id="show-select">
       <option value="">— 請選擇專案 —</option>
-      ${shows.map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+      ${shows.map(s => `<option value="${escapeAttr(s.name)}">${escapeHtml(s.name)}</option>`).join('')}
       <option value="__add_new__">＋ 新增一個專案</option>
     </select>
   `;
@@ -216,7 +216,7 @@ function createMemberSelect(id, selectedValue, options = {}) {
     html += `<option value="">— 請選擇 —</option>`;
   }
   MEMBERS.forEach(m => {
-    html += `<option value="${m}" ${m === selectedValue ? 'selected' : ''}>${m}</option>`;
+    html += `<option value="${escapeAttr(m)}" ${m === selectedValue ? 'selected' : ''}>${escapeHtml(m)}</option>`;
   });
   if (includeOther) {
     html += `<option value="__other__">其他</option>`;
@@ -292,7 +292,7 @@ function createCategorySelect(id, type, selectedValue) {
   const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   return `<select class="form-control" id="${id}">
     <option value="">— 請選擇分類 —</option>
-    ${categories.map(c => `<option value="${c}" ${c === selectedValue ? 'selected' : ''}>${c}</option>`).join('')}
+    ${categories.map(c => `<option value="${escapeAttr(c)}" ${c === selectedValue ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
   </select>`;
 }
 
@@ -305,6 +305,23 @@ function updateCategorySelect(id, type, selectedValue) {
 }
 
 // ---- Utilities ----
+
+// 全站唯一的 HTML 跳脫函式（含 null/undefined guard）。shared.js 於各頁最先載入，故各頁可直接使用。
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 function formatAmount(amount) {
   const num = Number(amount);

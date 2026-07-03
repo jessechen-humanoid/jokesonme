@@ -252,7 +252,8 @@ function bindChecklistEvents() {
           return;
         }
       }
-      await API.updateChecklistItem(id, { assignee: value });
+      const res = await API.updateChecklistItem(id, { assignee: value });
+      if (!res || !res.success) alert('更新負責人失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
     });
   });
 
@@ -264,7 +265,11 @@ function bindChecklistEvents() {
       debounceTimer = setTimeout(async () => {
         const id = Number(input.dataset.id);
         const value = input.value.trim();
-        await API.updateChecklistItem(id, { notes: value });
+        const res = await API.updateChecklistItem(id, { notes: value });
+        if (!res || !res.success) {
+          alert('儲存企劃名稱失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
+          return;
+        }
 
         // Update the corresponding video production item display
         // Reload to reflect auto-populated names
@@ -280,7 +285,8 @@ function bindChecklistEvents() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
         const id = Number(textarea.dataset.id);
-        await API.updateChecklistItem(id, { notes: textarea.value });
+        const res = await API.updateChecklistItem(id, { notes: textarea.value });
+        if (!res || !res.success) alert('儲存備註失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
       }, 800);
     });
   });
@@ -311,22 +317,19 @@ function bindAddItemEvents() {
       return;
     }
 
-    await API.addChecklistItem({
+    const res = await API.addChecklistItem({
       showName: currentShow,
       category,
       itemName,
       assignee,
     });
+    if (!res || !res.success) {
+      alert('新增待辦失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
+      return;
+    }
 
     form.style.display = 'none';
     document.getElementById('add-checklist-item-btn').style.display = '';
     await loadChecklist();
   });
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }

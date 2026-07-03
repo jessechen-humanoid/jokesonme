@@ -415,9 +415,10 @@ async function submitTransaction() {
   btn.disabled = true;
   btn.textContent = editingId ? '更新中...' : '新增中...';
 
+  let res;
   if (editingId) {
     // Update existing — 不送 date，保留交易原始日期（後端對 undefined 欄位不動作）
-    await API.updateTransaction(editingId, {
+    res = await API.updateTransaction(editingId, {
       category,
       notes,
       amount,
@@ -426,10 +427,9 @@ async function submitTransaction() {
       recordedBy,
       paidByFund,
     });
-    cancelEdit();
   } else {
     // Add new
-    await API.addTransaction({
+    res = await API.addTransaction({
       showName: currentShow,
       category,
       notes,
@@ -440,7 +440,19 @@ async function submitTransaction() {
       recordedBy,
       paidByFund,
     });
+  }
 
+  // 失敗：保留表單內容、還原按鈕文字（依模式），讓使用者可直接重試
+  if (!res || !res.success) {
+    btn.disabled = false;
+    btn.textContent = editingId ? '更新' : '新增';
+    alert('儲存失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
+    return;
+  }
+
+  if (editingId) {
+    cancelEdit();
+  } else {
     // Reset form (keep toggle and date)
     updateCategorySelect('tx-category', isIncome ? 'income' : 'expense', '');
     document.getElementById('tx-notes').value = '';
@@ -479,16 +491,4 @@ function formatAllocCell(t) {
     return allocText + ' ' + escapeHtml(t.advancedBy) + '(墊)';
   }
   return allocText;
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

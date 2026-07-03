@@ -563,12 +563,6 @@ function renderMappingSection() {
   }).join('');
 }
 
-function escapeHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
 // ---- Dashboard ----
 
 function renderDashboard() {
