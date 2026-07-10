@@ -14,8 +14,8 @@
 
 ## 3. 驗證
 
-- [ ] 3.1 開啟 `analytics.html`，確認初始狀態為淨利降序、最賺的演出在最上（落實 Initial table state）
-- [ ] 3.2 點擊各欄標頭驗證切換行為（落實 Click inactive column header 與 Click active column header 兩個 Scenario）
-- [ ] 3.3 驗證專案欄中文排序正確、支出欄降序時花最多的演出在最上（落實 Sort show name column with Chinese names 與 Sort expense column uses absolute values）
-- [ ] 3.4 重新載入頁面，確認回到初始淨利降序狀態（落實 No sort state persistence across reload）
-- [ ] 3.5 任意排序下，合計列永遠在最底（落實 Totals row stays pinned）
+- [x] 3.1 開啟 `analytics.html`，確認初始狀態為淨利降序、最賺的演出在最上（落實 Initial table state）
+- [x] 3.2 點擊各欄標頭驗證切換行為（落實 Click inactive column header 與 Click active column header 兩個 Scenario）
+- [x] 3.3 驗證專案欄中文排序正確、支出欄降序時花最多的演出在最上（落實 Sort show name column with Chinese names 與 Sort expense column uses absolute values）
+- [x] 3.4 重新載入頁面，確認回到初始淨利降序狀態（落實 No sort state persistence across reload）
+- [x] 3.5 任意排序下，合計列永遠在最底（落實 Totals row stays pinned）

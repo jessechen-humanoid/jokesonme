@@ -457,3 +457,52 @@ code:
   - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
   - RAW DATA/20260412_應援訂單_85筆.csv
 -->
+
+---
+### Requirement: External library integrity verification
+
+The SheetJS library `<script>` tag on the import page SHALL pin a specific library version and SHALL include an `integrity` attribute with the SHA-384 hash of that version plus `crossorigin="anonymous"`. If the fetched file does not match the hash, the browser blocks execution and the import feature becomes unavailable rather than running tampered code. A comment adjacent to the tag SHALL document how to recompute the hash when upgrading the library version.
+
+#### Scenario: Library loads with valid integrity
+
+- **WHEN** user opens the import page with network access and the CDN serves the pinned SheetJS version
+- **THEN** the library loads (`typeof XLSX !== 'undefined'`) and file import works as before
+
+#### Scenario: Tampered library is blocked
+
+- **WHEN** the CDN response does not match the declared SHA-384 hash
+- **THEN** the browser refuses to execute the script and no spreadsheet parsing occurs
+
+<!-- @trace
+source: site-optimization
+updated: 2026-07-10
+code:
+  - OPTIMIZATION_PLAN.md
+  - js/analytics.js
+  - .agents/skills/spectra-commit/SKILL.md
+  - js/checklist.js
+  - import.html
+  - checklist.html
+  - .agents/skills/spectra-debug/SKILL.md
+  - .agents/skills/spectra-ask/SKILL.md
+  - .agents/skills/spectra-propose/SKILL.md
+  - index.html
+  - .agents/skills/spectra-discuss/SKILL.md
+  - analytics.html
+  - .agents/skills/spectra-audit/SKILL.md
+  - .agents/skills/spectra-ingest/SKILL.md
+  - opentix.html
+  - .agents/skills/spectra-apply/SKILL.md
+  - js/import.js
+  - js/shared.js
+  - AGENTS.md
+  - css/style.css
+  - forecast.html
+  - opentix-analytics.html
+  - demo.html
+  - CLAUDE.md
+  - gas/Code.gs
+  - .agents/skills/spectra-archive/SKILL.md
+  - js/transaction.js
+  - .agents/skills/spectra-drift/SKILL.md
+-->

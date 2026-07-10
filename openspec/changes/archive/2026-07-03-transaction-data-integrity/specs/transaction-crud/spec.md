@@ -1,10 +1,4 @@
-# transaction-crud Specification
-
-## Purpose
-
-TBD - created by archiving change 'platform-v2'. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Edit transaction
 
@@ -30,16 +24,6 @@ The system SHALL allow users to edit an existing transaction. When the user clic
 - **WHEN** user is in edit mode and clicks a cancel button
 - **THEN** the form resets to empty add mode with submit button showing "新增"
 
-
-<!-- @trace
-source: transaction-data-integrity
-updated: 2026-07-03
-code:
-  - CLAUDE.md
-  - OPTIMIZATION_PLAN.md
--->
-
----
 ### Requirement: Delete transaction
 
 The system SHALL allow users to delete an existing transaction. When the user clicks the delete action, a confirmation dialog SHALL appear. Upon confirmation, the system SHALL delete the transaction identified by its stable UUID: the backend SHALL locate the row whose ID column matches the UUID and remove that row. If no row matches the UUID, the backend SHALL return `{ success: false, error: "找不到該筆交易（可能已被刪除）" }` and delete nothing.
@@ -58,43 +42,3 @@ The system SHALL allow users to delete an existing transaction. When the user cl
 
 - **WHEN** user clicks delete on a transaction and cancels the dialog
 - **THEN** the transaction remains unchanged
-
-
-<!-- @trace
-source: transaction-data-integrity
-updated: 2026-07-03
-code:
-  - CLAUDE.md
-  - OPTIMIZATION_PLAN.md
--->
-
----
-### Requirement: Transaction row action menu
-
-Each transaction row SHALL display a "⋯" action button in the rightmost column. Clicking the button SHALL reveal a menu with "編輯" and "刪除" options.
-
-#### Scenario: Open action menu
-
-- **WHEN** user clicks "⋯" on a transaction row
-- **THEN** a menu appears with "編輯" and "刪除" options
-
-#### Scenario: Close action menu
-
-- **WHEN** user clicks outside an open action menu
-- **THEN** the menu closes
-
-<!-- @trace
-source: platform-v2
-updated: 2026-03-17
-code:
-  - index.html
-  - js/analytics.js
-  - CLAUDE.md
-  - js/checklist.js
-  - .DS_Store
-  - js/transaction.js
-  - js/api.js
-  - js/shared.js
-  - gas/Code.gs
-  - css/style.css
--->

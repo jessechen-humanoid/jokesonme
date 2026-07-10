@@ -40,33 +40,39 @@ code:
 ---
 ### Requirement: Add settlement record
 
-The system SHALL provide a button in the member earnings section to add a new settlement record. Clicking the button SHALL open a modal form with fields: member (dropdown), amount (number), date (date picker), notes (text). Submitting the form SHALL save the record to the "成員結算" sheet and refresh the member earnings table.
+The system SHALL provide a button in the member earnings section to add a new settlement record. A settlement record represents profit distribution only and MUST NOT include any advance reimbursement amount.
 
-#### Scenario: Add settlement via modal
+Clicking the button SHALL open a modal form with fields: member (dropdown), amount (number, the profit amount), date (date picker), notes (text). The modal SHALL NOT display any advance section and SHALL NOT show a "一起結清代墊" checkbox. Submitting the form SHALL append one row to the "成員結算" sheet with the entered amount and SHALL refresh the member earnings table. Submitting SHALL NOT read, modify, or mark any advance transactions.
 
-- **WHEN** user clicks "新增結算" and fills in member "傑哥", amount 5000, date "2026-03-31"
-- **THEN** a new row is added to the "成員結算" sheet and the member earnings table updates to reflect the settlement
+Advance reimbursements are recorded separately via the advance reimbursement ledger (see capability `advance-reimbursement-ledger`), not through this settlement form.
+
+#### Scenario: Add a profit settlement
+
+- **WHEN** user clicks "新增結算", selects member "兔子", enters amount 10000, date "2026-06-05", and submits
+- **THEN** a new row [兔子, 10000, 2026-06-05, ...] is appended to the "成員結算" sheet, the member earnings table updates, and no advance transactions are modified
+
+#### Scenario: Settlement modal has no advance section
+
+- **WHEN** user opens the "新增結算" modal and selects any member, regardless of whether that member has advance transactions
+- **THEN** the modal shows only member, amount, date, and notes fields, with no advance breakdown and no "一起結清代墊" checkbox
 
 
 <!-- @trace
-source: analytics-v2
-updated: 2026-03-24
+source: advance-reimbursement-ledger
+updated: 2026-06-05
 code:
-  - js/api.js
+  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
+  - RAW DATA/20260412_應援訂單_85筆.csv
   - .DS_Store
-  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
-  - js/shared.js
-  - js/import.js
-  - analytics.html
-  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
+  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
+  - RAW DATA/20260412_應援票券訂單_515筆.csv
+  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
   - gas/Code.gs
-  - css/style.css
-  - js/transaction.js
-  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
   - js/analytics.js
-  - RAW DATA/.DS_Store
-  - index.html
-  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
+  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
+  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
+  - js/api.js
+  - CLAUDE.md
 -->
 
 ---
@@ -99,3 +105,5 @@ code:
   - index.html
   - RAW DATA/20260322_應援撥款明細_220筆.xlsx
 -->
+
+---

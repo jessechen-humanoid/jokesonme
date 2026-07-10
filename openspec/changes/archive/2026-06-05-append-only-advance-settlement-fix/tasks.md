@@ -1,6 +1,3 @@
-<!--
-Each task delivers an observable behavior + verification target. File paths are locator context.
--->
 
 ## 1. GAS 後端：Append-only 修正紀錄而非 in-place mutation
 
@@ -32,10 +29,10 @@ Each task delivers an observable behavior + verification target. File paths are 
 
 ## 4. 部署
 
-- [ ] 4.1 GAS 部署：在 Apps Script editor 操作「管理部署作業 → 建立新版本 → 部署」，確保新版包含 `fixAdvanceSettlements()`（重寫版）與 `previewAdvanceFix()`。驗收：用 curl 或前端對部署 URL 以 `action=previewAdvanceFix` 發送 POST 請求，HTTP 200 並回傳含 `previews` 陣列的 JSON。
+- [x] 4.1 GAS 部署：在 Apps Script editor 操作「管理部署作業 → 建立新版本 → 部署」，確保新版包含 `fixAdvanceSettlements()`（重寫版）與 `previewAdvanceFix()`。驗收：用 curl 或前端對部署 URL 以 `action=previewAdvanceFix` 發送 POST 請求，HTTP 200 並回傳含 `previews` 陣列的 JSON。
 
-- [ ] 4.2 前端部署：git commit 修改檔（`js/analytics.js`、`gas/Code.gs`）並 push 到 `main`，等 GitHub Pages 自動部署完成（`https://jessechen-humanoid.github.io/jokesonme/`）。驗收：以無痕視窗開啟 analytics 頁面，看到「修正代墊帳」按鈕點下後跳出預覽 modal（而非舊版直接執行）。
+- [x] 4.2 前端部署：git commit 修改檔（`js/analytics.js`、`gas/Code.gs`）並 push 到 `main`，等 GitHub Pages 自動部署完成（`https://jessechen-humanoid.github.io/jokesonme/`）。驗收：以無痕視窗開啟 analytics 頁面，看到「修正代墊帳」按鈕點下後跳出預覽 modal（而非舊版直接執行）。
 
-- [ ] 4.3 生產資料修正執行：在 production analytics 頁面點「修正代墊帳」→ 檢查預覽含全 8 位成員、確認又又 / 兔子等顯示 `needs-correction` → 按確認執行 → 重新檢視成員年度報表，又又 / 兔子的「已收款淨利」變小、「未收款淨利」與「需匯款金額」變大。驗收：直接打開 Google Sheet 的 `成員結算` 工作表，確認新增修正列存在（備註欄為「代墊還款修正」）、且**原本任何列都沒被修改**。
+- [x] 4.3 生產資料修正執行：在 production analytics 頁面點「修正代墊帳」→ 檢查預覽含全 8 位成員、確認又又 / 兔子等顯示 `needs-correction` → 按確認執行 → 重新檢視成員年度報表，又又 / 兔子的「已收款淨利」變小、「未收款淨利」與「需匯款金額」變大。驗收：直接打開 Google Sheet 的 `成員結算` 工作表，確認新增修正列存在（備註欄為「代墊還款修正」）、且**原本任何列都沒被修改**。
 
-- [ ] 4.4 冪等性生產驗收：再次點「修正代墊帳」按鈕，預覽顯示先前已修正的成員 status = `already-corrected`，按確認後 `成員結算` 列數不增加。
+- [x] 4.4 冪等性生產驗收：再次點「修正代墊帳」按鈕，預覽顯示先前已修正的成員 status = `already-corrected`，按確認後 `成員結算` 列數不增加。

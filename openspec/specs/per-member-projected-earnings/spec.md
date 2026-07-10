@@ -16,7 +16,17 @@ The calculation SHALL account for the common fund deduction:
 - For the **non-common portion** (transactions where excludedMembers is not empty): each member's share SHALL be calculated using the existing allocation logic (split among included members only)
 - **年度分配淨利** = common portion share + non-common portion share
 
-The "需匯款金額" (amount to transfer) calculation SHALL use the updated 年度分配淨利 value.
+The member annual report (成員年度報表) SHALL display these columns in order: 成員, 已收款淨利, 未收款淨利, 代墊未結清, 代墊已結清, 年度分配淨利. The report SHALL NOT include a "需匯款金額" column.
+
+Column derivations:
+
+- **已收款淨利** = sum of all rows in the "成員結算" sheet for that member (profit only)
+- **未收款淨利** = 年度分配淨利 − 已收款淨利
+- **代墊已結清** = sum of all rows in the "代墊還款" ledger for that member
+- **代墊總額** = sum of absolute amounts of all "收支紀錄" transactions whose 墊款人 equals that member, regardless of settle status
+- **代墊未結清** = 代墊總額 − 代墊已結清
+
+The report SHALL satisfy the invariant 代墊已結清 + 代墊未結清 = 代墊總額 for every member. When 代墊未結清 is negative (reimbursed more than total advanced), the value SHALL be displayed as-is with a warning style and SHALL NOT be clamped.
 
 #### Scenario: View per-member earnings with equal allocation
 
@@ -33,18 +43,39 @@ The "需匯款金額" (amount to transfer) calculation SHALL use the updated 年
 - **WHEN** all transactions have excluded members
 - **THEN** common fund = $0, and each member's 年度分配淨利 equals only their non-shared portion
 
+#### Scenario: Member report columns and advance invariant
+
+- **WHEN** 柏文 has 成員結算 rows summing to 30,000, a 代墊還款 ledger sum of 7,665, and 代墊總額 of 15,745
+- **THEN** the report shows 已收款淨利 30,000, 代墊已結清 7,665, 代墊未結清 8,080, and 代墊已結清 + 代墊未結清 = 15,745 = 代墊總額
+
+##### Example: member report row values
+
+- **GIVEN** post-migration data for these members
+- **WHEN** the member annual report renders
+- **THEN** rows show:
+
+| 成員 | 已收款淨利 | 代墊已結清 | 代墊總額 | 代墊未結清 |
+| ---- | --------- | --------- | ------- | --------- |
+| 柏文 | 30,000 | 7,665 | 15,745 | 8,080 |
+| 又又 | 30,000 | 8,380 | 14,380 | 6,000 |
+| 芭樂 | 30,000 | 1,600 | 1,600 | 0 |
+| 兔子 | 30,000 | 6,000 | 6,000 | 0 |
+| 巧達 | 30,000 | 0 | 0 | 0 |
+
 <!-- @trace
-source: common-fund
-updated: 2026-04-06
+source: advance-reimbursement-ledger
+updated: 2026-06-05
 code:
-  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
-  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
-  - .spectra.yaml
-  - RAW DATA/.DS_Store
-  - gas/Code.gs
-  - analytics.html
-  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
-  - js/analytics.js
-  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
+  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
+  - RAW DATA/20260412_應援訂單_85筆.csv
   - .DS_Store
+  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
+  - RAW DATA/20260412_應援票券訂單_515筆.csv
+  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
+  - gas/Code.gs
+  - js/analytics.js
+  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
+  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
+  - js/api.js
+  - CLAUDE.md
 -->

@@ -1,10 +1,4 @@
-# password-gate Specification
-
-## Purpose
-
-TBD - created by archiving change 'income-allocation-analytics'. Update Purpose after archive.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Password gate for all pages
 
@@ -39,14 +33,3 @@ All pages SHALL check sessionStorage for an authentication token on page load. I
 
 - **WHEN** the frontend source code is searched for the previous literal password value
 - **THEN** no occurrence is found, because password verification happens only on the server
-
-<!-- @trace
-source: api-auth-token
-updated: 2026-07-03
-code:
-  - OPTIMIZATION_PLAN.md
-  - CLAUDE.md
-  - gas/Code.gs
-  - js/api.js
-  - js/shared.js
--->

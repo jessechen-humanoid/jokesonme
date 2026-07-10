@@ -169,77 +169,6 @@ code:
 -->
 
 ---
-### Requirement: Data migration action
-
-The API SHALL support a `migrateRenameShowToProject` action that performs a one-time data migration:
-
-1. Rename the sheet tab from "演出清單" to "專案清單" (if not already renamed)
-2. Update all transaction records where showName is "會員與其他收支" and category is "付費會員" to use showName "看我笑話會員"
-
-#### Scenario: Migration renames sheet and moves membership records
-
-- **WHEN** a POST request is sent with action `migrateRenameShowToProject`
-- **THEN** the sheet tab is renamed and matching membership records are updated
-- **AND** a success response is returned with the count of updated records
-
-#### Scenario: Migration is idempotent
-
-- **WHEN** the migration action is called after it has already been executed
-- **THEN** no changes are made and a success response is returned
-
-<!-- @trace
-source: rename-show-to-project
-updated: 2026-03-22
-code:
-  - js/analytics.js
-  - gas/Code.gs
-  - .DS_Store
-  - js/import.js
-  - js/shared.js
-  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
-  - import.html
-  - analytics.html
-  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
-  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
-  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
-  - RAW DATA/.DS_Store
--->
-
----
-### Requirement: Analytics cleanup migration
-
-The API SHALL support a `migrateAnalyticsCleanup` action that performs a one-time data migration:
-
-1. Remove the row with project name "會員與其他收支" from the project list sheet
-2. Reorder the project list so that "看我笑話年度大會｜看我畫大餅" appears before "看我笑話第 2 季 Opening Party"
-
-#### Scenario: Migration removes obsolete project and reorders
-
-- **WHEN** a POST request is sent with action `migrateAnalyticsCleanup`
-- **THEN** the "會員與其他收支" row is deleted and "看我笑話年度大會｜看我畫大餅" is moved before "看我笑話第 2 季 Opening Party"
-- **AND** a success response is returned
-
-#### Scenario: Migration is idempotent
-
-- **WHEN** the migration is called after it has already been executed
-- **THEN** no errors occur and a success response is returned
-
-<!-- @trace
-source: analytics-cleanup
-updated: 2026-03-22
-code:
-  - RAW DATA/20260322_看我笑話｜第 2 季 4 月號_活動報名狀態_142筆.xlsx
-  - js/analytics.js
-  - RAW DATA/20260322_應援撥款明細_220筆.xlsx
-  - RAW DATA/20260322_應援撥款明細_1筆.xlsx
-  - RAW DATA/20260322_2026 年度會議｜看我畫大餅_活動報名狀態_47筆.xlsx
-  - gas/Code.gs
-  - RAW DATA/.DS_Store
-  - .DS_Store
-  - analytics.html
--->
-
----
 ### Requirement: Get forecast data
 
 The system SHALL provide a `getForecast` API endpoint that reads the "財務預估" worksheet and returns structured JSON containing all six sections: baseParams, versionParams, income, expense, pnl, and profitShare.
@@ -292,4 +221,116 @@ code:
   - js/forecast.js
   - js/shared.js
   - forecast.html
+-->
+
+---
+### Requirement: Password verification action
+
+The API SHALL support a `verifyPassword` action. It accepts a POST payload containing `password` and compares it against the `APP_PASSWORD` value stored in Script Properties. On match, it SHALL return `{ success: true, token: <API_TOKEN> }` where `API_TOKEN` is read from Script Properties. On mismatch, it SHALL return a failure response and SHALL NOT include a token.
+
+#### Scenario: Correct password returns token
+
+- **WHEN** a POST request with action `verifyPassword` and payload `{ password: <correct password> }` is sent
+- **THEN** the API returns `{ success: true, token: <API_TOKEN> }`
+
+#### Scenario: Incorrect password is rejected
+
+- **WHEN** a POST request with action `verifyPassword` and an incorrect password is sent
+- **THEN** the API returns a failure response with no token field
+
+
+<!-- @trace
+source: api-auth-token
+updated: 2026-07-03
+code:
+  - OPTIMIZATION_PLAN.md
+  - CLAUDE.md
+  - gas/Code.gs
+  - js/api.js
+  - js/shared.js
+-->
+
+---
+### Requirement: Token authorization for all actions
+
+The API SHALL require a valid `token` on every action except `verifyPassword`. The token is read from the request (query parameter for GET, payload field for POST) and compared against the `API_TOKEN` value in Script Properties. If `API_TOKEN` is not set in Script Properties, the API SHALL skip token verification to allow a zero-downtime transition; this fallback exists only until the property is configured. Once `API_TOKEN` is set, any request whose token does not match SHALL return `{ success: false, error: "unauthorized" }` and SHALL NOT read or write any data.
+
+#### Scenario: Missing token is rejected once enforcement is active
+
+- **WHEN** `API_TOKEN` is set and a request for any action other than `verifyPassword` is sent without a token or with a wrong token
+- **THEN** the API returns `{ success: false, error: "unauthorized" }` and performs no data read or write
+
+#### Scenario: Valid token behaves normally
+
+- **WHEN** `API_TOKEN` is set and a request includes a token equal to `API_TOKEN`
+- **THEN** the action executes exactly as it did before authorization was added
+
+#### Scenario: Transitional fallback before property is configured
+
+- **WHEN** `API_TOKEN` is not set in Script Properties and a request without a token is sent
+- **THEN** the API executes the action normally, preserving compatibility with the pre-upgrade frontend
+
+<!-- @trace
+source: api-auth-token
+updated: 2026-07-03
+code:
+  - OPTIMIZATION_PLAN.md
+  - CLAUDE.md
+  - gas/Code.gs
+  - js/api.js
+  - js/shared.js
+-->
+
+---
+### Requirement: Forecast structure validation
+
+Before reading or writing forecast data, `getForecast` and `updateForecast` SHALL verify that the anchor cells (section header labels) of the forecast worksheet match the expected labels. On mismatch, the API SHALL return `{ "success": false, "error": "FORECAST_STRUCTURE_MISMATCH", "detail": "<anchor location>" }` and SHALL NOT return or write partially parsed data. When the structure matches, behaviour SHALL be identical to the previous implementation.
+
+#### Scenario: Row inserted into forecast worksheet
+
+- **WHEN** a row has been inserted into the forecast worksheet so that section anchors no longer sit at their expected positions, and `getForecast` is called
+- **THEN** the response is `success: false` with error `FORECAST_STRUCTURE_MISMATCH` and a detail naming the failed anchor, and no forecast data is returned
+
+#### Scenario: Intact structure behaves unchanged
+
+- **WHEN** the forecast worksheet structure matches the expected anchors and `getForecast` is called
+- **THEN** the response contains the same forecast data shape as before this change
+
+#### Scenario: Write blocked on structure mismatch
+
+- **WHEN** the forecast worksheet structure does not match and `updateForecast` is called
+- **THEN** no cell is written and the response is `success: false` with error `FORECAST_STRUCTURE_MISMATCH`
+
+<!-- @trace
+source: site-optimization
+updated: 2026-07-10
+code:
+  - OPTIMIZATION_PLAN.md
+  - js/analytics.js
+  - .agents/skills/spectra-commit/SKILL.md
+  - js/checklist.js
+  - import.html
+  - checklist.html
+  - .agents/skills/spectra-debug/SKILL.md
+  - .agents/skills/spectra-ask/SKILL.md
+  - .agents/skills/spectra-propose/SKILL.md
+  - index.html
+  - .agents/skills/spectra-discuss/SKILL.md
+  - analytics.html
+  - .agents/skills/spectra-audit/SKILL.md
+  - .agents/skills/spectra-ingest/SKILL.md
+  - opentix.html
+  - .agents/skills/spectra-apply/SKILL.md
+  - js/import.js
+  - js/shared.js
+  - AGENTS.md
+  - css/style.css
+  - forecast.html
+  - opentix-analytics.html
+  - demo.html
+  - CLAUDE.md
+  - gas/Code.gs
+  - .agents/skills/spectra-archive/SKILL.md
+  - js/transaction.js
+  - .agents/skills/spectra-drift/SKILL.md
 -->

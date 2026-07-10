@@ -46,8 +46,8 @@ Each task delivers an observable behavior + verification target. File paths are 
 
 ## 8. 部署與生產遷移
 
-- [ ] 8.1 GAS 部署：Apps Script editor → 管理部署作業 → 建立新版本 → 部署，確保含新 reimbursement 函式、`migrateAdvanceLedger`、簡化後 `addSettlement`，且已移除舊自動偵測。驗收：對部署 URL 發 `action=getAdvanceReimbursements` 回 200、發 `action=previewAdvanceFix` 回「未知的 action」。
+- [x] 8.1 GAS 部署：Apps Script editor → 管理部署作業 → 建立新版本 → 部署，確保含新 reimbursement 函式、`migrateAdvanceLedger`、簡化後 `addSettlement`，且已移除舊自動偵測。驗收：對部署 URL 發 `action=getAdvanceReimbursements` 回 200、發 `action=previewAdvanceFix` 回「未知的 action」。
 
-- [ ] 8.2 前端部署：git commit（`gas/Code.gs`、`js/api.js`、`js/analytics.js`）並 push 到 `main`，等 GitHub Pages 自動部署。驗收：硬重新整理 analytics 頁，成員年度報表已是新欄位（代墊已結清、無需匯款金額、無修正代墊帳按鈕）。
+- [x] 8.2 前端部署：git commit（`gas/Code.gs`、`js/api.js`、`js/analytics.js`）並 push 到 `main`，等 GitHub Pages 自動部署。驗收：硬重新整理 analytics 頁，成員年度報表已是新欄位（代墊已結清、無需匯款金額、無修正代墊帳按鈕）。
 
-- [ ] 8.3 生產遷移：先請 Jesse 另存 sheet 快照備援，再於 analytics 頁觸發 `migrateAdvanceLedger`（一次性按鈕或手動呼叫），完成後核對 Google Sheet 與報表。驗收：柏文 已收款 30,000 / 代墊已結清 7,665 / 代墊未結清 8,080；又又 30,000 / 8,380 / 6,000；4 月與 6 月手動結算原始列未被刪改；再次觸發回 `already-migrated`。
+- [x] 8.3 生產遷移：先請 Jesse 另存 sheet 快照備援，再於 analytics 頁觸發 `migrateAdvanceLedger`（一次性按鈕或手動呼叫），完成後核對 Google Sheet 與報表。驗收：柏文 已收款 30,000 / 代墊已結清 7,665 / 代墊未結清 8,080；又又 30,000 / 8,380 / 6,000；4 月與 6 月手動結算原始列未被刪改；再次觸發回 `already-migrated`。
