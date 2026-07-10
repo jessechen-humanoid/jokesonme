@@ -19,5 +19,5 @@
 
 ## 4. 部署與驗收
 
-- [ ] 4.1 GAS 部署與 production 實測：Jesse 於 Apps Script 編輯器建立新版本並部署後，curl 實測——`action=getCommonFund` 回 unknown-action 錯誤；`action=getForecast` 正常結構回資料、（可行時）於測試副本插列驗證回 `FORECAST_STRUCTURE_MISMATCH`。驗證：curl 輸出原文記錄於完成回報。
-- [ ] 4.2 全項驗收：依 design.md「Implementation Contract」逐條核對六項可觀察行為與全部 grep 驗收，`spectra validate site-optimization` 通過。驗證：驗收清單與指令輸出附於完成回報。
+- [x] 4.1 GAS 部署與 production 實測：Jesse 於 Apps Script 編輯器建立新版本並部署後，curl 實測——`action=getCommonFund` 回 unknown-action 錯誤；`action=getForecast` 正常結構回資料、（可行時）於測試副本插列驗證回 `FORECAST_STRUCTURE_MISMATCH`。驗證：curl 輸出原文記錄於完成回報。
+- [x] 4.2 全項驗收：依 design.md「Implementation Contract」逐條核對六項可觀察行為與全部 grep 驗收，`spectra validate site-optimization` 通過。驗證：驗收清單與指令輸出附於完成回報。
