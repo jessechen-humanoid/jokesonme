@@ -1055,7 +1055,9 @@ function checkForecastAnchors_(sheet) {
   for (let i = 0; i < FORECAST_ANCHORS.length; i++) {
     const anchor = FORECAST_ANCHORS[i];
     const actual = sheet.getRange(anchor.row, 1).getValue();
-    if (String(actual).trim() !== anchor.label) {
+    // 包含式比對：實際標籤帶有【】與說明後綴（如「【基礎參數】（藍色 = 可調整）」），
+    // 只要該列文字包含區段名即視為相符；列被插挪後通常不含區段名，仍會正確報錯
+    if (String(actual).indexOf(anchor.label) === -1) {
       return { row: anchor.row, expected: anchor.label, actual: actual };
     }
   }
