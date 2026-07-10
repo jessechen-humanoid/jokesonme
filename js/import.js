@@ -32,7 +32,7 @@ function setupUploadZones() {
   const actInput = document.getElementById('activity-input');
 
   cfZone.addEventListener('click', () => cfInput.click());
-  cfZone.addEventListener('dragover', e => { e.preventDefault(); cfZone.style.borderColor = 'var(--accent)'; });
+  cfZone.addEventListener('dragover', e => { e.preventDefault(); cfZone.style.borderColor = 'var(--brand-deep)'; });
   cfZone.addEventListener('dragleave', () => { cfZone.style.borderColor = ''; });
   cfZone.addEventListener('drop', e => {
     e.preventDefault();
@@ -47,7 +47,7 @@ function setupUploadZones() {
   });
 
   orderZone.addEventListener('click', () => orderInput.click());
-  orderZone.addEventListener('dragover', e => { e.preventDefault(); orderZone.style.borderColor = 'var(--accent)'; });
+  orderZone.addEventListener('dragover', e => { e.preventDefault(); orderZone.style.borderColor = 'var(--brand-deep)'; });
   orderZone.addEventListener('dragleave', () => { orderZone.style.borderColor = ''; });
   orderZone.addEventListener('drop', e => {
     e.preventDefault();
@@ -62,7 +62,7 @@ function setupUploadZones() {
   });
 
   actZone.addEventListener('click', () => actInput.click());
-  actZone.addEventListener('dragover', e => { e.preventDefault(); actZone.style.borderColor = 'var(--accent)'; });
+  actZone.addEventListener('dragover', e => { e.preventDefault(); actZone.style.borderColor = 'var(--brand-deep)'; });
   actZone.addEventListener('dragleave', () => { actZone.style.borderColor = ''; });
   actZone.addEventListener('drop', e => {
     e.preventDefault();
@@ -538,7 +538,7 @@ function renderMappingSection() {
 
     let badge = '';
     if (autoEvent) badge = '<span class="status-badge" style="color:var(--success)">自動對應</span>';
-    else if (isAmbiguous) badge = '<span class="status-badge" style="color:var(--red)">需手動確認</span>';
+    else if (isAmbiguous) badge = '<span class="status-badge" style="color:var(--warning)">需手動確認</span>';
 
     const options = showsList.map(s => {
       const selected = autoEvent === s.name ? ' selected' : '';

@@ -61,6 +61,7 @@ function showAuthGate() {
   input.focus();
 }
 
+// 改這裡必須同步改 gas/Code.gs 的 MEMBERS
 const MEMBERS = ['傑哥', '柏文', '巧達', '芭樂', '又又', '兔子', '大弋', '竹節蟲'];
 
 const INCOME_CATEGORIES = ['演出票房', '付費會員', '商演合作', '周邊商品', '品牌贊助', '其他收入'];

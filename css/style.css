@@ -1,5 +1,5 @@
 /* ============================================================
-   看我笑話工作室 — MUJI Design System
+   看我笑話工作室 — Brand Design System（暖白×墨×品牌橘）
    ============================================================ */
 
 /* Reset & Base */
@@ -10,28 +10,47 @@
 }
 
 :root {
-  --white: #ffffff;
-  --bg: #fafaf8;
-  --bg-secondary: #f6f6f3;
-  --text: #1a1a1a;
-  --text-light: #6b6b6b;
-  --text-meta: #a0a09b;
-  --border: #e8e8e5;
-  --border-hover: #c8c8c5;
-  --border-solid: #e8e8e5;
-  --red: #B04237;
-  --yellow: #B89056;
-  --green: #4A7C59;
-  --red-light: rgba(176, 66, 55, 0.1);
-  --yellow-light: rgba(184, 144, 86, 0.1);
-  --green-light: rgba(74, 124, 89, 0.1);
-  --accent: #c9a96e;
-  --radius: 0;
-  --radius-sm: 0;
+  /* Brand tokens */
+  --bg: #FAF7F2;
+  --surface: #FFFFFF;
+  --surface-2: #F5F0E8;
+  --text-primary: #33302B;
+  --text-secondary: #6B655C;
+  --text-muted: #9A938A;
+  --border: #E8E2D8;
+  --border-hover: #D3CBBD;
+  --brand: #FF7A00;
+  --brand-deep: #D96400;
+  --brand-tint: #FFF1E4;
+  --success: #4A7C59;
+  --danger: #C24E36;
+  --warning: #C08A3E;
+  --success-bg: rgba(74, 124, 89, 0.1);
+  --danger-bg: rgba(194, 78, 54, 0.1);
+  --warning-bg: rgba(192, 138, 62, 0.1);
+
+  /* Legacy token names kept for existing rules; aliased to brand tokens above */
+  --white: var(--surface);
+  --bg-secondary: var(--surface-2);
+  --text: var(--text-primary);
+  --text-light: var(--text-secondary);
+  --text-meta: var(--text-muted);
+  --border-solid: var(--border);
+  --red: var(--danger);
+  --yellow: var(--warning);
+  --green: var(--success);
+  --red-light: var(--danger-bg);
+  --yellow-light: var(--warning-bg);
+  --green-light: var(--success-bg);
+  --accent: var(--brand);
+
+  --radius: 8px;
+  --radius-sm: var(--radius);
+  --radius-lg: 12px;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -105,7 +124,7 @@ body {
 .card {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 24px;
   margin-bottom: 20px;
 }
@@ -213,14 +232,14 @@ body {
 }
 
 .btn-primary {
-  background: var(--text);
+  background: var(--brand);
   color: var(--white);
-  border-color: var(--text);
+  border-color: var(--brand);
 }
 
 .btn-primary:hover {
-  background: #000;
-  border-color: #000;
+  background: var(--brand-deep);
+  border-color: var(--brand-deep);
 }
 
 .btn-secondary {
@@ -423,7 +442,7 @@ tr.totals-row td {
 .stat-card {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 20px;
   text-align: center;
 }
@@ -572,7 +591,7 @@ tr.totals-row td {
 .auth-box {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 40px 32px;
   width: 100%;
   max-width: 360px;
@@ -672,7 +691,7 @@ tr.totals-row td {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(26, 26, 26, 0.4);
+  background: rgba(51, 48, 43, 0.4);
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -685,7 +704,7 @@ tr.totals-row td {
 .modal {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 24px;
   width: 100%;
   max-width: 400px;
@@ -882,7 +901,7 @@ tr.totals-row td {
 
 .import-upload-zone {
   border: 1px dashed var(--border-hover);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 32px 16px;
   text-align: center;
   cursor: pointer;

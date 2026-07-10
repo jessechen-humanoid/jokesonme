@@ -22,8 +22,12 @@ async function onShowSelected(showName) {
 
   content.innerHTML = '<div class="loading">載入中...</div>';
 
-  // Initialize checklist from template if first time
-  await API.initChecklist(showName);
+  // Only initialize from template when the checklist is empty
+  // (avoids re-issuing initChecklist every time an already-initialized show is selected)
+  const checkRes = await API.getChecklist(currentShow);
+  if (checkRes.success && checkRes.data.length === 0) {
+    await API.initChecklist(showName);
+  }
 
   // Load checklist data
   await loadChecklist();
@@ -146,6 +150,20 @@ function getProjectNames() {
   return names;
 }
 
+// After an in-place project-name save, sync the display of the matching
+// "企劃 N 剪輯說明" item(s) in 影片製作 without reloading the whole checklist.
+function syncProjectNameDisplay(projectNum, projectName) {
+  const targetName = `企劃 ${projectNum} 剪輯說明`;
+  checklistData
+    .filter(i => i.category === '影片製作' && i.itemName === targetName)
+    .forEach(i => {
+      const span = document.querySelector(`[data-item-id="${i.id}"]`);
+      if (span) {
+        span.textContent = projectName ? `「${projectName}」剪輯說明` : targetName;
+      }
+    });
+}
+
 function renderChecklistItem(item, category, projectNames) {
   const statusOptions = ['未開始', '進行中', '已完成'];
   let displayName = item.itemName;
@@ -173,7 +191,7 @@ function renderChecklistItem(item, category, projectNames) {
              data-id="${item.id}" data-field="project-name" data-project-num="${projectNum}">
     `;
   } else {
-    nameHtml = `<span>${escapeHtml(displayName)}</span>`;
+    nameHtml = `<span data-item-id="${item.id}">${escapeHtml(displayName)}</span>`;
   }
 
   let notesHtml = '';
@@ -258,22 +276,33 @@ function bindChecklistEvents() {
   });
 
   // Project name input (stored in notes)
+  // Optimistic UI like the progress toggle above: save via the single-item update
+  // path and patch local state + affected DOM in place, so the input is never
+  // re-created and keyboard focus/caret survive the debounced save.
   content.querySelectorAll('[data-field="project-name"]').forEach(input => {
     let debounceTimer;
+    let lastSaved = input.value;
     input.addEventListener('input', () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {
         const id = Number(input.dataset.id);
+        const projectNum = input.dataset.projectNum;
         const value = input.value.trim();
-        const res = await API.updateChecklistItem(id, { notes: value });
-        if (!res || !res.success) {
-          alert('儲存企劃名稱失敗：' + ((res && res.error) || '未知錯誤') + '，請重試');
-          return;
-        }
 
-        // Update the corresponding video production item display
-        // Reload to reflect auto-populated names
-        await loadChecklist();
+        try {
+          const res = await API.updateChecklistItem(id, { notes: value });
+          if (!res || !res.success) throw new Error((res && res.error) || '未知錯誤');
+
+          // Keep local state in sync and update the auto-populated
+          // "剪輯說明" item display without reloading the whole checklist
+          const item = checklistData.find(i => i.id === id);
+          if (item) item.notes = value;
+          lastSaved = value;
+          syncProjectNameDisplay(projectNum, value);
+        } catch (e) {
+          alert('儲存企劃名稱失敗：' + e.message + '，請重試');
+          input.value = lastSaved;
+        }
       }, 800);
     });
   });

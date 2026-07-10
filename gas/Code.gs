@@ -1,6 +1,12 @@
 // ============================================================
 // 看我笑話工作室 — Google Apps Script API
 // ============================================================
+//
+// API_TOKEN 輪替 SOP：
+//   1. Apps Script 編輯器 →「專案設定」→ Script Properties → 修改 API_TOKEN 值
+//   2. 通知團隊重新登入（token 存於前端 sessionStorage，關瀏覽器即失效，無需清除步驟）
+//   3. 免重新部署（Script Properties 變更即時生效，不需建立新版本）
+// ============================================================
 
 const SPREADSHEET_ID = '1sM-ST9lTjvCk7a0ppjSX48-zvhSOc16oYXEaVp3qisI';
 
@@ -16,6 +22,7 @@ const SHEET_NAMES = {
 // 稅率常數（所有收入依此比例自動提列稅務預留支出）
 const TAX_RESERVE_RATE = 0.03;
 const TAX_RESERVE_CATEGORY = '稅務預留';
+// 改這裡必須同步改 js/transaction.js 的 FUND_SHOW_NAME
 const FUND_SHOW_NAME = '共同基金支出';
 const SYSTEM_RECORDER = '系統';
 
@@ -29,6 +36,7 @@ const TX_HEADERS = ['專案名稱', '分類', '備註', '金額', '墊款人', '
 // 交易 sheet 完整欄數（讀取時以此為準，確保讀得到 ID 欄）
 const TX_NUM_COLS = 12;
 
+// 改這裡必須同步改 js/shared.js 的 MEMBERS
 const MEMBERS = ['傑哥', '柏文', '巧達', '芭樂', '又又', '兔子', '大弋', '竹節蟲'];
 const ADVANCE_CORRECTION_NOTE = '代墊還款修正';
 
@@ -259,9 +267,6 @@ function handleRequest(e) {
           break;
         case 'addAdvanceReimbursement':
           result = addAdvanceReimbursement(postData);
-          break;
-        case 'getCommonFund':
-          result = getCommonFund();
           break;
         case 'getForecast':
           result = getForecast();
@@ -863,64 +868,6 @@ function getSettlements() {
   return { success: true, data: settlements };
 }
 
-function getCommonFund() {
-  const ss = getSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAMES.TRANSACTIONS);
-  const emptyResult = {
-    commonIncome: 0, commonExpense: 0, commonNetProfit: 0, commonFund: 0,
-    fundReserved: 0, fundUsed: 0, fundBalance: 0,
-  };
-  if (!sheet) return { success: true, data: emptyResult };
-  const lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return { success: true, data: emptyResult };
-
-  const numCols = Math.max(sheet.getLastColumn(), TX_NUM_COLS);
-  const data = sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
-  let commonIncome = 0;
-  let commonExpense = 0;
-  let fundUsed = 0;
-  data.forEach(row => {
-    const amount = Number(row[TX_COL.AMOUNT - 1]) || 0;
-    const excludedMembers = (row[TX_COL.EXCLUDED - 1] || '').toString().trim();
-    const paidByFund = row[TX_COL.PAID_BY_FUND - 1] === true
-      || row[TX_COL.PAID_BY_FUND - 1] === 'TRUE' || row[TX_COL.PAID_BY_FUND - 1] === 'true';
-
-    // paidByFund 支出不計入共同支出（避免雙扣）
-    if (paidByFund && amount < 0) {
-      fundUsed += Math.abs(amount);
-      return;
-    }
-    if (excludedMembers === '') {
-      if (amount > 0) commonIncome += amount;
-      else commonExpense += amount;
-    }
-  });
-
-  const commonNetProfit = commonIncome + commonExpense;
-  const fundReserved = commonNetProfit * 0.2;
-  const fundBalance = fundReserved - fundUsed;
-
-  // Write summary to 共同基金 sheet
-  const fundSheet = getOrCreateSheet(ss, '共同基金', ['項目', '金額']);
-  fundSheet.getRange(2, 1, 6, 2).setValues([
-    ['共同收入', commonIncome],
-    ['共同支出', commonExpense],
-    ['共同淨利', commonNetProfit],
-    ['提撥 20%（基金累積）', fundReserved],
-    ['基金已動用', fundUsed],
-    ['基金餘額', fundBalance],
-  ]);
-
-  return {
-    success: true,
-    data: {
-      commonIncome, commonExpense, commonNetProfit,
-      commonFund: fundReserved,
-      fundReserved, fundUsed, fundBalance,
-    },
-  };
-}
-
 // 結算只記利潤分配，不夾帶代墊還款；代墊還款由 代墊還款 帳本獨立記錄。
 function addSettlement(payload) {
   const member = (payload.member || '').trim();
@@ -1079,10 +1026,57 @@ function migrateAdvanceLedger() {
 // Forecast (財務預估)
 // ============================================================
 
+// 財務預估工作表錨點：各區段標題列（title row）預期文字。
+// 推導依據：
+//   - openspec/changes/archive/2026-04-06-forecast-page/design.md 的
+//     「Google Sheet Structure」表格（各區塊 Row 範圍：基礎參數 3-19、
+//     版本參數 20-31、收入計算 34-47、支出計算 49-58、損益彙總 60-63、
+//     分潤規劃 65-69）。
+//   - 本檔 getForecast 各區段實際讀取的資料起始列（baseParams 從 row 4、
+//     versionParams 從 row 22、income 從 row 36、expense 從 row 51、
+//     pnl 從 row 62、profitShare 從 row 67 開始讀），回推「資料起始列
+//     往前推 1（基礎參數，無副標頭列）或 2（其餘區段，多一列版本副標頭）」
+//     即為該區段標題列位置。
+//   - 標題文字取自同一份 design.md 表格的「區塊」欄，並與 js/forecast.js
+//     的 card-title／renderReadOnlyTable 標題字串（'基礎參數' '版本參數'
+//     '損益彙總' '收入計算' '支出計算' '分潤規劃'）互相印證一致。
+const FORECAST_ANCHORS = [
+  { row: 3, label: '基礎參數' },
+  { row: 20, label: '版本參數' },
+  { row: 34, label: '收入計算' },
+  { row: 49, label: '支出計算' },
+  { row: 60, label: '損益彙總' },
+  { row: 65, label: '分潤規劃' },
+];
+
+// 驗證財務預估工作表的錨點列是否與預期相符。相符回傳 null，不符回傳
+// { row, expected, actual } 供組成 FORECAST_STRUCTURE_MISMATCH 錯誤訊息。
+function checkForecastAnchors_(sheet) {
+  for (let i = 0; i < FORECAST_ANCHORS.length; i++) {
+    const anchor = FORECAST_ANCHORS[i];
+    const actual = sheet.getRange(anchor.row, 1).getValue();
+    if (String(actual).trim() !== anchor.label) {
+      return { row: anchor.row, expected: anchor.label, actual: actual };
+    }
+  }
+  return null;
+}
+
+// 組成錨點位置與預期值的說明文字，供 getForecast / updateForecast 的
+// FORECAST_STRUCTURE_MISMATCH 錯誤各自帶入 detail。
+function forecastMismatchDetail_(mismatch) {
+  return '第 ' + mismatch.row + ' 列應為「' + mismatch.expected + '」，實際為「' + mismatch.actual + '」';
+}
+
 function getForecast() {
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName('財務預估');
   if (!sheet) return { success: false, error: '找不到「財務預估」工作表' };
+
+  const mismatch = checkForecastAnchors_(sheet);
+  if (mismatch) {
+    return { success: false, error: 'FORECAST_STRUCTURE_MISMATCH', detail: forecastMismatchDetail_(mismatch) };
+  }
 
   const data = sheet.getRange('A1:G69').getValues();
 
@@ -1091,11 +1085,7 @@ function getForecast() {
     for (let r = startRow - 1; r < endRow; r++) {
       const label = data[r][0];
       if (!label) continue;
-      if (cols === 1) {
-        rows.push({ row: r + 1, label: label, value: data[r][1] });
-      } else {
-        rows.push({ row: r + 1, label: label, values: [data[r][1], data[r][2], data[r][3]] });
-      }
+      rows.push({ row: r + 1, label: label, values: [data[r][1], data[r][2], data[r][3]] });
     }
     return rows;
   }
@@ -1154,6 +1144,11 @@ function updateForecast(payload) {
   const ss = getSpreadsheet();
   const sheet = ss.getSheetByName('財務預估');
   if (!sheet) return { success: false, error: '找不到「財務預估」工作表' };
+
+  const mismatch = checkForecastAnchors_(sheet);
+  if (mismatch) {
+    return { success: false, error: 'FORECAST_STRUCTURE_MISMATCH', detail: forecastMismatchDetail_(mismatch) };
+  }
 
   let updated = 0;
 

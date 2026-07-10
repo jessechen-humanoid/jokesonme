@@ -2,8 +2,11 @@
 // 看我笑話工作室 — 財務分析頁
 // ============================================================
 
-const PIE_COLORS_INCOME = ['#2d4d37', '#4A7C59', '#6a9879', '#8fb29a', '#b4ccba', '#d9e6dc'];
-const PIE_COLORS_EXPENSE = ['#6b2820', '#B04237', '#c56d62', '#d6958d', '#e6bdb8', '#f2dbd7'];
+const CHART_COLORS = {
+  income: ['#4A7C59', '#5E8F6C', '#749F80', '#8BB095', '#A3C1AB', '#BCD2C2'],
+  expense: ['#C24E36', '#CB6650', '#D47D6A', '#DD9585', '#E6ADA1', '#EFC6BD'],
+  bg: '#ffffff',
+};
 
 let _transactions = [];
 
@@ -232,7 +235,7 @@ function renderShowPnl(transactions, el) {
 function renderPieChart(items, total, fixedCategories, el, title, type) {
   if (total === 0) {
     el.innerHTML = `<div class="card"><div class="card-title">${title}</div>
-      <div style="padding:16px 0;color:var(--text-light);font-size:13px;">尚無${type === 'income' ? '收入' : '支出'}紀錄</div></div>`;
+      <div style="padding:16px 0;color:var(--text-secondary);font-size:13px;">尚無${type === 'income' ? '收入' : '支出'}紀錄</div></div>`;
     return;
   }
 
@@ -253,7 +256,7 @@ function renderPieChart(items, total, fixedCategories, el, title, type) {
     .sort((a, b) => b.pct - a.pct);
 
   const canvasId = `pie-${type}`;
-  const colors = type === 'income' ? PIE_COLORS_INCOME : PIE_COLORS_EXPENSE;
+  const colors = type === 'income' ? CHART_COLORS.income : CHART_COLORS.expense;
   el.innerHTML = `<div class="card"><div class="card-title">${title}</div>
     <div class="pie-chart-container">
       <canvas id="${canvasId}" width="200" height="200"></canvas>
@@ -292,7 +295,7 @@ function drawPie(canvasId, data, colors) {
   // White center for donut effect
   ctx.beginPath();
   ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = CHART_COLORS.bg;
   ctx.fill();
 }
 
@@ -372,10 +375,10 @@ function renderMemberEarnings(transactions, settlements, reimbursements, distrib
         <tbody>
           ${members.map(m => `<tr>
             <td>${escapeHtml(m.name)}</td>
-            <td style="text-align:right;color:var(--text-light)">${formatAmount(m.settled)}</td>
+            <td style="text-align:right;color:var(--text-secondary)">${formatAmount(m.settled)}</td>
             <td class="${m.unsettledNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right">${formatAmount(m.unsettledNet)}</td>
-            <td style="text-align:right;${m.advanceUnsettled > 0 ? 'color:var(--red)' : (m.advanceUnsettled < 0 ? 'color:var(--red);font-weight:600' : 'color:var(--text-light)')}"${m.advanceUnsettled < 0 ? ' title="超還：代墊已結清大於代墊總額"' : ''}>${m.advanceUnsettled < 0 ? '⚠ ' : ''}$${m.advanceUnsettled.toLocaleString()}</td>
-            <td style="text-align:right;${m.advanceCleared > 0 ? 'color:var(--text-light)' : 'color:var(--text-light)'}">$${m.advanceCleared.toLocaleString()}</td>
+            <td style="text-align:right;${m.advanceUnsettled > 0 ? 'color:var(--danger)' : (m.advanceUnsettled < 0 ? 'color:var(--danger);font-weight:600' : 'color:var(--text-secondary)')}"${m.advanceUnsettled < 0 ? ' title="超還：代墊已結清大於代墊總額"' : ''}>$${m.advanceUnsettled.toLocaleString()}</td>
+            <td style="text-align:right;${m.advanceCleared > 0 ? 'color:var(--text-secondary)' : 'color:var(--text-secondary)'}">$${m.advanceCleared.toLocaleString()}</td>
             <td class="${m.annualNet >= 0 ? 'amount-positive' : 'amount-negative'}" style="text-align:right;font-weight:600">${formatAmount(m.annualNet)}</td>
           </tr>`).join('')}
         </tbody>
@@ -528,10 +531,4 @@ async function submitReimbursement() {
     btn.disabled = false;
     btn.textContent = '新增';
   }
-}
-
-// ---- Utilities ----
-
-function formatAmountAbs(amount) {
-  return '$' + Math.abs(amount).toLocaleString();
 }
