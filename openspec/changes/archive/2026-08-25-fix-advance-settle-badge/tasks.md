@@ -11,4 +11,4 @@
 ## 3. 整合驗證
 
 - [x] 3.1 端對端一致性驗證（spec「Track settlement status」全部 Scenario）：以正式資料載入收支紀錄頁，逐成員核對——任一成員「settled＋partial 已還額」加總 = analytics 的「代墊已結清」、「unsettled＋partial 未還額」加總 = analytics 的「代墊未結清」（至少核對柏文 22,933/188 與又又 15,352/324）；並確認無墊款人交易顯示「—」、還款登錄後重新載入頁面最舊代墊自動變已結清。驗證：瀏覽器實測兩頁數字比對，截圖留存。
-- [ ] 3.2 git commit 並 push 至 `main` 觸發 GitHub Pages 部署，於 `https://jessechen-humanoid.github.io/jokesonme/` 線上環境重跑 3.1 的柏文/又又核對。完成行為：線上站結清標示與 analytics 一致。驗證：線上頁面實測。
+- [x] 3.2 git commit 並 push 至 `main` 觸發 GitHub Pages 部署，於 `https://jessechen-humanoid.github.io/jokesonme/` 線上環境重跑 3.1 的柏文/又又核對。完成行為：線上站結清標示與 analytics 一致。驗證：線上頁面實測。
