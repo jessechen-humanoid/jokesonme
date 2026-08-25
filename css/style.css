@@ -253,26 +253,42 @@ body {
   font-size: 12px;
 }
 
-.btn-settle {
+/* 結清狀態 badge（唯讀，由代墊還款帳本推導） */
+.settle-badge {
+  display: inline-block;
   padding: 4px 10px;
   font-size: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--white);
-  cursor: pointer;
   color: var(--text-light);
   font-family: inherit;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.btn-settle:hover {
-  border-color: var(--border-hover);
+.settle-badge.settle-settled {
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success);
 }
 
-.btn-settle.settled {
-  background: var(--green-light);
-  color: var(--green);
-  border-color: var(--green);
+.settle-badge.settle-partial {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.settle-badge.settle-unsettled {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.settle-badge .settle-sub {
+  display: block;
+  font-size: 11px;
+  opacity: 0.85;
 }
 
 /* Status badges */
