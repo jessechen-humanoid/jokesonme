@@ -12,7 +12,7 @@ metadata:
 
 Create a complete Spectra change proposal — requirement to validated artifacts — in one workflow.
 
-**Input**: Requirement description after `/spectra-propose` (e.g., `/spectra-propose add dark mode`). If absent, extract from conversation context or ask.
+**Input**: Requirement description after `$spectra-propose` (e.g., `$spectra-propose add dark mode`). If absent, extract from conversation context or ask.
 
 **Prerequisites**: Requires `spectra` CLI. If unavailable, report and STOP.
 
@@ -40,7 +40,7 @@ Use the active conversation language for user-visible analysis, questions, label
    a. **Argument provided** → use it as the requirement description, then derive a kebab-case change name.
 
    b. **Plan file available**:
-   - If conversation context mentions `~/.claude/plans/<name>.md` and the file exists, ask whether to use the plan file or conversation context.
+   - If conversation context mentions `<name>.md` and the file exists, ask whether to use the plan file or conversation context.
    - If chosen, read it and extract `plan_title`, `plan_context`, `plan_stages`, and `plan_files`.
 
    c. **Conversation context**:
@@ -75,13 +75,13 @@ Use the active conversation language for user-visible analysis, questions, label
    Capability-level behavior:
 
    ```bash
-   spectra new change "<name>" --agent claude
+   spectra new change "<name>" --agent codex
    ```
 
    No capability-level behavior:
 
    ```bash
-   spectra new change "<name>" --schema no-spec --agent claude
+   spectra new change "<name>" --schema no-spec --agent codex
    ```
 
    If the change exists, suggest continuing it.
@@ -187,7 +187,7 @@ Use the active conversation language for user-visible analysis, questions, label
     spectra park "<name>"
     ```
 
-    Report parked status separately from readiness. With unresolved Critical or failed validation, end with blockers and next actions. Otherwise tell the user `/spectra-apply <change-name>` will unpark/start when ready; in read-only planning mode, remind them to switch to an editing mode. Do NOT invoke `/spectra-apply`.
+    Report parked status separately from readiness. With unresolved Critical or failed validation, end with blockers and next actions. Otherwise tell the user `$spectra-apply <change-name>` will unpark/start when ready; in read-only planning mode, remind them to switch to an editing mode. Do NOT invoke `$spectra-apply`.
 
 **Artifact Creation Guidelines**
 
@@ -206,4 +206,4 @@ Use the active conversation language for user-visible analysis, questions, label
 - NEVER write application code or implement features.
 - NEVER skip the artifact workflow.
 - NEVER reinterpret requirements by ignoring proposal.
-- NEVER invoke `/spectra-apply`; user decides when to start implementation.
+- NEVER invoke `$spectra-apply`; user decides when to start implementation.

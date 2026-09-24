@@ -1,8 +1,6 @@
 ---
 name: spectra-audit
 description: "Perform an explicit security audit of changed code for dangerous defaults, type confusion, unsafe API surfaces, and silent failures. Use when that security audit is requested, not merely because a diff touches paths or config"
-context: fork
-agent: Explore
 disallowed-tools: [Edit, Write]
 license: MIT
 compatibility: Requires spectra CLI.
@@ -10,14 +8,6 @@ metadata:
   author: spectra
   version: "1.0"
   generatedBy: "Spectra"
----
-
-Audit changed code for security sharp edges in a Claude Code fork. This generated skill is report-only. Run only the standalone analysis below and return one consolidated report, then stop. Do not ask or wait for user input. Do not edit files, run rewriting formatters, stage, commit, apply fixes, or invoke a follow-up workflow.
-
-## Claude fork context
-
-The standalone body below is the complete report core. Missing decisions: return the concrete context and missing input to the main thread, then stop. The main thread decides whether to authorize any recommended fix.
-
 ---
 
 Audit changed code for security sharp edges: APIs, defaults, and boundaries that make insecure use easier than secure use.

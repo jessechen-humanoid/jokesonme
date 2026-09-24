@@ -40,9 +40,9 @@ Use the active conversation language for user-visible analysis, questions, label
 1. **Select the change**
 
    Use an explicit name, else a unique confirmed conversation target. If unresolved, list and auto-select only one candidate, otherwise ask.
-   - Ambiguous: run `spectra list --json` and `spectra list --parked --json`; mark parked entries and ask. Empty: suggest `/spectra-propose` and STOP.
+   - Ambiguous: run `spectra list --json` and `spectra list --parked --json`; mark parked entries and ask. Empty: suggest `$spectra-propose` and STOP.
 
-   Announce "Using change: <name>"; override `/spectra-apply <other>`.
+   Announce "Using change: <name>"; override `$spectra-apply <other>`.
 
 2. **Check status and parking**
 
@@ -61,7 +61,7 @@ Use the active conversation language for user-visible analysis, questions, label
 
    Read `tasks.md` at `contextFiles.tasks`; follow returned diagnostics/preflight/instruction.
 
-   - `state: "blocked"`: report missing artifacts, suggest `/spectra-propose`, and STOP.
+   - `state: "blocked"`: report missing artifacts, suggest `$spectra-propose`, and STOP.
    - Compact `all_done`: same exit.
    - Preflight: continue on clean; summarize warnings; for critical, list missing files/source artifacts and ask to continue.
 
@@ -120,12 +120,12 @@ Use the active conversation language for user-visible analysis, questions, label
 
    Run `spectra instructions apply --change "<name>" --json --summary`. If state is `all_done`, do not request instructions again. Run `spectra instructions apply --change "<name>" --json --compact` only when state is not `all_done` to resume.
 
-   **Check that every spec scenario has a test** (`tdd: true` only): classify each delta specs `#### Scenario`/`##### Example` under `/spectra-verify` **Scenario Coverage**/**Example Traceability** into exactly one of three results: covered by a test, excluded by the test scope criterion (`spectra instructions --skill tdd`), or an uncovered gap. For each exclusion, report the ground for exclusion and leave it out of the gaps/test recommendations. Recommend gap fixes or report "every scenario has a test or a recorded exclusion". This check does not block completion. When `tdd` is not `true`, skip this audit entirely and proceed to the completion report unchanged.
+   **Check that every spec scenario has a test** (`tdd: true` only): classify each delta specs `#### Scenario`/`##### Example` under `$spectra-verify` **Scenario Coverage**/**Example Traceability** into exactly one of three results: covered by a test, excluded by the test scope criterion (`spectra instructions --skill tdd`), or an uncovered gap. For each exclusion, report the ground for exclusion and leave it out of the gaps/test recommendations. Recommend gap fixes or report "every scenario has a test or a recorded exclusion". This check does not block completion. When `tdd` is not `true`, skip this audit entirely and proceed to the completion report unchanged.
 
 7. **Report status**
 
-   Show this session's completed tasks and N/M. If all done: recommend `/spectra-verify <name>` and `/spectra-review <name>` before `/spectra-archive`.
+   Show this session's completed tasks and N/M. If all done: recommend `$spectra-verify <name>` and `$spectra-review <name>` before `$spectra-archive`.
 
-   Completion line: "All tasks complete! Run `/spectra-verify <change-name>` and `/spectra-review <change-name>` before archiving with `/spectra-archive`."
+   Completion line: "All tasks complete! Run `$spectra-verify <change-name>` and `$spectra-review <change-name>` before archiving with `$spectra-archive`."
 
 **Guardrails**: use CLI paths/totals, keep edits scoped, update checkboxes immediately after verification, and continue until done or blocked.

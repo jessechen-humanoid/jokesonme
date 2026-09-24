@@ -12,7 +12,7 @@ metadata:
 
 Archive a completed change.
 
-**Input**: Optionally specify a change name after `/spectra-archive` (e.g., `/spectra-archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name after `$spectra-archive` (e.g., `$spectra-archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Prerequisites**: This skill requires the `spectra` CLI. If any `spectra` command fails with "command not found" or similar, report the error and STOP.
 
@@ -49,7 +49,7 @@ Use the active conversation language for user-visible analysis, questions, label
 
    Retain incomplete artifact warnings for the complete plan after preview.
 
-   **Quality gate pre-check**: Use only current conversation/session evidence; no persistent state file. If verification is unconfirmed, retain a recommendation to run `/spectra-verify <name>` and `/spectra-review <name>`. This advisory check MUST NOT block archive. Carry any earlier CRITICAL findings and their locations into the complete plan.
+   **Quality gate pre-check**: Use only current conversation/session evidence; no persistent state file. If verification is unconfirmed, retain a recommendation to run `$spectra-verify <name>` and `$spectra-review <name>`. This advisory check MUST NOT block archive. Carry any earlier CRITICAL findings and their locations into the complete plan.
 
 3. **Preview the archive transaction**
 

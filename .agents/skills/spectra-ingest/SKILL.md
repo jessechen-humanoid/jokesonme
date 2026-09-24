@@ -12,15 +12,15 @@ metadata:
 
 Update an existing Spectra change from a plan file or conversation context.
 
-This tool can discover bare plan names under `~/.claude/plans/` and also accepts explicit existing plan paths.
+This tool has no configured plan directory. It still accepts an explicit existing plan path; bare plan-name discovery is unavailable.
 
 **Prerequisites**: Requires `spectra` CLI. If unavailable, report and STOP.
 
 **Input**: Optional existing change name or plan file:
 
-- `/spectra-ingest add-auth`
-- `/spectra-ingest ./plans/add-auth.md`
-- `/spectra-ingest`
+- `$spectra-ingest add-auth`
+- `$spectra-ingest ./plans/add-auth.md`
+- `$spectra-ingest`
 
 ## Write for the reader
 
@@ -56,7 +56,7 @@ Use the active conversation language for user-visible analysis, questions, label
 
    b. **Exact active or parked change ID** — Otherwise, if the bare argument exactly matches an active or parked change ID, set `target_change` to that ID. Obtain `requirement_source` separately from conversation context or a separately selected plan. Do not append `.md` or report a missing plan merely because the argument selected a change.
 
-   c. **Plan-directory candidate** — Otherwise, if the bare argument resolves to a plan under `~/.claude/plans/`, set `requirement_source` to that plan and select `target_change` separately.
+   c. **Plan-directory candidate** — This tool has no configured plan directory, so skip bare plan-name lookup. An explicit existing plan path remains valid; otherwise continue only through the no-argument conversation flow.
 
    If a bare argument matches both an exact change ID and a plan-directory basename, the change ID wins. An explicit path or `.md` suffix forces plan-file interpretation. If a bare argument matches neither a change nor an available plan candidate, report the unknown argument and STOP; do not reinterpret it as conversation context.
 
@@ -70,7 +70,7 @@ Use the active conversation language for user-visible analysis, questions, label
 
 3. **Select the target change** (REQUIRED — ingest only updates existing changes)
 
-   Keep an explicit name, else a unique confirmed conversation target. Otherwise use the active/parked lists and auto-select only one candidate; ask only when ambiguous. Label parked candidates. With no candidates, suggest `/spectra-propose` and STOP.
+   Keep an explicit name, else a unique confirmed conversation target. Otherwise use the active/parked lists and auto-select only one candidate; ask only when ambiguous. Label parked candidates. With no candidates, suggest `$spectra-propose` and STOP.
 
    For a parked target, disclose parking. If the named ingest operation is already explicitly requested, run `spectra unpark "<name>"` as a necessary step; respect a known refusal. Otherwise ask for missing authorization. Silence does not authorize restoration.
 
@@ -186,7 +186,7 @@ For a conversation source, map the resolved context while updating artifacts.
 
    With unresolved Critical or failed validation, end with blockers and next actions. Only the ready branch below offers apply.
 
-   Report completion directly, without a Done gate. With existing explicit authorization to continue apply for this target and readiness checks passed, invoke `/spectra-apply <change-name>`. Without that authorization, suggest `/spectra-apply <change-name>` as the next step and STOP. Silence does not authorize a handoff; respect a known refusal or cancellation.
+   Report completion directly, without a Done gate. With existing explicit authorization to continue apply for this target and readiness checks passed, invoke `$spectra-apply <change-name>`. Without that authorization, suggest `$spectra-apply <change-name>` as the next step and STOP. Silence does not authorize a handoff; respect a known refusal or cancellation.
 
 **Guardrails**
 

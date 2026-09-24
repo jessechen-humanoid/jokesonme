@@ -21,11 +21,11 @@ Have a focused discussion about a topic and reach a conclusion.
 - Allowed exception: creating/updating Spectra artifacts when the user explicitly wants the decision captured.
 - Answering a clarifying question is not permission to write. However definite the answer, authorization comes only from a request or agreement addressed to writing itself.
 - Before the first artifact write, state which files you will create or modify and wait for an explicit yes. Later writes within that stated scope need no repeat; files outside that scope do.
-- If the user asks for code changes, decline and point them to `/spectra-propose` or ask them to exit discuss.
+- If the user asks for code changes, decline and point them to `$spectra-propose` or ask them to exit discuss.
 
 This is task-oriented: it works toward a decision, recommendation, or explicit deferral.
 
-**Input**: Topic after `/spectra-discuss` — design question, problem, change name, architecture decision, or vague idea.
+**Input**: Topic after `$spectra-discuss` — design question, problem, change name, architecture decision, or vague idea.
 
 ## Write for the reader
 
@@ -156,7 +156,7 @@ If the user wants speed:
 1. First time, flag one important unresolved risk in a sentence and ask whether to address it.
 2. If they push again, converge with the best supported conclusion.
 
-If the discussion diverges for roughly 5+ rounds, propose explicit deferral: summarize positions, name the missing evidence/spike, and suggest `/spectra-propose` with the spike as first task.
+If the discussion diverges for roughly 5+ rounds, propose explicit deferral: summarize positions, name the missing evidence/spike, and suggest `$spectra-propose` with the spike as first task.
 
 ---
 
@@ -210,7 +210,7 @@ Offer to capture, name the target file, and write only after the user agrees.
 
 ### Transition to action
 
-When the discussion converges on building something, suggest `/spectra-propose <name>`. For an existing change, list artifact updates for approval and let propose/ingest/apply carry them.
+When the discussion converges on building something, suggest `$spectra-propose <name>`. For an existing change, list artifact updates for approval and let propose/ingest/apply carry them.
 
 ---
 

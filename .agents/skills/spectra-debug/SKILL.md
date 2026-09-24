@@ -14,11 +14,11 @@ Systematically debug a problem using a five-phase workflow.
 
 **This skill enforces debugging discipline.** No guessing, no random changes, no "let me try this." Every step is deliberate and evidence-based.
 
-**Input**: The argument after `/spectra-debug` describes the bug or unexpected behavior. Examples:
+**Input**: The argument after `$spectra-debug` describes the bug or unexpected behavior. Examples:
 
-- `/spectra-debug the search returns duplicate results`
-- `/spectra-debug crash on startup after upgrading`
-- `/spectra-debug file watcher misses rename events`
+- `$spectra-debug the search returns duplicate results`
+- `$spectra-debug crash on startup after upgrading`
+- `$spectra-debug file watcher misses rename events`
 
 ## Write for the reader
 
@@ -130,7 +130,7 @@ Then:
 Connect the fix back to the Spectra workflow.
 
 - **Debugging within a Spectra change** — run `spectra list --json`. If the fix matches an active task, verify the requirement, then run `spectra task done --change "<name>" <task-id> --file <path>` and repeat `--file` for every changed source or test file.
-- **Standalone debugging** (unrelated to any change) — if the fix is significant or spawns follow-up work, suggest the user formalize it with `/spectra-propose`
+- **Standalone debugging** (unrelated to any change) — if the fix is significant or spawns follow-up work, suggest the user formalize it with `$spectra-propose`
 
 ---
 
