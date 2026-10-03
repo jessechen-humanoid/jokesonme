@@ -7,3 +7,16 @@ RAW DATA/
 # macOS 目錄中繼檔
 .DS_Store
 **/.DS_Store
+
+# 新平台（platform/）的金鑰與建置產物，永不進版控（jokesonme-platform-v2 task 1.1）
+.env*
+platform/.env*
+platform/.dev.vars
+platform/.open-next/
+platform/.next/
+platform/.wrangler/
+platform/node_modules/
+
+# 財務原始檔一律放 RAW DATA/；保險起見，platform/ 底下任何試算表都不進版控
+platform/**/*.xlsx
+platform/**/*.csv

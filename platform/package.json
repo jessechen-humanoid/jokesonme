@@ -1,0 +1,37 @@
+{
+  "name": "jokesonme-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy",
+    "typecheck": "next typegen && tsc --noEmit -p tsconfig.json",
+    "test": "node --test --experimental-strip-types \"lib/**/*.test.ts\"",
+    "test:db": "bash scripts/test-db.sh",
+    "db:migrate": "bash scripts/db-migrate.sh"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.8",
+    "@types/node": "^20",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.8",
+    "pg": "^8.23.1",
+    "typescript": "^5",
+    "wrangler": "^4.147.0"
+  }
+}
