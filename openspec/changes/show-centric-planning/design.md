@@ -117,5 +117,5 @@
 
 ## Open Questions
 
-- 群組 postback 事件是否帶 `replyToken`（任務 1.1 實測後填）。
+- ~~群組 postback 事件是否帶 `replyToken`~~ → **已實測（2026-10-03，正式群組）**：Jesse 打 `#測試按鈕`、按「10 月號」，靈感由 `line-bot` 寫入 `show_id`，傑瓜回覆「已歸到「看我笑話 10 月號」」——群組 postback **有**帶 replyToken；LINE quota consumption 仍為 0。未做任何臨時程式改動（直接以正式功能實測）。
 - 「年度大會｜看我畫大餅」算演出還是活動：預設 `performance`，Jesse 若要排除就歸檔。
