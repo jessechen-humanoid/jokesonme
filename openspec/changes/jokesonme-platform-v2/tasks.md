@@ -46,15 +46,15 @@
 
 ## 8. 靈感庫與企劃頁
 
-- [ ] 8.1 實作 Idea library page 與 Assign idea to a show（列出未歸類靈感、指派／移動／退回、封存與還原、網頁新增編輯）；驗證：測試指派後靈感離開靈感庫、封存後不出現、finance_partner 讀取回 403 [after: 7.2, 4.4, 5.2]
-- [ ] 8.2 實作 Monthly planning page 與 Show document links（演出名稱與日期、歸到該場的靈感、該場待辦、rundown／簡報／問卷三個連結欄位）；驗證：Playwright 在 375px 開啟企劃頁，看得到指派過來的靈感與待辦，貼上連結後點擊開新分頁 [after: 8.1, 6.2]
+- [x] 8.1 實作 Idea library page 與 Assign idea to a show（列出未歸類靈感、指派／移動／退回、封存與還原、網頁新增編輯）；驗證：測試指派後靈感離開靈感庫、封存後不出現、finance_partner 讀取回 403 [after: 7.2, 4.4, 5.2]
+- [x] 8.2 實作 Monthly planning page 與 Show document links（演出名稱與日期、歸到該場的靈感、該場待辦、rundown／簡報／問卷三個連結欄位）；驗證：Playwright 在 375px 開啟企劃頁，看得到指派過來的靈感與待辦，貼上連結後點擊開新分頁 [after: 8.1, 6.2]
 
 ## 9. 演出模板與推播
 
 - [ ] 9.1 Jesse 與 agent 以舊 23 項 Checklist 為草稿定出月號模板（項目、預設負責人、相對天數），並滿足 Monthly show template（只有管理員可編輯）；驗證：Jesse 核准模板內容，member 呼叫模板編輯 API 回 403 [after: 4.4]
-- [ ] 9.2 實作 Template-generated due dates 與 No templates for special shows（改演出日會平移未完成模板待辦）；驗證：測試 spec 範例表三列、改日期後截止日平移、special 不產生待辦 [after: 9.1, 6.1]
-- [ ] 9.3 實作 Pre-show reminder schedule（UTC `0 2 * * *` = 台北 10:00、前 3 天與前 1 天、無未完成不推）與 Reminder content with actual dates（含 LIFF 連結、無 `D-`）；驗證：以固定「今天」測 spec 範例表三列，訊息含 `10/24（六）` 且不含 `D-` [after: 9.2, 6.3]
-- [ ] 9.4 落實 Push only for reminders：`line_pushes` 記錄每次推播，管理頁顯示本月用量（次數×8／200）；驗證：測試兩次推播顯示 16／200，並 grep 程式碼確認 push API 只在提醒模組被呼叫 [after: 9.3]
+- [x] 9.2 實作 Template-generated due dates 與 No templates for special shows（改演出日會平移未完成模板待辦）；驗證：測試 spec 範例表三列、改日期後截止日平移、special 不產生待辦 [after: 9.1, 6.1]
+- [x] 9.3 實作 Pre-show reminder schedule（UTC `0 2 * * *` = 台北 10:00、前 3 天與前 1 天、無未完成不推）與 Reminder content with actual dates（含 LIFF 連結、無 `D-`）；驗證：以固定「今天」測 spec 範例表三列，訊息含 `10/24（六）` 且不含 `D-` [after: 9.2, 6.3]
+- [x] 9.4 落實 Push only for reminders：`line_pushes` 記錄每次推播，管理頁顯示本月用量（次數×8／200）；驗證：測試兩次推播顯示 16／200，並 grep 程式碼確認 push API 只在提醒模組被呼叫 [after: 9.3]
 
 ## 10. 財務搬遷
 
@@ -67,6 +67,6 @@
 
 ## 11. 切換
 
-- [ ] 11.1 正式搬遷與對帳：Jesse 下載 Sheet xlsx → 跑搬遷 → 跑對帳；驗證：對帳報告全數 pass，Jesse 確認 [after: 10.6, 4.3]
-- [ ] 11.2 完成 Legacy archive after cutover：舊靜態頁改為只顯示新平台連結（取代 Password gate for all pages 與舊 Checklist 頁的入口；show-checklist 的 Initialize checklist from template 等需求一併移除），Sheet 改檢視權限、GAS 不再被呼叫；驗證：開舊 Pages 網址看到導引連結，瀏覽器網路紀錄無 `script.google.com` 請求 [after: 11.1]
+- [x] 11.1 正式搬遷與對帳：Jesse 下載 Sheet xlsx → 跑搬遷 → 跑對帳；驗證：對帳報告全數 pass，Jesse 確認（2026-10-03 正式搬家：專案 29、收支 186、結算 32、代墊還款 13；對帳 102/102 一致；24 個專案稅務預留一致；Jesse 授權直接切換）[after: 10.6, 4.3]
+- [x] 11.2 完成 Legacy archive after cutover：舊靜態頁改為只顯示新平台連結（取代 Password gate for all pages 與舊 Checklist 頁的入口；show-checklist 的 Initialize checklist from template 等需求一併移除），Sheet 改檢視權限、GAS 不再被呼叫；驗證：開舊 Pages 網址看到導引連結，瀏覽器網路紀錄無 `script.google.com` 請求 [after: 11.1]
 - [ ] 11.3 上線驗收：8 位成員與財務夥伴登入並核准、群組用 `/` 建立一則待辦、用 `#` 存一則靈感、檢查 `audit_log` 有對應紀錄；更新 auto-memory 的部署檢查清單（新網址、Worker、Supabase）；驗證：Jesse 確認全員可用 [after: 11.2]

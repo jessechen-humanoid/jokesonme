@@ -16,7 +16,13 @@ export default async function MePage() {
         <p className="page-sub">{ROLE_LABEL[me.role]}・LINE：{me.display_name}</p>
       </header>
       <div className="content">
-        {me.role === "admin" ? <Link className="card" style={{ display: "block" }} href="/admin/users"><div className="title">登入核准</div></Link> : null}
+        {me.role === "admin" ? (
+          <>
+            <Link className="card" style={{ display: "block" }} href="/admin/users"><div className="title">登入核准</div></Link>
+            <Link className="card" style={{ display: "block" }} href="/admin/template"><div className="title">月號模板</div></Link>
+            <Link className="card" style={{ display: "block" }} href="/admin/push"><div className="title">LINE 推播用量與演出提醒預覽</div></Link>
+          </>
+        ) : null}
         <form action="/api/auth/logout" method="post">
           <button className="btn btn-ghost btn-block" type="submit">登出</button>
         </form>

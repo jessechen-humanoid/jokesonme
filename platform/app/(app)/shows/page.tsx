@@ -71,12 +71,12 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
 
 function ShowCard({ s }: { s: { id: string; name: string; type: keyof typeof SHOW_TYPE_LABEL; performanceDate: string | null } }) {
   return (
-    <div className="card">
+    <Link href={`/shows/${s.id}`} className="card" style={{ display: "block" }}>
       <div className="title">{s.name}</div>
       <div className="meta">
         {s.performanceDate ? <span className="due">{formatMonthDay(s.performanceDate)}演出</span> : <span>未定日期</span>}
         <span className="tag">{SHOW_TYPE_LABEL[s.type]}</span>
       </div>
-    </div>
+    </Link>
   );
 }
