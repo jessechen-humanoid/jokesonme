@@ -275,3 +275,74 @@ tests:
   - platform/supabase/test/local-shim.sql
   - platform/lib/line/summary.test.ts
 -->
+
+---
+### Requirement: Page header economy
+
+Every page's title card SHALL show the brand name 「看我笑話」 as a small secondary label (no larger than 13px) and the page name as the `h1`. A title card SHALL NOT repeat a number that is already shown in the same header's filter chips. Instructional copy that explains how to use a feature SHALL appear only in that list's empty state, not in the title card.
+
+#### Scenario: Todo page header
+
+- **WHEN** a member opens the todo page
+- **THEN** the title card shows 「待辦」 as the heading, the brand name as a small label, counts only in the chips, and no explanatory subtitle
+
+#### Scenario: Ideas page with content
+
+- **WHEN** the ideas page has at least one unassigned idea
+- **THEN** no copy about the `#` command is shown in the title card
+
+<!-- @trace
+source: show-centric-planning
+updated: 2026-10-03
+code:
+  - platform/app/(app)/finance/import/page.tsx
+  - platform/supabase/migrations/0009_show_kind.sql
+  - platform/lib/events.ts
+  - platform/lib/supabase.ts
+  - platform/components/idea-list.tsx
+  - platform/components/bottom-nav.tsx
+  - platform/app/globals.css
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/ideas/page.tsx
+  - platform/supabase/migrations/0010_internal_events.sql
+  - platform/app/(app)/calendar/page.tsx
+  - platform/components/add-menu.tsx
+  - platform/lib/line/commands.ts
+  - platform/lib/calendar/feed.ts
+  - platform/app/(app)/shows/actions.ts
+  - platform/lib/line/summary.ts
+  - platform/app/(app)/shows/page.tsx
+  - platform/app/(app)/calendar/actions.ts
+  - platform/lib/calendar/ics.ts
+  - platform/lib/dates.ts
+  - platform/eslint.config.mjs
+  - platform/components/show-editor.tsx
+  - platform/components/finance-show-select.tsx
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
+  - platform/lib/line/quick-reply.ts
+  - platform/wrangler.toml
+  - platform/app/api/line/webhook/route.ts
+  - platform/scripts/oneoff-show-dates-20261003.mts
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/components/show-picker.tsx
+  - platform/app/(app)/todos/page.tsx
+  - platform/lib/calendar/days.ts
+  - platform/lib/line/api.ts
+  - platform/lib/line/store.ts
+  - platform/lib/shows.ts
+  - platform/lib/line/webhook.ts
+tests:
+  - platform/lib/line/commands.test.ts
+  - platform/lib/calendar/days.test.ts
+  - platform/lib/events.test.ts
+  - platform/lib/calendar/feed.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/supabase/test/internal_events.test.sql
+  - platform/lib/line/quick-reply.test.ts
+  - platform/lib/line/summary.test.ts
+  - platform/supabase/test/show_kind.test.sql
+  - platform/lib/calendar/ics.test.ts
+  - platform/lib/shows.test.ts
+-->

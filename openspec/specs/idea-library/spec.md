@@ -8,270 +8,142 @@ Keeps the troupe's show ideas from the LINE group in one place where they can be
 
 ### Requirement: Idea library page
 
-The platform SHALL provide an idea library page listing all non-archived ideas without a show, newest first, each showing text, author, time, and a link to the original message. Admin and members SHALL access it; `finance_partner` SHALL NOT.
+The platform SHALL provide an ideas page with three views: 「還沒歸位」 (non-archived ideas without a show, newest first, with the count in the chip), 「全部」 (every non-archived idea with its show name), and 「已封存」. Each idea SHALL show its text, author, time, and whether it came from LINE. Admin and members SHALL access it; `finance_partner` SHALL NOT. Explanatory copy about the `#` command SHALL appear only in the empty state of 「還沒歸位」, not in the page header.
 
 #### Scenario: View unsorted ideas
 
-- **WHEN** a member opens the idea library
-- **THEN** every unassigned, non-archived idea is listed with its author and time
+- **WHEN** a member opens the ideas page
+- **THEN** the 「還沒歸位」 view is selected and lists every unassigned, non-archived idea with author and time
+
+#### Scenario: Empty inbox
+
+- **WHEN** there are no unassigned ideas
+- **THEN** the empty state explains that 「#內容」 in the group saves an idea here
 
 
 <!-- @trace
-source: jokesonme-platform-v2
+source: show-centric-planning
 updated: 2026-10-03
 code:
-  - platform/components/show-picker.tsx
-  - platform/app/pending/page.tsx
-  - platform/scripts/migrate-from-sheet.mts
-  - platform/supabase/migrations/0008_monthly_template.sql
-  - platform/components/tx-board.tsx
-  - platform/lib/finance/calc.ts
-  - platform/components/finance-head.tsx
-  - platform/supabase/migrations/0007_revoke_truncate.sql
-  - platform/app/(app)/ideas/actions.ts
-  - platform/app/api/finance/export/route.ts
-  - platform/lib/members.ts
-  - platform/app/(app)/finance/analytics/page.tsx
-  - platform/app/(app)/finance/import/legacy-import.tsx
-  - platform/app/api/line/webhook/route.ts
-  - platform/public/next.svg
-  - platform/public/window.svg
-  - platform/app/(app)/ideas/page.tsx
-  - platform/app/api/auth/liff/route.ts
-  - platform/lib/finance/reserve.ts
-  - platform/wrangler.toml
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/app/(app)/admin/users/page.tsx
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/me/page.tsx
-  - platform/app/globals.css
-  - platform/supabase/migrations/0003_app_settings.sql
-  - platform/app/(app)/todos/page.tsx
-  - platform/supabase/migrations/0005_users_login.sql
   - platform/app/(app)/finance/import/page.tsx
-  - platform/lib/line/store.ts
-  - platform/eslint.config.mjs
-  - platform/app/login/page.tsx
-  - platform/supabase/migrations/0001_audit.sql
-  - platform/supabase/migrations/0002_core.sql
-  - platform/lib/shows.ts
-  - platform/tsconfig.json
-  - platform/open-next.config.ts
-  - platform/lib/auth/users.ts
-  - platform/app/(app)/admin/template/actions.ts
-  - platform/app/api/auth/login/route.ts
-  - platform/app/api/auth/logout/route.ts
-  - platform/lib/auth/line-login.ts
-  - platform/components/bottom-nav.tsx
-  - platform/scripts/legacy-oracle.mts
-  - platform/supabase/migrations/0004_message_retention.sql
-  - platform/app/liff/[[...path]]/page.tsx
-  - platform/components/ledger-sheet.tsx
-  - platform/components/idea-list.tsx
-  - platform/app/(app)/shows/page.tsx
-  - platform/lib/audit.ts
-  - platform/app/favicon.ico
-  - js/api.js
-  - platform/next.config.ts
-  - platform/lib/line/signature.ts
-  - platform/lib/line/webhook.ts
-  - platform/public/file.svg
-  - platform/lib/auth/access.ts
-  - platform/CLAUDE.md
-  - platform/app/(app)/admin/users/actions.ts
-  - platform/app/(app)/todos/actions.ts
-  - platform/lib/auth/session.ts
-  - platform/lib/ideas.ts
-  - platform/lib/todos.ts
-  - platform/scripts/db-check.sql
-  - platform/public/vercel.svg
-  - platform/public/globe.svg
-  - platform/scripts/test-db.sh
-  - platform/scripts/db-migrate.sh
-  - platform/lib/templates.ts
-  - platform/scripts/reconcile.mts
-  - platform/app/api/cron/purge-messages/route.ts
-  - platform/app/api/auth/callback/line/route.ts
-  - platform/lib/cron/auth.ts
-  - platform/worker.ts
-  - platform/lib/finance/reconcile.ts
-  - platform/package.json
-  - platform/lib/line/summary.ts
-  - platform/public/legacy/import.css
-  - platform/app/(app)/finance/page.tsx
-  - platform/app/(app)/layout.tsx
-  - platform/app/api/finance/import/route.ts
-  - platform/app/(app)/finance/actions.ts
-  - platform/components/avatar.tsx
-  - platform/lib/line/api.ts
-  - platform/public/legacy/import.js
-  - platform/lib/auth/current.ts
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/shows/actions.ts
-  - platform/scripts/rehearse-migration.sh
-  - platform/AGENTS.md
-  - platform/app/page.tsx
-  - platform/app/liff/[[...path]]/liff-login.tsx
-  - platform/supabase/migrations/0006_finance.sql
-  - platform/README.md
-  - platform/lib/dates.ts
-  - platform/scripts/check-tax-reserves.mts
-  - platform/lib/line/commands.ts
-  - platform/lib/finance/sheet.ts
-  - platform/public/legacy/import-shim.js
-  - platform/components/show-editor.tsx
+  - platform/supabase/migrations/0009_show_kind.sql
+  - platform/lib/events.ts
   - platform/lib/supabase.ts
-  - platform/app/layout.tsx
+  - platform/components/idea-list.tsx
+  - platform/components/bottom-nav.tsx
+  - platform/app/globals.css
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/ideas/page.tsx
+  - platform/supabase/migrations/0010_internal_events.sql
+  - platform/app/(app)/calendar/page.tsx
+  - platform/components/add-menu.tsx
+  - platform/lib/line/commands.ts
+  - platform/lib/calendar/feed.ts
+  - platform/app/(app)/shows/actions.ts
+  - platform/lib/line/summary.ts
+  - platform/app/(app)/shows/page.tsx
+  - platform/app/(app)/calendar/actions.ts
+  - platform/lib/calendar/ics.ts
+  - platform/lib/dates.ts
+  - platform/eslint.config.mjs
+  - platform/components/show-editor.tsx
+  - platform/components/finance-show-select.tsx
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
+  - platform/lib/line/quick-reply.ts
+  - platform/wrangler.toml
+  - platform/app/api/line/webhook/route.ts
+  - platform/scripts/oneoff-show-dates-20261003.mts
+  - platform/app/(app)/shows/[id]/page.tsx
   - platform/app/(app)/finance/transactions/page.tsx
-  - platform/lib/finance/data.ts
+  - platform/components/show-picker.tsx
+  - platform/app/(app)/todos/page.tsx
+  - platform/lib/calendar/days.ts
+  - platform/lib/line/api.ts
+  - platform/lib/line/store.ts
+  - platform/lib/shows.ts
+  - platform/lib/line/webhook.ts
 tests:
-  - platform/lib/finance/reserve.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/lib/auth/session.test.ts
-  - platform/lib/templates.test.ts
-  - platform/supabase/test/audit_core.test.sql
-  - platform/lib/finance/calc.test.ts
   - platform/lib/line/commands.test.ts
-  - platform/lib/auth/access.test.ts
-  - platform/supabase/test/finance.test.sql
-  - platform/supabase/test/retention.test.sql
-  - platform/lib/dates.test.ts
-  - platform/lib/todos.test.ts
-  - platform/supabase/test/local-shim.sql
+  - platform/lib/calendar/days.test.ts
+  - platform/lib/events.test.ts
+  - platform/lib/calendar/feed.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/supabase/test/internal_events.test.sql
+  - platform/lib/line/quick-reply.test.ts
   - platform/lib/line/summary.test.ts
+  - platform/supabase/test/show_kind.test.sql
+  - platform/lib/calendar/ics.test.ts
+  - platform/lib/shows.test.ts
 -->
 
 ---
 ### Requirement: Assign idea to a show
 
-A member SHALL be able to assign an idea to a show, move it to another show, or return it to the library; a member SHALL be able to archive an idea and restore it from an archived view. Members SHALL also be able to add or edit ideas on the web.
+Each idea card in 「還沒歸位」 and 「全部」 SHALL offer a one-tap button 「→ {next show name}」 that attaches the idea to the next upcoming performance, and an 「其他…」 button that opens the shared show picker. When there is no upcoming performance, the one-tap button SHALL be hidden and only 「其他…」 remains. A member SHALL be able to move an idea to another show or back to no show through the picker, and to edit or archive an idea from its edit panel opened by tapping the card text; archived ideas SHALL be restorable from 「已封存」. An idea that leaves the current view (for example, assigned while viewing 「還沒歸位」) SHALL disappear from the list immediately. Ledger rows SHALL never be offered.
 
 #### Scenario: Assign to November show
 
-- **WHEN** a member assigns 「讓觀眾投票決定結局」 to 「第 2 季 11 月號」
-- **THEN** the idea leaves the library list and appears on that show's planning page
+- **WHEN** a member taps 「其他…」 on 「讓觀眾投票決定結局」 and picks 「第 2 季 11 月號」
+- **THEN** the idea leaves 「還沒歸位」 and appears on that show's page
+
+#### Scenario: One tap to the next show
+
+- **WHEN** 10 月號 is the next show and a member taps 「→ 10 月號」 on an idea
+- **THEN** the idea is attached to 10 月號 without any further choice
 
 <!-- @trace
-source: jokesonme-platform-v2
+source: show-centric-planning
 updated: 2026-10-03
 code:
-  - platform/components/show-picker.tsx
-  - platform/app/pending/page.tsx
-  - platform/scripts/migrate-from-sheet.mts
-  - platform/supabase/migrations/0008_monthly_template.sql
-  - platform/components/tx-board.tsx
-  - platform/lib/finance/calc.ts
-  - platform/components/finance-head.tsx
-  - platform/supabase/migrations/0007_revoke_truncate.sql
-  - platform/app/(app)/ideas/actions.ts
-  - platform/app/api/finance/export/route.ts
-  - platform/lib/members.ts
-  - platform/app/(app)/finance/analytics/page.tsx
-  - platform/app/(app)/finance/import/legacy-import.tsx
-  - platform/app/api/line/webhook/route.ts
-  - platform/public/next.svg
-  - platform/public/window.svg
-  - platform/app/(app)/ideas/page.tsx
-  - platform/app/api/auth/liff/route.ts
-  - platform/lib/finance/reserve.ts
-  - platform/wrangler.toml
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/app/(app)/admin/users/page.tsx
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/me/page.tsx
-  - platform/app/globals.css
-  - platform/supabase/migrations/0003_app_settings.sql
-  - platform/app/(app)/todos/page.tsx
-  - platform/supabase/migrations/0005_users_login.sql
   - platform/app/(app)/finance/import/page.tsx
-  - platform/lib/line/store.ts
-  - platform/eslint.config.mjs
-  - platform/app/login/page.tsx
-  - platform/supabase/migrations/0001_audit.sql
-  - platform/supabase/migrations/0002_core.sql
-  - platform/lib/shows.ts
-  - platform/tsconfig.json
-  - platform/open-next.config.ts
-  - platform/lib/auth/users.ts
-  - platform/app/(app)/admin/template/actions.ts
-  - platform/app/api/auth/login/route.ts
-  - platform/app/api/auth/logout/route.ts
-  - platform/lib/auth/line-login.ts
-  - platform/components/bottom-nav.tsx
-  - platform/scripts/legacy-oracle.mts
-  - platform/supabase/migrations/0004_message_retention.sql
-  - platform/app/liff/[[...path]]/page.tsx
-  - platform/components/ledger-sheet.tsx
-  - platform/components/idea-list.tsx
-  - platform/app/(app)/shows/page.tsx
-  - platform/lib/audit.ts
-  - platform/app/favicon.ico
-  - js/api.js
-  - platform/next.config.ts
-  - platform/lib/line/signature.ts
-  - platform/lib/line/webhook.ts
-  - platform/public/file.svg
-  - platform/lib/auth/access.ts
-  - platform/CLAUDE.md
-  - platform/app/(app)/admin/users/actions.ts
-  - platform/app/(app)/todos/actions.ts
-  - platform/lib/auth/session.ts
-  - platform/lib/ideas.ts
-  - platform/lib/todos.ts
-  - platform/scripts/db-check.sql
-  - platform/public/vercel.svg
-  - platform/public/globe.svg
-  - platform/scripts/test-db.sh
-  - platform/scripts/db-migrate.sh
-  - platform/lib/templates.ts
-  - platform/scripts/reconcile.mts
-  - platform/app/api/cron/purge-messages/route.ts
-  - platform/app/api/auth/callback/line/route.ts
-  - platform/lib/cron/auth.ts
-  - platform/worker.ts
-  - platform/lib/finance/reconcile.ts
-  - platform/package.json
-  - platform/lib/line/summary.ts
-  - platform/public/legacy/import.css
-  - platform/app/(app)/finance/page.tsx
-  - platform/app/(app)/layout.tsx
-  - platform/app/api/finance/import/route.ts
-  - platform/app/(app)/finance/actions.ts
-  - platform/components/avatar.tsx
-  - platform/lib/line/api.ts
-  - platform/public/legacy/import.js
-  - platform/lib/auth/current.ts
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/shows/actions.ts
-  - platform/scripts/rehearse-migration.sh
-  - platform/AGENTS.md
-  - platform/app/page.tsx
-  - platform/app/liff/[[...path]]/liff-login.tsx
-  - platform/supabase/migrations/0006_finance.sql
-  - platform/README.md
-  - platform/lib/dates.ts
-  - platform/scripts/check-tax-reserves.mts
-  - platform/lib/line/commands.ts
-  - platform/lib/finance/sheet.ts
-  - platform/public/legacy/import-shim.js
-  - platform/components/show-editor.tsx
+  - platform/supabase/migrations/0009_show_kind.sql
+  - platform/lib/events.ts
   - platform/lib/supabase.ts
-  - platform/app/layout.tsx
+  - platform/components/idea-list.tsx
+  - platform/components/bottom-nav.tsx
+  - platform/app/globals.css
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/ideas/page.tsx
+  - platform/supabase/migrations/0010_internal_events.sql
+  - platform/app/(app)/calendar/page.tsx
+  - platform/components/add-menu.tsx
+  - platform/lib/line/commands.ts
+  - platform/lib/calendar/feed.ts
+  - platform/app/(app)/shows/actions.ts
+  - platform/lib/line/summary.ts
+  - platform/app/(app)/shows/page.tsx
+  - platform/app/(app)/calendar/actions.ts
+  - platform/lib/calendar/ics.ts
+  - platform/lib/dates.ts
+  - platform/eslint.config.mjs
+  - platform/components/show-editor.tsx
+  - platform/components/finance-show-select.tsx
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
+  - platform/lib/line/quick-reply.ts
+  - platform/wrangler.toml
+  - platform/app/api/line/webhook/route.ts
+  - platform/scripts/oneoff-show-dates-20261003.mts
+  - platform/app/(app)/shows/[id]/page.tsx
   - platform/app/(app)/finance/transactions/page.tsx
-  - platform/lib/finance/data.ts
+  - platform/components/show-picker.tsx
+  - platform/app/(app)/todos/page.tsx
+  - platform/lib/calendar/days.ts
+  - platform/lib/line/api.ts
+  - platform/lib/line/store.ts
+  - platform/lib/shows.ts
+  - platform/lib/line/webhook.ts
 tests:
-  - platform/lib/finance/reserve.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/lib/auth/session.test.ts
-  - platform/lib/templates.test.ts
-  - platform/supabase/test/audit_core.test.sql
-  - platform/lib/finance/calc.test.ts
   - platform/lib/line/commands.test.ts
-  - platform/lib/auth/access.test.ts
-  - platform/supabase/test/finance.test.sql
-  - platform/supabase/test/retention.test.sql
-  - platform/lib/dates.test.ts
-  - platform/lib/todos.test.ts
-  - platform/supabase/test/local-shim.sql
+  - platform/lib/calendar/days.test.ts
+  - platform/lib/events.test.ts
+  - platform/lib/calendar/feed.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/supabase/test/internal_events.test.sql
+  - platform/lib/line/quick-reply.test.ts
   - platform/lib/line/summary.test.ts
+  - platform/supabase/test/show_kind.test.sql
+  - platform/lib/calendar/ics.test.ts
+  - platform/lib/shows.test.ts
 -->
