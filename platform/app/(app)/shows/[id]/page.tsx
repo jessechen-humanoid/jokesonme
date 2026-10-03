@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requirePage } from "@/lib/auth/current";
 import { db } from "@/lib/supabase";
 import { listIdeas } from "@/lib/ideas";
+import { programSummary } from "@/lib/program";
 import { listPerformances, pickableShows, SHOW_TYPE_LABEL, type ShowType, toPickerData } from "@/lib/shows";
 import { assignableUsers, groupByShow, listTodos, listUsers, nameMap } from "@/lib/todos";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
@@ -21,9 +22,10 @@ export default async function ShowPlanningPage({ params, searchParams }: PagePro
   const actor = `user:${me.id}` as const;
   const { data: show } = await db(actor).from("shows").select("id, name, type, kind, performance_date, status").eq("id", id).maybeSingle<{ id: string; name: string; type: ShowType; kind: string; performance_date: string | null; status: string }>();
   if (!show || show.kind !== "performance") notFound();
-  const [ideas, shows, users, todos, linksRes] = await Promise.all([
+  const [ideas, shows, users, todos, linksRes, program] = await Promise.all([
     listIdeas(actor, { showId: id }), listPerformances(actor), listUsers(actor), listTodos(actor),
     db(actor).from("show_links").select("kind, url").eq("show_id", id),
+    programSummary(actor, id),
   ]);
   const names = nameMap(users);
   const picker = toPickerData(pickableShows(shows, todayInTaipei()));
@@ -42,6 +44,11 @@ export default async function ShowPlanningPage({ params, searchParams }: PagePro
         <ShowInfoButton show={{ id: show.id, name: show.name, type: show.type, performanceDate: show.performance_date, status: show.status }} />
       </header>
       <div className="content">
+        <Link href={`/shows/${id}/program`} className="card show-row">
+          <span className="show-row-name">節目表</span>
+          <span className="show-row-meta">{program.count ? `${program.count} 段・共 ${program.minutes} 分鐘` : "還沒有節目表"} ›</span>
+        </Link>
+
         <TodoBoard
           key={`todos-${newKind ?? ""}`}
           groups={groupByShow(showTodos).map((g) => ({ ...g, title: "待辦" }))}
