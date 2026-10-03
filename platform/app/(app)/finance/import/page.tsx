@@ -8,7 +8,7 @@ export default async function ImportPage() {
   return (
     <main className="page">
       <link rel="stylesheet" href="/legacy/import.css" />
-      <FinanceHead me={me} active="import" title="應援金流匯入" sub="上傳應援後台下載的檔案，自動配對到專案" />
+      <FinanceHead me={me} active="import" title="應援金流匯入" />
       <div className="content legacy-import">
         <div className="card">
           <div className="card-title">上傳檔案</div>

@@ -1,38 +1,57 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
 import { listIdeas } from "@/lib/ideas";
-import { listShows } from "@/lib/shows";
+import { listPerformances, pickableShows, toPickerData } from "@/lib/shows";
 import { listUsers, nameMap } from "@/lib/todos";
+import { todayInTaipei } from "@/lib/dates";
 import Avatar from "@/components/avatar";
-import IdeaList from "@/components/idea-list";
+import IdeaList, { type IdeaListMode } from "@/components/idea-list";
 
+// 靈感分頁（spec idea-library「Idea library page」）：還沒歸位／全部／已封存。
 export default async function IdeasPage({ searchParams }: PageProps<"/ideas">) {
   const sp = await searchParams;
-  const archived = sp.archived === "1";
+  const mode: IdeaListMode = sp.v === "all" ? "all" : sp.v === "archived" ? "archived" : "inbox";
   const me = await requirePage("ideas", "/ideas");
   const actor = `user:${me.id}` as const;
-  const [ideas, shows, users] = await Promise.all([listIdeas(actor, { library: !archived, archived }), listShows(actor), listUsers(actor)]);
+  const [active, archived, shows, users] = await Promise.all([
+    listIdeas(actor, {}),
+    mode === "archived" ? listIdeas(actor, { archived: true }) : Promise.resolve([]),
+    listPerformances(actor),
+    listUsers(actor),
+  ]);
   const names = nameMap(users);
+  const showNames = new Map(shows.map((s) => [s.id, s.name]));
+  const inbox = active.filter((i) => !i.showId);
+  const list = mode === "inbox" ? inbox : mode === "all" ? active : archived;
+  const tab = (v: IdeaListMode, label: string) => (
+    <Link className={`chip ${mode === v ? "on" : ""}`} href={v === "inbox" ? "/ideas" : `/ideas?v=${v}`}>{label}</Link>
+  );
+
   return (
     <main className="page">
       <header className="head">
         <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <div className="chips">
-          <Link className={`chip ${!archived ? "on" : ""}`} href="/ideas">靈感庫</Link>
-          <Link className={`chip ${archived ? "on" : ""}`} href="/ideas?archived=1">已封存</Link>
+        <h1 className="page-title">靈感</h1>
+        <div className="chips" style={{ marginBottom: 0, marginTop: 10 }}>
+          {tab("inbox", `還沒歸位 ${inbox.length}`)}
+          {tab("all", `全部 ${active.length}`)}
+          {tab("archived", "已封存")}
         </div>
-        <h1 className="page-title">{archived ? "已封存的靈感" : "靈感庫"}</h1>
-        <p className="page-sub">{archived ? "封存的靈感可以還原" : "群組裡打「#內容」就會存到這裡，指派到演出後會移到該場的企劃頁"}</p>
       </header>
       <div className="content">
         <IdeaList
-          key={archived ? "a" : "l"}
-          ideas={ideas.map((i) => ({ id: i.id, text: i.text, author: names.get(i.authorUserId ?? "") ?? "成員", when: i.source?.sentAt ?? i.createdAt, showId: i.showId, viaLine: !!i.source }))}
-          shows={shows.map((s) => ({ id: s.id, name: s.name }))}
-          archived={archived}
+          key={mode}
+          ideas={list.map((i) => ({
+            id: i.id, text: i.text, author: names.get(i.authorUserId ?? "") ?? "成員", when: i.source?.sentAt ?? i.createdAt,
+            showId: i.showId, showName: i.showId ? (showNames.get(i.showId) ?? null) : null, viaLine: !!i.source,
+          }))}
+          picker={toPickerData(pickableShows(shows, todayInTaipei()))}
+          mode={mode}
           contextShowId={null}
-          emptyText={archived ? "沒有封存的靈感" : "靈感庫是空的。在群組打「#內容」或按右下角 + 新增。"}
-          allowCreate={!archived}
+          emptyText={
+            mode === "inbox" ? <>都歸位了。<br />在群組打「#內容」，靈感會先存到這裡。</> : mode === "all" ? "還沒有靈感" : "沒有封存的靈感"
+          }
+          allowCreate={mode !== "archived"}
         />
       </div>
     </main>

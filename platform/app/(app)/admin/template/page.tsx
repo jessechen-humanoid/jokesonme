@@ -14,9 +14,9 @@ export default async function TemplatePage() {
       <header className="head">
         <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
         <h1 className="page-title">月號模板</h1>
-        <p className="page-sub">建立月號（有演出日）時會照這份清單產生待辦，截止日 = 演出日 ± 天數。改模板不影響已經建立的待辦。</p>
       </header>
       <div className="content">
+        <div className="notice">建立月號（有演出日）時會照這份清單產生待辦，截止日 = 演出日 ± 天數。改模板不影響已經建立的待辦。</div>
         {items.map((i) => (
           <details key={i.id} className="card">
             <summary style={{ cursor: "pointer", listStyle: "none" }}>

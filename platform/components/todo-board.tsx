@@ -3,7 +3,9 @@
 // 點待辦直接用已載入的資料打開面板，不再跟伺服器要一次。失敗時跳提示並以伺服器資料為準。
 import { useOptimistic, useState, useTransition } from "react";
 import { claimTodo, createTodo, deleteTodo, toggleDone, updateTodo } from "@/app/(app)/todos/actions";
+import Link from "next/link";
 import { formatDueLabel, formatMonthDay, formatTaipeiDateTime } from "@/lib/dates";
+import ShowPicker, { type PickerData } from "@/components/show-picker";
 
 export type BoardTodo = {
   id: string;
@@ -17,7 +19,6 @@ export type BoardTodo = {
   sourceMessage: { text: string; userId: string; sentAt: string } | null;
 };
 export type BoardGroup = { key: string; title: string; performanceDate: string | null; todos: BoardTodo[] };
-type Show = { id: string; name: string; performanceDate: string | null };
 
 type Patch = { id: string; kind: "toggle" | "claim" | "delete"; me: string };
 
@@ -48,13 +49,17 @@ function fd(entries: Record<string, string>): FormData {
 export default function TodoBoard(props: {
   groups: BoardGroup[];
   names: Record<string, string>;
-  shows: Show[];
+  picker: PickerData;
   assignable: { id: string; name: string }[];
   meId: string;
   showDone: boolean;
   emptyText: string;
   initialSelected: string | null;
   initialNew: boolean;
+  /** 從演出頁開的新增面板預選這場 */
+  initialShowId?: string | null;
+  /** 演出頁有自己的＋選單，不顯示這裡的浮動按鈕 */
+  showFab?: boolean;
 }) {
   const [groups, patch] = useOptimistic(props.groups, applyPatch);
   const [, startTransition] = useTransition();
@@ -89,7 +94,7 @@ export default function TodoBoard(props: {
           return (
             <section key={g.key}>
               <div className="section">
-                <b>{g.title}</b>
+                {g.key !== "none" ? <Link href={`/shows/${g.key}`}><b>{g.title} ›</b></Link> : <b>{g.title}</b>}
                 <span>{g.performanceDate ? `${formatMonthDay(g.performanceDate)}演出` : `${visible.length} 件`}</span>
               </div>
               {visible.map((t) => {
@@ -121,13 +126,14 @@ export default function TodoBoard(props: {
         })
       )}
 
-      <button className="fab" type="button" aria-label="新增待辦" onClick={() => setSelected("new")} style={{ border: 0, cursor: "pointer" }}>+</button>
+      {props.showFab !== false ? <button className="fab" type="button" aria-label="新增待辦" onClick={() => setSelected("new")}>+</button> : null}
 
       {selected ? (
         <Sheet
           key={selected}
           todo={current}
-          shows={props.shows}
+          picker={props.picker}
+          initialShowId={props.initialShowId ?? null}
           assignable={props.assignable}
           meId={props.meId}
           name={name}
@@ -157,13 +163,14 @@ export default function TodoBoard(props: {
 }
 
 function Sheet({
-  todo, shows, assignable, meId, name, onClose, onSubmit, onClaim, onDelete,
+  todo, picker, initialShowId, assignable, meId, name, onClose, onSubmit, onClaim, onDelete,
 }: {
-  todo?: BoardTodo; shows: Show[]; assignable: { id: string; name: string }[]; meId: string; name: (id: string) => string;
+  todo?: BoardTodo; picker: PickerData; initialShowId: string | null; assignable: { id: string; name: string }[]; meId: string; name: (id: string) => string;
   onClose: () => void; onSubmit: (action: (f: FormData) => Promise<void>, f: FormData) => void;
   onClaim: (id: string) => void; onDelete: (id: string) => void;
 }) {
   const assigned = new Set(todo?.assignees ?? []);
+  const [showId, setShowId] = useState<string | null>(todo ? (todo.show?.id ?? null) : initialShowId);
   // 已指派但不在可指派名單（例如還沒核准的人）也要列出，避免儲存時被默默移除
   const pickable = [...assignable, ...[...assigned].filter((id) => !assignable.some((u) => u.id === id)).map((id) => ({ id, name: name(id) }))];
   return (
@@ -193,15 +200,10 @@ function Sheet({
             <span>截止日</span>
             <input className="input" type="date" name="due_date" defaultValue={todo?.dueDate ?? ""} />
           </label>
-          <label className="field">
+          <div className="field">
             <span>演出</span>
-            <select className="select" name="show_id" defaultValue={todo?.show?.id ?? ""}>
-              <option value="">沒有掛演出</option>
-              {shows.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}{s.performanceDate ? `（${formatMonthDay(s.performanceDate)}）` : ""}</option>
-              ))}
-            </select>
-          </label>
+            <ShowPicker data={picker} value={showId} onChange={setShowId} name="show_id" />
+          </div>
           <fieldset className="field" style={{ border: 0, padding: 0, margin: "0 0 14px" }}>
             <span>負責人（可複選，不選就是未認領）</span>
             <div className="picks">

@@ -33,13 +33,14 @@ export async function updateShow(fd: FormData): Promise<{ ok: boolean; error?: s
   const name = String(fd.get("name") ?? "").trim();
   const type = String(fd.get("type") ?? "other");
   const date = String(fd.get("performance_date") ?? "").trim();
+  const status = fd.get("archived") === "1" ? "archived" : "active"; // spec show-management「Archive a show」
   if (!name) return { ok: false, error: "請填寫演出名稱" };
   if (!["monthly", "special", "other"].includes(type)) return { ok: false, error: "類型不正確" };
   if (type === "monthly" && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: "月號一定要填演出日期" };
   const actor = `user:${me.id}` as const;
   const { data: before } = await db(actor).from("shows").select("performance_date").eq("id", id).single();
   const newDate = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
-  const { error } = await db(actor).from("shows").update({ name, type, performance_date: newDate }).eq("id", id);
+  const { error } = await db(actor).from("shows").update({ name, type, performance_date: newDate, status }).eq("id", id).eq("kind", "performance");
   if (error) return { ok: false, error: error.code === "23505" ? "已經有同名的演出" : "儲存失敗，請再試一次" };
   try {
     // 改演出日 → 未完成的模板待辦一起平移；變成月號且還沒有模板待辦 → 產生

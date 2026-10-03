@@ -2,6 +2,8 @@
 import { db } from "../supabase.ts";
 import { getGroupMemberProfile } from "./api.ts";
 import { mentionSummary } from "./summary.ts";
+import { listPerformances, pickableShows } from "../shows.ts";
+import { todayInTaipei } from "../dates.ts";
 import { MEMBER_NAMES } from "../members.ts";
 import type { CapturedMessage, WebhookStore } from "./webhook.ts";
 
@@ -65,6 +67,7 @@ export function supabaseWebhookStore(): WebhookStore {
       }
       const { error: e3 } = await client.from("todo_sources").insert({ todo_id: data.id, line_message_id: sourceMessageId });
       if (e3) fail("link todo source", e3);
+      return data.id as string;
     },
     async ensureUsers(groupId, userIds) {
       const ids = [...new Set(userIds.filter((u) => u && u !== "unknown"))];
@@ -101,8 +104,26 @@ export function supabaseWebhookStore(): WebhookStore {
       );
     },
     async createIdea({ text, authorUserId, sourceMessageId }) {
-      const { error } = await client.from("ideas").insert({ text, author_user_id: authorUserId, line_message_id: sourceMessageId });
-      if (error) fail("create idea", error);
+      const { data, error } = await client.from("ideas").insert({ text, author_user_id: authorUserId, line_message_id: sourceMessageId }).select("id").single();
+      if (error || !data) fail("create idea", error);
+      return data.id as string;
+    },
+    async upcomingShows() {
+      const p = pickableShows(await listPerformances("line-bot"), todayInTaipei());
+      return p.upcoming.map((s) => ({ id: s.id, name: s.name }));
+    },
+    async assignToShow(kind, id, showId) {
+      const { data: show } = await client.from("shows").select("name").eq("id", showId).eq("kind", "performance").maybeSingle();
+      if (!show) return { status: "missing" as const };
+      const table = kind === "idea" ? "ideas" : "todos";
+      const { data, error } = await client.from(table).update({ show_id: showId }).eq("id", id).is(kind === "todo" ? "deleted_at" : "archived_at", null).select("id");
+      if (error) fail("assign to show", error);
+      return data && data.length ? { status: "ok" as const, showName: show.name as string } : { status: "missing" as const };
+    },
+    async exists(kind, id) {
+      const table = kind === "idea" ? "ideas" : "todos";
+      const { data } = await client.from(table).select("id").eq("id", id).is(kind === "todo" ? "deleted_at" : "archived_at", null).maybeSingle();
+      return !!data;
     },
   };
 }

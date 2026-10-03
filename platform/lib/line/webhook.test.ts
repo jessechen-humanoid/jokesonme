@@ -11,19 +11,33 @@ function fakeStore(registered: string | null = "G1") {
     ideas: [] as { text: string; authorUserId: string; sourceMessageId: string }[],
     ensured: [] as string[],
     summaries: [] as string[][],
+    upcoming: [] as { id: string; name: string }[],
+    assigned: [] as [string, string, string][],
+    alive: new Set<string>(),
   };
   const store: WebhookStore = {
     async getRegisteredGroup() { return s.group; },
     async registerGroup(g) { if (!s.group) s.group = g; },
     async saveMessage(m) { if (s.messages.has(m.id)) return false; s.messages.set(m.id, m); return true; },
     async getMessage(id) { return s.messages.get(id) ?? null; },
-    async createTodo(t) { s.todos.push(t); },
-    async createIdea(i) { s.ideas.push(i); },
+    async createTodo(t) { s.todos.push(t); return `todo-${s.todos.length}`; },
+    async createIdea(i) { s.ideas.push(i); return `idea-${s.ideas.length}`; },
+    async upcomingShows() { return s.upcoming; },
+    async assignToShow(kind, id, showId) {
+      if (!s.alive.has(id)) return { status: "missing" as const };
+      s.assigned.push([kind, id, showId]);
+      return { status: "ok" as const, showName: s.upcoming.find((x) => x.id === showId)?.name ?? "?" };
+    },
+    async exists(_k, id) { return s.alive.has(id); },
     async ensureUsers(_g, ids) { s.ensured.push(...ids); },
     async mentionSummary(only) { s.summaries.push(only); return `SUMMARY:${only.join(",")}`; },
   };
   const replies: string[] = [];
-  return { s, store, replies, reply: async (_t: string, text: string) => { replies.push(text); } };
+  const messages: (string | { text: string; quickReply?: { items: { action: { label: string; data: string } }[] } })[] = [];
+  return {
+    s, store, replies, messages,
+    reply: async (_t: string, m: string | { type: "text"; text: string }) => { messages.push(m); replies.push(typeof m === "string" ? m : m.text); },
+  };
 }
 
 const msg = (id: string, text: string, extra: Record<string, unknown> = {}, groupId = "G1", userId = "U_jesse") => ({
@@ -137,5 +151,62 @@ test("「/買膠帶 @傑瓜」仍是待辦，傑瓜不會變成負責人", async
 test("一般聊天有 tag 別人（沒 tag 傑瓜）：不回覆", async () => {
   const f = fakeStore();
   await handleEvents([msg("23", "@柏文 晚點打給你", { mention: { mentionees: [{ index: 0, length: 3, userId: "U_bowen", type: "user" }] } })], f.store, f.reply);
+  assert.deepEqual(f.replies, []);
+});
+
+// ---- 快速回覆按鈕與 postback（show-centric-planning） ----
+const U = (n: number) => `00000000-0000-0000-0000-00000000000${n}`;
+const btn = (m: unknown) => (typeof m === "string" ? null : (m as { quickReply?: { items: { action: { label: string } }[] } }).quickReply?.items.map((i) => i.action.label) ?? null);
+
+test("四個建立分支都帶「要歸到哪一場？」按鈕", async () => {
+  const f = fakeStore();
+  f.s.upcoming = [{ id: U(8), name: "看我笑話 10 月號" }];
+  await handleEvents([msg("30", "#觀眾投票")], f.store, f.reply);
+  await handleEvents([msg("31", "/買膠帶")], f.store, f.reply);
+  await handleEvents([msg("32", "原文 A")], f.store, f.reply);
+  await handleEvents([msg("33", "#", { quotedMessageId: "32" })], f.store, f.reply);
+  await handleEvents([msg("34", "/", { quotedMessageId: "32" })], f.store, f.reply);
+  assert.deepEqual(f.replies, ["已存進靈感庫，要歸到哪一場？", "已建立待辦：買膠帶（未認領）", "已存進靈感庫，要歸到哪一場？", "已建立待辦：原文 A（未認領）"]);
+  for (const m of f.messages) assert.deepEqual(btn(m), ["10 月號", "先放著"]);
+});
+
+test("沒有接下來的演出：純文字、不帶按鈕", async () => {
+  const f = fakeStore();
+  await handleEvents([msg("35", "#觀眾投票")], f.store, f.reply);
+  assert.deepEqual(f.messages, ["已存進靈感庫"]);
+});
+
+const pb = (data: string, groupId = "G1") => ({ type: "postback", replyToken: "Rpb", timestamp: 1, source: { type: "group", groupId, userId: "U_x" }, postback: { data } });
+
+test("postback：歸到演出", async () => {
+  const f = fakeStore();
+  f.s.upcoming = [{ id: U(8), name: "看我笑話 10 月號" }];
+  f.s.alive.add(U(1));
+  const r = await handleEvents([pb(`v=1&t=idea&id=${U(1)}&show=${U(8)}`)], f.store, f.reply);
+  assert.deepEqual(r, ["postback:assigned"]);
+  assert.deepEqual(f.s.assigned, [["idea", U(1), U(8)]]);
+  assert.deepEqual(f.replies, ["已歸到「看我笑話 10 月號」"]);
+  assert.equal(f.s.messages.size, 0, "postback 不寫 line_messages");
+});
+
+test("postback：先放著（不寫入）、目標已刪、壞資料、其他群組", async () => {
+  const f = fakeStore();
+  f.s.alive.add(U(1));
+  assert.deepEqual(await handleEvents([pb(`v=1&t=idea&id=${U(1)}&show=none`)], f.store, f.reply), ["postback:none"]);
+  assert.deepEqual(await handleEvents([pb(`v=1&t=todo&id=${U(1)}&show=none`)], f.store, f.reply), ["postback:none"]);
+  assert.deepEqual(await handleEvents([pb(`v=1&t=idea&id=${U(2)}&show=${U(8)}`)], f.store, f.reply), ["postback:missing"]);
+  assert.deepEqual(await handleEvents([pb("v=9&t=idea")], f.store, f.reply), ["postback:ignored"]);
+  assert.deepEqual(await handleEvents([pb(`v=1&t=idea&id=${U(1)}&show=none`, "G_other")], f.store, f.reply), ["ignored:other-group"]);
+  assert.deepEqual(f.replies, ["好，先放在靈感庫", "好，先不掛演出", "這則已經不在了"]);
+  assert.deepEqual(f.s.assigned, []);
+});
+
+test("postback 沒有 replyToken：照樣寫入、不回覆", async () => {
+  const f = fakeStore();
+  f.s.upcoming = [{ id: U(8), name: "10 月號" }];
+  f.s.alive.add(U(1));
+  const ev = { ...pb(`v=1&t=todo&id=${U(1)}&show=${U(8)}`), replyToken: undefined };
+  await handleEvents([ev], f.store, f.reply);
+  assert.deepEqual(f.s.assigned, [["todo", U(1), U(8)]]);
   assert.deepEqual(f.replies, []);
 });

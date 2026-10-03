@@ -6,7 +6,7 @@ import { todayInTaipei } from "@/lib/dates";
 import { displayName } from "@/lib/auth/users";
 import FinanceHead from "@/components/finance-head";
 import TxBoard from "@/components/tx-board";
-import ShowPicker from "@/components/show-picker";
+import FinanceShowSelect from "@/components/finance-show-select";
 
 const money = (n: number) => `${n > 0 ? "+" : n < 0 ? "-" : ""}$${Math.abs(n).toLocaleString()}`;
 
@@ -32,7 +32,7 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/fin
       <FinanceHead me={me} active="transactions" title="收支紀錄" />
       <div className="content">
         <div className="toolbar">
-          <ShowPicker shows={shows.map((s) => ({ id: s.id, name: s.name }))} value={showId} />
+          <FinanceShowSelect shows={shows.map((s) => ({ id: s.id, name: s.name }))} value={showId} />
         </div>
         {show ? (
           <>

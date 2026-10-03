@@ -6,7 +6,7 @@ import { saveShowLink, updateShow } from "@/app/(app)/shows/actions";
 const LINK_LABEL = { rundown: "Rundown", presentation: "簡報", survey: "問卷" } as const;
 type Kind = keyof typeof LINK_LABEL;
 
-export function ShowInfoButton({ show }: { show: { id: string; name: string; type: string; performanceDate: string | null } }) {
+export function ShowInfoButton({ show }: { show: { id: string; name: string; type: string; performanceDate: string | null; status: string } }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -40,6 +40,10 @@ export function ShowInfoButton({ show }: { show: { id: string; name: string; typ
                 </select>
               </label>
               <label className="field"><span>演出日期（月號必填）</span><input className="input" type="date" name="performance_date" defaultValue={show.performanceDate ?? ""} /></label>
+              <label className="check-line">
+                <input type="checkbox" name="archived" value="1" defaultChecked={show.status === "archived"} />
+                已演出，歸檔（不再出現在「接下來」與下一場捷徑；財務頁仍看得到）
+              </label>
               <div className="actions">
                 <button className="btn btn-primary" type="submit" disabled={pending}>{pending ? "儲存中…" : "儲存"}</button>
                 <button className="btn btn-ghost" type="button" onClick={() => setOpen(false)}>取消</button>

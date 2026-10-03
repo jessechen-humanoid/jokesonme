@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
-import { listShows, SHOW_TYPE_LABEL } from "@/lib/shows";
+import { listPerformances, pickableShows, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
 import Avatar from "@/components/avatar";
 import { createShow } from "./actions";
@@ -12,30 +12,29 @@ const ERRORS: Record<string, string> = {
   save: "儲存失敗，請再試一次",
 };
 
+// 演出分頁（spec show-planning-page「Monthly planning page」）：只列演出，分「接下來」與「已演出／其他」。
 export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   const sp = await searchParams;
   const me = await requirePage("planning", "/shows");
-  const shows = await listShows(`user:${me.id}`);
-  const today = todayInTaipei();
-  const upcoming = shows.filter((s) => !s.performanceDate || s.performanceDate >= today).reverse();
-  const past = shows.filter((s) => s.performanceDate && s.performanceDate < today);
+  const { upcoming, more } = pickableShows(await listPerformances(`user:${me.id}`), todayInTaipei());
   const err = typeof sp.err === "string" ? ERRORS[sp.err] : undefined;
 
   return (
     <main className="page">
       <header className="head">
         <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <h1 className="page-title">企劃</h1>
-        <p className="page-sub">每場演出的靈感、待辦與文件</p>
+        <h1 className="page-title">演出</h1>
       </header>
       <div className="content">
-        <div className="section"><b>接下來</b><span>{upcoming.length} 場</span></div>
-        {upcoming.length === 0 ? <p className="empty">還沒有排演出，按右下角 + 新增</p> : upcoming.map((s) => <ShowCard key={s.id} s={s} />)}
-        {past.length ? (
-          <>
-            <div className="section"><b>已演出</b><span>{past.length} 場</span></div>
-            {past.map((s) => <ShowCard key={s.id} s={s} />)}
-          </>
+        <section>
+          <div className="section"><b>接下來</b><span>{upcoming.length} 場</span></div>
+          {upcoming.length === 0 ? <p className="empty">還沒有排日期的演出。點下面的演出、按「編輯演出資訊」填日期，或按右下角 ＋ 新增。</p> : upcoming.map((s) => <ShowCard key={s.id} s={s} />)}
+        </section>
+        {more.length ? (
+          <section>
+            <div className="section"><b>已演出／其他</b><span>{more.length} 場</span></div>
+            {more.map((s) => <ShowCard key={s.id} s={s} />)}
+          </section>
         ) : null}
       </div>
       <Link className="fab" href="/shows?new=1" aria-label="新增演出">+</Link>
@@ -69,13 +68,14 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   );
 }
 
-function ShowCard({ s }: { s: { id: string; name: string; type: keyof typeof SHOW_TYPE_LABEL; performanceDate: string | null } }) {
+function ShowCard({ s }: { s: Show }) {
   return (
     <Link href={`/shows/${s.id}`} className="card" style={{ display: "block" }}>
       <div className="title">{s.name}</div>
       <div className="meta">
-        {s.performanceDate ? <span className="due">{formatMonthDay(s.performanceDate)}演出</span> : <span>未定日期</span>}
+        {s.performanceDate ? <span className="due">{formatMonthDay(s.performanceDate)}</span> : <span>沒有日期</span>}
         <span className="tag">{SHOW_TYPE_LABEL[s.type]}</span>
+        {s.status === "archived" ? <span>已歸檔</span> : null}
       </div>
     </Link>
   );

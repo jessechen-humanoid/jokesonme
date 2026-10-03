@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 建置產物與 Cloudflare 本機暫存
+    ".open-next/**",
+    ".wrangler/**",
+    // 原封不動沿用的舊應援匯入程式（見檔頭說明），不在這裡改寫風格
+    "public/legacy/**",
   ]),
 ]);
 
