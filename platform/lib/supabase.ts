@@ -2,8 +2,8 @@
 // 只能在伺服器端使用：SUPABASE_SECRET_KEY 絕不能送到瀏覽器。
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/** actor 格式：真人 `user:<LINE userId>`；系統 `line-bot` / `reminder-job` / `migration`。 */
-export type Actor = `user:${string}` | "line-bot" | "reminder-job" | "migration";
+/** actor 格式：真人 `user:<LINE userId>`；系統 `line-bot` / `reminder-job` / `calendar-sync` / `migration`。 */
+export type Actor = `user:${string}` | "line-bot" | "reminder-job" | "calendar-sync" | "migration";
 
 export function db(actor: Actor): SupabaseClient {
   const url = process.env.SUPABASE_URL;

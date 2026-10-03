@@ -1,10 +1,14 @@
 // WebhookStore 的 Supabase 實作；所有寫入的 actor 都是 line-bot。
 import { db } from "../supabase.ts";
 import { getGroupMemberProfile } from "./api.ts";
-import { mentionSummary } from "./summary.ts";
+import { datesBlock, mentionSummary } from "./summary.ts";
 import { listPerformances, pickableShows } from "../shows.ts";
-import { todayInTaipei } from "../dates.ts";
+import { addDays, todayInTaipei } from "../dates.ts";
 import { MEMBER_NAMES } from "../members.ts";
+import { createEvent, listEvents } from "../events.ts";
+import { showCalendarFeed } from "../calendar/feed.ts";
+import { eventsInRange } from "../calendar/ics.ts";
+import { buildDays, importantDates } from "../calendar/days.ts";
 import type { CapturedMessage, WebhookStore } from "./webhook.ts";
 
 const GROUP_KEY = "line_group_id";
@@ -85,10 +89,17 @@ export function supabaseWebhookStore(): WebhookStore {
       }
     },
     async mentionSummary(onlyUserIds) {
-      const [{ data: todos, error }, { data: users, error: e2 }] = await Promise.all([
+      // 接下來 14 天（含今天）：跟行事曆頁共用 buildDays
+      const from = todayInTaipei();
+      const to = addDays(from, 13);
+      const [{ data: todos, error }, { data: users, error: e2 }, feed, events] = await Promise.all([
         client.from("todos").select("title, due_date, todo_assignees(user_id)").is("done_at", null).is("deleted_at", null),
         client.from("users").select("id, member_name, display_name"),
+        showCalendarFeed().catch(() => ({ status: "missing" as const })),
+        listEvents("line-bot", from, to),
       ]);
+      const shows = "text" in feed ? eventsInRange(feed.text, from, to) : [];
+      const dates = datesBlock(importantDates(buildDays(from, to, shows, events, [])), feed.status === "missing");
       if (error) fail("read todos", error);
       if (e2) fail("read users", e2);
       const names = new Map((users ?? []).map((u: { id: string; member_name: string | null; display_name: string }) => [u.id, u.member_name || u.display_name]));
@@ -101,12 +112,16 @@ export function supabaseWebhookStore(): WebhookStore {
         link,
         onlyUserIds,
         [...MEMBER_NAMES],
+        dates,
       );
     },
     async createIdea({ text, authorUserId, sourceMessageId }) {
       const { data, error } = await client.from("ideas").insert({ text, author_user_id: authorUserId, line_message_id: sourceMessageId }).select("id").single();
       if (error || !data) fail("create idea", error);
       return data.id as string;
+    },
+    async createEvent({ date, time, title, createdBy }) {
+      return createEvent("line-bot", { date, time, title, notes: "" }, createdBy);
     },
     async upcomingShows() {
       const p = pickableShows(await listPerformances("line-bot"), todayInTaipei());

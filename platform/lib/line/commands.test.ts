@@ -63,3 +63,37 @@ test("重複 mention 同一人只算一次", () => {
   });
   assert.deepEqual(r, { kind: "todo", title: "搬道具", assigneeUserIds: ["U_q"] });
 });
+
+// spec 範例表（team-calendar-and-simple-commands）：/ ＋ 類型詞
+test("/靈感 內容 → 靈感；/說明 → 小抄；類型詞後要接空白或結尾", () => {
+  assert.deepEqual(parseCommand({ text: "/靈感 讓觀眾投票決定結局" }), { kind: "idea", text: "讓觀眾投票決定結局" });
+  assert.deepEqual(parseCommand({ text: "／靈感　全形空白也可以" }), { kind: "idea", text: "全形空白也可以" });
+  assert.deepEqual(parseCommand({ text: "/說明" }), { kind: "usage" });
+  assert.deepEqual(parseCommand({ text: "/靈感會議要訂場地" }), { kind: "todo", title: "靈感會議要訂場地", assigneeUserIds: [] });
+  assert.deepEqual(parseCommand({ text: "/行程表要更新" }), { kind: "todo", title: "行程表要更新", assigneeUserIds: [] });
+});
+
+test("/靈感 沒內容：有引用存被回覆的訊息，沒引用回小抄", () => {
+  assert.deepEqual(parseCommand({ text: "/靈感", quotedMessageId: "Q1" }), { kind: "idea-from-quote", quotedMessageId: "Q1" });
+  assert.deepEqual(parseCommand({ text: "/靈感" }), { kind: "usage" });
+});
+
+test("/行程 年份與時間（spec Example: year and time）", () => {
+  const today = "2026-10-03";
+  assert.deepEqual(parseCommand({ text: "/行程 10/12 19:00 討論 11 月號", today }), { kind: "event", date: "2026-10-12", time: "19:00", title: "討論 11 月號" });
+  assert.deepEqual(parseCommand({ text: "/行程 1/5 排練", today }), { kind: "event", date: "2027-01-05", time: null, title: "排練" });
+  assert.deepEqual(parseCommand({ text: "/行程 10/3 晚上聚餐", today }), { kind: "event", date: "2026-10-03", time: null, title: "晚上聚餐" });
+  assert.deepEqual(parseCommand({ text: "/行程 13/40 開會", today }), { kind: "usage" });
+  assert.deepEqual(parseCommand({ text: "/行程 10/12", today }), { kind: "usage" });
+  assert.deepEqual(parseCommand({ text: "/行程 10/12 19:00", today }), { kind: "usage" });
+  assert.deepEqual(parseCommand({ text: "/行程", today }), { kind: "usage" });
+});
+
+test("/行程 邊界：2/30 無效、9:5 不算時間、全形斜線與 @人 挖掉", () => {
+  const today = "2026-10-03";
+  assert.deepEqual(parseCommand({ text: "/行程 2/30 開會", today }), { kind: "usage" });
+  assert.deepEqual(parseCommand({ text: "/行程 10/12 9:30 早會", today }), { kind: "event", date: "2026-10-12", time: "09:30", title: "早會" });
+  assert.deepEqual(parseCommand({ text: "/行程 10/12 25:00 開會", today }), { kind: "usage" });
+  const text = "/行程 10／12 排練 @傑瓜";
+  assert.deepEqual(parseCommand({ text, today, mentions: [{ index: text.indexOf("@"), length: 3, isSelf: true }] }), { kind: "event", date: "2026-10-12", time: null, title: "排練" });
+});

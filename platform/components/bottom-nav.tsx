@@ -7,6 +7,7 @@ const ITEMS = [
   { href: "/todos", label: "待辦", areas: ["admin", "member"] },
   { href: "/ideas", label: "靈感", areas: ["admin", "member"] },
   { href: "/shows", label: "演出", areas: ["admin", "member"] },
+  { href: "/calendar", label: "行事曆", areas: ["admin", "member"] },
   { href: "/finance", label: "財務", areas: ["admin", "member", "finance_partner"] },
 ];
 

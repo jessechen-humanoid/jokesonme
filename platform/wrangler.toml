@@ -19,6 +19,8 @@ binding = "ASSETS"
 APP_URL = "https://jokesonme.jesse-chen.workers.dev"
 AUTH_URL = "https://jokesonme.jesse-chen.workers.dev"
 AUTH_TRUST_HOST = "true"
+# 演出公開日曆（觀眾訂閱用的公開網址，不是機密；平台只讀）
+SHOW_CALENDAR_ICS_URL = "https://calendar.google.com/calendar/ical/b74923a589b7be6546e3dc7be18121230e2f5cf67cd76d88482ca535dbd3dd9d%40group.calendar.google.com/public/basic.ics"
 
 # 平台不發推播（2026-10-03 取消演出前推播，改 tag 傑瓜詢問）。
 # 一般聊天清理：UTC 19:30 = 台北 03:30（design.md「一般聊天只保留 14 天」）

@@ -2,6 +2,7 @@
 // 原則：驗簽失敗回 401；其他任何狀況都回 200（LINE 會重送失敗的事件，重送靠 message id 冪等擋掉）。
 import { parseCommand, QUOTE_MISSING_TEXT, USAGE_TEXT, type Mention } from "./commands.ts";
 import { parsePostback, showQuickReply, type LineTextMessage } from "./quick-reply.ts";
+import { formatMonthDay, todayInTaipei } from "../dates.ts";
 
 export type CapturedMessage = {
   id: string;
@@ -23,6 +24,8 @@ export interface WebhookStore {
   createTodo(input: { title: string; assigneeUserIds: string[]; createdBy: string; sourceMessageId: string }): Promise<string>;
   /** 回傳新靈感的 id（給按鈕用） */
   createIdea(input: { text: string; authorUserId: string; sourceMessageId: string }): Promise<string>;
+  /** 內部行程（只存在平台，不寫回公開日曆）；回傳新行程的 id */
+  createEvent(input: { date: string; time: string | null; title: string; createdBy: string }): Promise<string>;
   /** 接下來的演出（pickableShows 的 upcoming，下一場第一；永遠不含 ledger） */
   upcomingShows(): Promise<{ id: string; name: string }[]>;
   /** 把靈感或待辦掛到演出；目標不存在回 missing */
@@ -115,7 +118,8 @@ async function handleEvent(ev: LineEvent, store: WebhookStore, reply: Reply): Pr
 
   // tag 傑瓜本身不算「人」：「/買膠帶 @傑瓜」仍是待辦，標題不含 @傑瓜、傑瓜也不是負責人
   const people = mentions.filter((m) => !m.isSelf);
-  const cmd = parseCommand({ text: msg.text, mentions, quotedMessageId: msg.quotedMessageId });
+  // `/行程` 的年份以「訊息送出那天」（台北）為準
+  const cmd = parseCommand({ text: msg.text, mentions, quotedMessageId: msg.quotedMessageId, today: todayInTaipei(new Date(ev.timestamp)) });
   const send = async (message: string | LineTextMessage) => {
     if (ev.replyToken) await reply(ev.replyToken, message);
   };
@@ -152,6 +156,11 @@ async function handleEvent(ev: LineEvent, store: WebhookStore, reply: Reply): Pr
       const id = await store.createIdea({ text: cmd.text, authorUserId: msg.userId, sourceMessageId: msg.id });
       await confirm("idea", id, "已存進靈感庫", "已存進靈感庫，要歸到哪一場？");
       return "idea";
+    }
+    case "event": {
+      await store.createEvent({ date: cmd.date, time: cmd.time, title: cmd.title, createdBy: msg.userId });
+      await send(`已記到行事曆：${formatMonthDay(cmd.date)}${cmd.time ? `${cmd.time} ` : ""}${cmd.title}`);
+      return "event";
     }
     case "todo-from-quote":
     case "idea-from-quote": {

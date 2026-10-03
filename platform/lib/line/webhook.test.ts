@@ -9,6 +9,7 @@ function fakeStore(registered: string | null = "G1") {
     messages: new Map<string, CapturedMessage>(),
     todos: [] as { title: string; assigneeUserIds: string[]; createdBy: string; sourceMessageId: string }[],
     ideas: [] as { text: string; authorUserId: string; sourceMessageId: string }[],
+    events: [] as { date: string; time: string | null; title: string; createdBy: string }[],
     ensured: [] as string[],
     summaries: [] as string[][],
     upcoming: [] as { id: string; name: string }[],
@@ -22,6 +23,7 @@ function fakeStore(registered: string | null = "G1") {
     async getMessage(id) { return s.messages.get(id) ?? null; },
     async createTodo(t) { s.todos.push(t); return `todo-${s.todos.length}`; },
     async createIdea(i) { s.ideas.push(i); return `idea-${s.ideas.length}`; },
+    async createEvent(e) { s.events.push(e); return `event-${s.events.length}`; },
     async upcomingShows() { return s.upcoming; },
     async assignToShow(kind, id, showId) {
       if (!s.alive.has(id)) return { status: "missing" as const };
@@ -209,4 +211,48 @@ test("postback 沒有 replyToken：照樣寫入、不回覆", async () => {
   await handleEvents([ev], f.store, f.reply);
   assert.deepEqual(f.s.assigned, [["todo", U(1), U(8)]]);
   assert.deepEqual(f.replies, []);
+});
+
+// team-calendar-and-simple-commands：/行程、/靈感、/說明
+const OCT3 = Date.parse("2026-10-03T12:00:00+08:00");
+const at = (ev: ReturnType<typeof msg>, ts: number) => ({ ...ev, timestamp: ts });
+
+test("/行程：建立內部行程並回覆實際日期（spec Scenario: Meeting from the group）", async () => {
+  const f = fakeStore();
+  const r = await handleEvents([at(msg("e1", "/行程 10/12 19:00 討論 11 月號"), OCT3)], f.store, f.reply);
+  assert.deepEqual(r, ["event"]);
+  assert.deepEqual(f.s.events, [{ date: "2026-10-12", time: "19:00", title: "討論 11 月號", createdBy: "U_jesse" }]);
+  assert.deepEqual(f.replies, ["已記到行事曆：10/12（一）19:00 討論 11 月號"]);
+});
+
+test("/行程 年份以訊息送出那天為準；沒時間不顯示時間", async () => {
+  const f = fakeStore();
+  await handleEvents([at(msg("e2", "/行程 1/5 排練"), OCT3)], f.store, f.reply);
+  assert.deepEqual(f.s.events, [{ date: "2027-01-05", time: null, title: "排練", createdBy: "U_jesse" }]);
+  assert.deepEqual(f.replies, ["已記到行事曆：1/5（二）排練"]);
+});
+
+test("/行程 日期無效或缺標題：不建立、回小抄", async () => {
+  const f = fakeStore();
+  await handleEvents([at(msg("e3", "/行程 13/40 開會"), OCT3), at(msg("e4", "/行程 10/12"), OCT3)], f.store, f.reply);
+  assert.equal(f.s.events.length, 0);
+  assert.equal(f.s.todos.length, 0);
+  assert.equal(f.replies.length, 2);
+  for (const r of f.replies) assert.match(r, /傑瓜小抄/);
+});
+
+test("/靈感 內容：存靈感、回已存進靈感庫；/說明：只回小抄", async () => {
+  const f = fakeStore();
+  await handleEvents([msg("e5", "/靈感 讓觀眾投票決定結局"), msg("e6", "/說明")], f.store, f.reply);
+  assert.deepEqual(f.s.ideas, [{ text: "讓觀眾投票決定結局", authorUserId: "U_jesse", sourceMessageId: "e5" }]);
+  assert.equal(f.replies[0], "已存進靈感庫");
+  assert.match(f.replies[1], /傑瓜小抄/);
+  assert.equal(f.s.todos.length + f.s.events.length, 0);
+});
+
+test("小抄只介紹 / 文法與 tag 傑瓜，不提 # 與回覆", async () => {
+  const { USAGE_TEXT } = await import("./commands.ts");
+  for (const s of ["/內容", "/靈感", "/行程", "/說明", "tag 傑瓜"]) assert.ok(USAGE_TEXT.includes(s), s);
+  assert.ok(!/[#＃]/.test(USAGE_TEXT));
+  assert.ok(!USAGE_TEXT.includes("回覆"));
 });

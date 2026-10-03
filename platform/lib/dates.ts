@@ -38,3 +38,10 @@ export function addDays(iso: string, days: number): string {
   const { y, m, d } = parseIsoDate(iso);
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
 }
+
+/** 時間戳記（ISO）→ 台北時間「10/3（六）14:00」（24 小時制）。 */
+export function formatTaipeiStamp(isoTimestamp: string): string {
+  const d = new Date(isoTimestamp);
+  const time = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
+  return `${formatMonthDay(todayInTaipei(d))} ${time}`;
+}
