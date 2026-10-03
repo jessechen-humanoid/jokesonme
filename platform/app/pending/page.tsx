@@ -7,7 +7,7 @@ export default async function PendingPage() {
   if (user.status === "approved") redirect(homeFor(user));
   return (
     <main className="center">
-      <div className="brand" style={{ fontSize: 28, marginBottom: 16 }}>看我笑話</div>
+      <div className="brand" style={{ marginBottom: 16 }}>看我笑話</div>
       <div className="card">
         <p className="title" style={{ marginTop: 0 }}>
           {user.status === "revoked" ? "你的存取權已被停用" : "等待核准中"}

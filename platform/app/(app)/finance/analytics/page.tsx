@@ -71,7 +71,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/financ
                   <td className={cls(m.unsettledNet)}>{money(m.unsettledNet)}</td>
                   <td className={m.advanceUnsettled !== 0 ? "neg" : ""} title={m.advanceUnsettled < 0 ? "超還：代墊已結清大於代墊總額" : undefined}>{plain(m.advanceUnsettled)}</td>
                   <td>{plain(m.advanceCleared)}</td>
-                  <td className={cls(m.annualNet)} style={{ fontWeight: 900 }}>{money(m.annualNet)}</td>
+                  <td className={cls(m.annualNet)} style={{ fontWeight: 700 }}>{money(m.annualNet)}</td>
                 </tr>
               ))}
             </tbody>
@@ -118,7 +118,7 @@ function Shares({ title, items, kind }: { title: string; items: CategoryShare[];
       <div className="card">
         {items.length === 0 ? <p className="empty" style={{ padding: 8 }}>尚無{kind === "pos" ? "收入" : "支出"}紀錄</p> : items.map((c) => (
           <div key={c.name} style={{ marginBottom: 10 }}>
-            <div className="row" style={{ justifyContent: "space-between", fontSize: 13 }}>
+            <div className="row" style={{ justifyContent: "space-between", fontSize: "var(--fs-body)" }}>
               <span>{c.name}</span>
               <span style={{ color: "var(--text-secondary)" }}>${c.amount.toLocaleString()}（{c.pct.toFixed(1)}%）</span>
             </div>

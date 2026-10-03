@@ -55,7 +55,7 @@ export default function LiffLogin({ liffId, next }: { liffId: string; next: stri
 
   return (
     <main className="center">
-      <div className="brand" style={{ fontSize: 28, marginBottom: 12 }}>看我笑話</div>
+      <div className="brand" style={{ marginBottom: 12 }}>看我笑話</div>
       {error ? (
         <>
           <div className="notice">{error}</div>

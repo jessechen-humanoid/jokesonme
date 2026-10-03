@@ -35,7 +35,7 @@ export default async function AdminUsersPage() {
             <div className="meta"><span className="tag">{ROLE_LABEL[u.role!]}</span></div>
             {u.id !== me.id ? (
               <details style={{ marginTop: 10 }}>
-                <summary style={{ fontSize: 13, color: "var(--text-secondary)", cursor: "pointer" }}>修改身分或停用</summary>
+                <summary style={{ fontSize: "var(--fs-secondary)", color: "var(--ink-2)", cursor: "pointer" }}>修改身分或停用</summary>
                 <ApproveForm u={u} label="更新" />
                 <form action={revokeUser} style={{ marginTop: 8 }}>
                   <input type="hidden" name="id" value={u.id} />
@@ -61,8 +61,8 @@ function UserLine({ u }: { u: UserRow }) {
   return (
     <div className="title">
       {displayName(u)}
-      {u.member_name && u.member_name !== u.display_name ? <span style={{ color: "var(--text-muted)", fontSize: 13 }}>（LINE：{u.display_name}）</span> : null}
-      {!u.last_login_at ? <span style={{ color: "var(--text-muted)", fontSize: 12 }}>・尚未登入過，從群組自動建立</span> : null}
+      {u.member_name && u.member_name !== u.display_name ? <span style={{ color: "var(--ink-3)", fontSize: "var(--fs-secondary)" }}>（LINE：{u.display_name}）</span> : null}
+      {!u.last_login_at ? <span style={{ color: "var(--ink-3)", fontSize: "var(--fs-secondary)" }}>・尚未登入過，從群組自動建立</span> : null}
     </div>
   );
 }
