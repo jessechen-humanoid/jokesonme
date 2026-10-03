@@ -71,6 +71,7 @@ export default async function TodosPage({ searchParams }: PageProps<"/todos">) {
           emptyText={showDone ? "還沒有完成的待辦" : filter === "mine" ? "你目前沒有待辦。可以到「全部」或「未認領」看看。" : "目前沒有待辦。在群組打「/內容」就會建立一筆。"}
           initialSelected={typeof sp.t === "string" ? sp.t : null}
           initialNew={sp.new === "1"}
+          today={today}
         />
         <Link className="toggle-done" href={q({ f: filter === "mine" ? undefined : filter, done: showDone ? undefined : "1" })}>
           {showDone ? "回到未完成" : "看已完成的待辦"}

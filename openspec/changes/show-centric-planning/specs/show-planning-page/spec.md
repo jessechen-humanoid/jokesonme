@@ -1,3 +1,14 @@
+## ADDED Requirements
+
+### Requirement: Shows page emphasises only the next show
+
+On the shows page, the next performance SHALL be shown as a full card with its date, days remaining, and its number of open todos; the other upcoming performances SHALL be compact one-line rows; the 「已演出／其他」 group SHALL be collapsed by default behind a toggle showing its count.
+
+#### Scenario: Default shows page
+
+- **WHEN** a member opens the shows page while 10 月號 is next and 11 月號, 12 月號 follow
+- **THEN** 10 月號 appears as a full card with 「還有 14 天」 and its open todo count, 11 月號 and 12 月號 are single lines, and past or undated shows are hidden until 「已演出／其他（N）」 is tapped
+
 ## MODIFIED Requirements
 
 ### Requirement: Monthly planning page

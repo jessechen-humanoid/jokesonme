@@ -31,3 +31,9 @@
 ## 6. 收尾
 
 - [x] 6.1 部署與資料修正：`npm run db:migrate`（正式庫 0009）、`npm run cf:build && npm run cf:deploy`；Jesse 在演出分頁把 10～12 月號改為類型「月號」並填日期、補專場日期、歸檔已演出場次；確認月號的模板待辦自動產生（既有 `ensureTemplateTodos`）。驗收：正式庫 `select kind, count(*) from shows group by 1` 為 `ledger 7、performance 22`；10 月號的 `todos` 出現 23 筆 `source = 'template'`；待辦頁頭顯示正確的「下一場」。（2026-10-03 實際：migration 0009 後為 ledger 7／performance 22；之後 Jesse 決定《續杯：一杯撤》為單一組合專場、只留財務，改為 ledger 8／performance 21。月號模板已由 Jesse 刪減為 21 項，故 10、11、12 月號各產生 21 筆。日期由 agent 依公開行事曆比對、Jesse 確認後以 `platform/scripts/oneoff-show-dates-20261003.mts` 寫入，actor = migration。）[after: 4.5] [after: 5.3] [after: 3.2]
+
+## 7. 只展開最近的一場（Jesse 2026-10-03 追加）
+
+- [x] 7.1 實作 Only the nearest show group is expanded：`platform/components/todo-board.tsx` 依「下一場」決定預設展開的群組，其餘演出群組收成一行（名稱・日期・件數），點了展開；「沒有掛演出」恆展開；驗證：spec 範例表兩列以本機測試資料截圖或 DOM 檢查，375px 無橫向捲動
+- [x] 7.2 實作 Shows page emphasises only the next show：`platform/app/(app)/shows/page.tsx` 下一場為完整卡片（日期、還有幾天、未完成待辦數），其他接下來的演出為單行，「已演出／其他（N）」預設收合；驗證：正式資料下 10 月號為完整卡片、11／12 月號單行、已演出區塊收合（DOM 檢查）
+

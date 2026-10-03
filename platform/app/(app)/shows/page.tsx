@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
-import { listPerformances, pickableShows, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
+import { daysBetween, listPerformances, pickableShows, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
+import { listTodos } from "@/lib/todos";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
 import Avatar from "@/components/avatar";
 import { createShow } from "./actions";
@@ -16,7 +17,10 @@ const ERRORS: Record<string, string> = {
 export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   const sp = await searchParams;
   const me = await requirePage("planning", "/shows");
-  const { upcoming, more } = pickableShows(await listPerformances(`user:${me.id}`), todayInTaipei());
+  const today = todayInTaipei();
+  const [shows, todos] = await Promise.all([listPerformances(`user:${me.id}`), listTodos(`user:${me.id}`)]);
+  const { next, upcoming, more } = pickableShows(shows, today);
+  const openCount = (id: string) => todos.filter((t) => t.show?.id === id && !t.doneAt).length;
   const err = typeof sp.err === "string" ? ERRORS[sp.err] : undefined;
 
   return (
@@ -26,15 +30,30 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
         <h1 className="page-title">演出</h1>
       </header>
       <div className="content">
-        <section>
-          <div className="section"><b>接下來</b><span>{upcoming.length} 場</span></div>
-          {upcoming.length === 0 ? <p className="empty">還沒有排日期的演出。點下面的演出、按「編輯演出資訊」填日期，或按右下角 ＋ 新增。</p> : upcoming.map((s) => <ShowCard key={s.id} s={s} />)}
-        </section>
-        {more.length ? (
+        {next ? (
+          <Link href={`/shows/${next.id}`} className="card next-card">
+            <small>下一場・還有 {daysBetween(today, next.performanceDate!)} 天</small>
+            <div className="next-card-title">{next.name}</div>
+            <div className="meta">
+              <span className="due">{formatMonthDay(next.performanceDate!)}</span>
+              <span className="tag">{SHOW_TYPE_LABEL[next.type]}</span>
+              <span>未完成待辦 {openCount(next.id)} 件</span>
+            </div>
+          </Link>
+        ) : (
+          <p className="empty">還沒有排日期的演出。點下面的演出、按「編輯演出資訊」填日期，或按右下角 ＋ 新增。</p>
+        )}
+        {upcoming.length > 1 ? (
           <section>
-            <div className="section"><b>已演出／其他</b><span>{more.length} 場</span></div>
-            {more.map((s) => <ShowCard key={s.id} s={s} />)}
+            <div className="section"><b>之後</b><span>{upcoming.length - 1} 場</span></div>
+            {upcoming.slice(1).map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} />)}
           </section>
+        ) : null}
+        {more.length ? (
+          <details className="more-shows">
+            <summary>已演出／其他（{more.length}）</summary>
+            {more.map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} />)}
+          </details>
         ) : null}
       </div>
       <Link className="fab" href="/shows?new=1" aria-label="新增演出">+</Link>
@@ -68,15 +87,15 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   );
 }
 
-function ShowCard({ s }: { s: Show }) {
+function ShowRow({ s, open }: { s: Show; open: number }) {
   return (
-    <Link href={`/shows/${s.id}`} className="card" style={{ display: "block" }}>
-      <div className="title">{s.name}</div>
-      <div className="meta">
-        {s.performanceDate ? <span className="due">{formatMonthDay(s.performanceDate)}</span> : <span>沒有日期</span>}
-        <span className="tag">{SHOW_TYPE_LABEL[s.type]}</span>
-        {s.status === "archived" ? <span>已歸檔</span> : null}
-      </div>
+    <Link href={`/shows/${s.id}`} className="card show-row">
+      <span className="show-row-name">{s.name}</span>
+      <span className="show-row-meta">
+        {s.performanceDate ? formatMonthDay(s.performanceDate) : "沒有日期"}
+        {s.status === "archived" ? "・已歸檔" : ""}
+        {open ? `・${open} 件` : ""}
+      </span>
     </Link>
   );
 }

@@ -60,6 +60,8 @@ export default function TodoBoard(props: {
   initialShowId?: string | null;
   /** 演出頁有自己的＋選單，不顯示這裡的浮動按鈕 */
   showFab?: boolean;
+  /** 台北今天；用來決定哪一場是「最近的演出」而預設展開 */
+  today?: string;
 }) {
   const [groups, patch] = useOptimistic(props.groups, applyPatch);
   const [, startTransition] = useTransition();
@@ -82,6 +84,20 @@ export default function TodoBoard(props: {
   const all = groups.flatMap((g) => g.todos);
   const current = selected && selected !== "new" ? (all.find((t) => t.id === selected) ?? props.groups.flatMap((g) => g.todos).find((t) => t.id === selected)) : undefined;
 
+  // 只展開最近的一場（spec todo-board「Only the nearest show group is expanded」）：
+  // 今天或之後最早的演出群組；沒有的話第一個群組。「沒有掛演出」恆展開，不受這個開關影響。
+  const visibleGroups = groups.filter((g) => g.todos.some((t) => !!t.doneAt === props.showDone));
+  const today = props.today ?? "";
+  const nearest = visibleGroups.find((g) => g.key !== "none" && g.performanceDate && g.performanceDate >= today) ?? visibleGroups.find((g) => g.key !== "none");
+  const [open, setOpen] = useState<Set<string>>(() => new Set(nearest ? [nearest.key] : []));
+  const toggleGroup = (key: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
   return (
     <>
       {error ? <div className="notice" role="alert">{error}</div> : null}
@@ -91,11 +107,27 @@ export default function TodoBoard(props: {
         groups.map((g) => {
           const visible = g.todos.filter((t) => !!t.doneAt === props.showDone);
           if (!visible.length) return null;
+          const expanded = g.key === "none" || open.has(g.key);
+          if (!expanded) {
+            return (
+              <section key={g.key} className="collapsed">
+                <button type="button" className="section group-toggle" aria-expanded={false} onClick={() => toggleGroup(g.key)}>
+                  <b>{g.title}</b>
+                  <span>{g.performanceDate ? `${formatMonthDay(g.performanceDate)}・` : ""}{visible.length} 件 ▸</span>
+                </button>
+              </section>
+            );
+          }
           return (
             <section key={g.key}>
               <div className="section">
                 {g.key !== "none" ? <Link href={`/shows/${g.key}`}><b>{g.title} ›</b></Link> : <b>{g.title}</b>}
-                <span>{g.performanceDate ? `${formatMonthDay(g.performanceDate)}演出` : `${visible.length} 件`}</span>
+                <span>
+                  {g.performanceDate ? `${formatMonthDay(g.performanceDate)}演出` : `${visible.length} 件`}
+                  {g.key !== "none" && groups.length > 1 ? (
+                    <button type="button" className="group-collapse" aria-expanded={true} aria-label={`收合 ${g.title}`} onClick={() => toggleGroup(g.key)}>▾</button>
+                  ) : null}
+                </span>
               </div>
               {visible.map((t) => {
                 const done = !!t.doneAt;
