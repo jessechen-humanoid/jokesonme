@@ -13,7 +13,6 @@ type ExecutionContext = { waitUntil(promise: Promise<unknown>): void; passThroug
 
 /** cron 表達式 → 排程 route。必須跟 wrangler.toml 的 crons 一致。 */
 const CRON_ROUTES: Record<string, string> = {
-  "0 2 * * *": "/api/cron/reminders", // 台北 10:00 演出前推播
   "30 19 * * *": "/api/cron/purge-messages", // 台北 03:30 刪除超過 14 天的一般聊天
 };
 

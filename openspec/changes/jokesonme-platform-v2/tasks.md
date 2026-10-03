@@ -28,6 +28,7 @@
 
 - [x] 5.1 依「視覺方向先選再套」做 2–3 個待辦頁手機 mockup（Visual direction selection：品牌橘為基礎、非暖白底、彼此差異明顯），交給 Jesse 挑選；驗證：Jesse 選定一個方向（記錄選擇）（2026-10-03 Jesse 選 C「橘色品牌感」，mockup 在 `.spectra/design-cache/jokesonme-platform-v2/directions.html`）
 - [x] 5.2 以 `/spectra-ingest` 把選定方向寫成本 change 的 `brand-design-system` delta spec，建立 design tokens 與全站版型，滿足 Mobile-first layout；驗證：`spectra validate jokesonme-platform-v2` 通過，375×812 下 `document.documentElement.scrollWidth` 等於視窗寬度 [after: 5.1, 2.1]
+- [x] 5.3 依 Jesse 2026-10-03 回饋改版為 B1「柿子紅品牌版」（Jebby 版面、主色 `#E2673F`，取代方向 C），更新 `brand-design-system` delta，電腦版改左側欄；驗證：`spectra validate` 通過，手機 375px 與電腦 1280px 實際截圖檢查（手機底部分頁、電腦左側欄），375px 無橫向捲動 [after: 5.2]
 
 ## 6. 專案與待辦
 
@@ -55,6 +56,9 @@
 - [x] 9.2 實作 Template-generated due dates 與 No templates for special shows（改演出日會平移未完成模板待辦）；驗證：測試 spec 範例表三列、改日期後截止日平移、special 不產生待辦 [after: 9.1, 6.1]
 - [x] 9.3 實作 Pre-show reminder schedule（UTC `0 2 * * *` = 台北 10:00、前 3 天與前 1 天、無未完成不推）與 Reminder content with actual dates（含 LIFF 連結、無 `D-`）；驗證：以固定「今天」測 spec 範例表三列，訊息含 `10/24（六）` 且不含 `D-` [after: 9.2, 6.3]
 - [x] 9.4 落實 Push only for reminders：`line_pushes` 記錄每次推播，管理頁顯示本月用量（次數×8／200）；驗證：測試兩次推播顯示 16／200，並 grep 程式碼確認 push API 只在提醒模組被呼叫 [after: 9.3]
+- [x] 9.5 依「LINE webhook 與推播額度策略」實作 Mention summary reply 與 No push messages：tag 傑瓜（mentionee isSelf）時以 reply 回覆待辦一覽，另 tag 他人時只列那些人；移除推播程式、演出前推播排程與推播頁；驗證：單元測試 spec 範例表兩列與「只列被 tag 的人」，grep 確認程式碼沒有 push／multicast／broadcast API，LINE quota consumption 維持 0 [after: 9.4]
+
+> 取消紀錄（非任務）：原 9.3「Pre-show reminder schedule／Reminder content with actual dates」、9.4「Push only for reminders 用量頁」已被取代為 9.5（Jesse 2026-10-03：不做演出前推播，改 tag 傑瓜詢問）。這兩項曾實作並測試（預覽模式，未發出任何推播）；9.5 負責移除其程式碼（補償任務）。
 
 ## 10. 財務搬遷
 

@@ -15,6 +15,7 @@ export default function BottomNav({ role }: { role: string }) {
   return (
     <nav className="nav" aria-label="主要導覽">
       <div className="nav-inner">
+        <div className="nav-brand">看我笑話</div>
         {ITEMS.filter((i) => i.areas.includes(role)).map((i) => (
           <Link key={i.href} href={i.href} className={path.startsWith(i.href) ? "on" : ""}>
             <i />

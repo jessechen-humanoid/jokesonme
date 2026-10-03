@@ -2,7 +2,7 @@
 //   `/` 或 `／` 開頭 → 待辦；`#` 或 `＃` 開頭 → 靈感。
 //   只打符號：有引用（LINE 回覆功能）→ 用被回覆的訊息；沒引用 → 回用法說明。
 
-export type Mention = { index: number; length: number; userId?: string };
+export type Mention = { index: number; length: number; userId?: string; isSelf?: boolean };
 
 export type CommandInput = {
   text: string;
@@ -59,7 +59,8 @@ export function parseCommand(input: CommandInput): Command {
   // 待辦：mention 位置是相對原文，先在原文上挖掉 mention，再去掉前導空白與斜線。
   const withoutMentions = stripMentions(input.text, mentions);
   const title = withoutMentions.slice(withoutMentions.indexOf(first) + 1).trim();
-  const assigneeUserIds = [...new Set(mentions.map((m) => m.userId).filter((id): id is string => !!id))];
+  // tag 傑瓜本身（isSelf）的文字會從標題挖掉，但傑瓜不會變成負責人
+  const assigneeUserIds = [...new Set(mentions.filter((m) => !m.isSelf).map((m) => m.userId).filter((id): id is string => !!id))];
   if (title === "") {
     // 只有 @人 沒有內容，視同沒寫內容
     return input.quotedMessageId ? { kind: "todo-from-quote", quotedMessageId: input.quotedMessageId } : { kind: "usage" };

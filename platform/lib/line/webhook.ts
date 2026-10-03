@@ -22,11 +22,13 @@ export interface WebhookStore {
   createIdea(input: { text: string; authorUserId: string; sourceMessageId: string }): Promise<void>;
   /** 作者或被 @ 的人還不在 users 時，用群組成員 profile 建一列 pending（讓待辦能顯示名字）。失敗不影響指令。 */
   ensureUsers(groupId: string, userIds: string[]): Promise<void>;
+  /** tag 傑瓜時回覆的待辦一覽文字。 */
+  mentionSummary(onlyUserIds: string[]): Promise<string>;
 }
 
 export type Reply = (replyToken: string, text: string) => Promise<void>;
 
-type LineMention = { index: number; length: number; userId?: string; type?: string };
+type LineMention = { index: number; length: number; userId?: string; type?: string; isSelf?: boolean };
 type LineEvent = {
   type: string;
   replyToken?: string;
@@ -82,7 +84,7 @@ async function handleEvent(ev: LineEvent, store: WebhookStore, reply: Reply): Pr
 
   const mentions: Mention[] = (ev.message.mention?.mentionees ?? [])
     .filter((m) => (m.type ?? "user") === "user")
-    .map((m) => ({ index: m.index, length: m.length, userId: m.userId }));
+    .map((m) => ({ index: m.index, length: m.length, userId: m.userId, isSelf: m.isSelf === true }));
   const msg: CapturedMessage = {
     id: ev.message.id,
     groupId,
@@ -96,26 +98,32 @@ async function handleEvent(ev: LineEvent, store: WebhookStore, reply: Reply): Pr
   const isNew = await store.saveMessage(msg);
   if (!isNew) return "duplicate";
 
+  // tag 傑瓜本身不算「人」：「/買膠帶 @傑瓜」仍是待辦，標題不含 @傑瓜、傑瓜也不是負責人
+  const people = mentions.filter((m) => !m.isSelf);
   const cmd = parseCommand({ text: msg.text, mentions, quotedMessageId: msg.quotedMessageId });
   const send = async (text: string) => {
     if (ev.replyToken) await reply(ev.replyToken, text);
   };
 
   if (cmd.kind !== "none" && cmd.kind !== "usage") {
-    await store.ensureUsers(groupId, [msg.userId, ...mentions.map((m) => m.userId).filter((u): u is string => !!u)]).catch((e) => {
+    await store.ensureUsers(groupId, [msg.userId, ...people.map((m) => m.userId).filter((u): u is string => !!u)]).catch((e) => {
       console.error("[line-webhook] ensureUsers failed", e);
     });
   }
 
   switch (cmd.kind) {
-    case "none":
-      return "captured";
+    case "none": {
+      if (!mentions.some((m) => m.isSelf)) return "captured";
+      // tag 傑瓜：回覆待辦一覽（reply 免費，不推播）；另外 tag 的人 = 只看他們
+      await send(await store.mentionSummary(people.map((m) => m.userId).filter((u): u is string => !!u)));
+      return "summary";
+    }
     case "usage":
       await send(USAGE_TEXT);
       return "usage";
     case "todo": {
       await store.createTodo({ title: cmd.title, assigneeUserIds: cmd.assigneeUserIds, createdBy: msg.userId, sourceMessageId: msg.id });
-      const names = mentionNames(msg.text, mentions);
+      const names = mentionNames(msg.text, people);
       await send(`已建立待辦：${cmd.title}${names.length ? `（${names.join("、")}）` : "（未認領）"}`);
       return "todo";
     }

@@ -20,7 +20,6 @@ export default async function MePage() {
           <>
             <Link className="card" style={{ display: "block" }} href="/admin/users"><div className="title">登入核准</div></Link>
             <Link className="card" style={{ display: "block" }} href="/admin/template"><div className="title">月號模板</div></Link>
-            <Link className="card" style={{ display: "block" }} href="/admin/push"><div className="title">LINE 推播用量與演出提醒預覽</div></Link>
           </>
         ) : null}
         <form action="/api/auth/logout" method="post">

@@ -20,8 +20,8 @@ APP_URL = "https://jokesonme.jesse-chen.workers.dev"
 AUTH_URL = "https://jokesonme.jesse-chen.workers.dev"
 AUTH_TRUST_HOST = "true"
 
-# 演出前推播：UTC 02:00 = 台北 10:00（design.md「LINE webhook 與推播額度策略」）
+# 平台不發推播（2026-10-03 取消演出前推播，改 tag 傑瓜詢問）。
 # 一般聊天清理：UTC 19:30 = 台北 03:30（design.md「一般聊天只保留 14 天」）
 # 必須跟 worker.ts 的 CRON_ROUTES 一致。
 [triggers]
-crons = ["0 2 * * *", "30 19 * * *"]
+crons = ["30 19 * * *"]

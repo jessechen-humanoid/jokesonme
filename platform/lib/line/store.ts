@@ -1,6 +1,8 @@
 // WebhookStore 的 Supabase 實作；所有寫入的 actor 都是 line-bot。
 import { db } from "../supabase.ts";
 import { getGroupMemberProfile } from "./api.ts";
+import { mentionSummary } from "./summary.ts";
+import { MEMBER_NAMES } from "../members.ts";
 import type { CapturedMessage, WebhookStore } from "./webhook.ts";
 
 const GROUP_KEY = "line_group_id";
@@ -78,6 +80,25 @@ export function supabaseWebhookStore(): WebhookStore {
           .insert({ id, display_name: profile.displayName, picture_url: profile.pictureUrl, status: "pending" });
         if (e2 && e2.code !== "23505") fail("insert user stub", e2);
       }
+    },
+    async mentionSummary(onlyUserIds) {
+      const [{ data: todos, error }, { data: users, error: e2 }] = await Promise.all([
+        client.from("todos").select("title, due_date, todo_assignees(user_id)").is("done_at", null).is("deleted_at", null),
+        client.from("users").select("id, member_name, display_name"),
+      ]);
+      if (error) fail("read todos", error);
+      if (e2) fail("read users", e2);
+      const names = new Map((users ?? []).map((u: { id: string; member_name: string | null; display_name: string }) => [u.id, u.member_name || u.display_name]));
+      const link = `https://liff.line.me/${process.env.LIFF_ID ?? ""}/todos?f=all`;
+      return mentionSummary(
+        (todos ?? []).map((t: { title: string; due_date: string | null; todo_assignees: { user_id: string }[] }) => ({
+          title: t.title, dueDate: t.due_date, assignees: t.todo_assignees.map((a) => a.user_id),
+        })),
+        (id) => names.get(id) ?? "成員",
+        link,
+        onlyUserIds,
+        [...MEMBER_NAMES],
+      );
     },
     async createIdea({ text, authorUserId, sourceMessageId }) {
       const { error } = await client.from("ideas").insert({ text, author_user_id: authorUserId, line_message_id: sourceMessageId });

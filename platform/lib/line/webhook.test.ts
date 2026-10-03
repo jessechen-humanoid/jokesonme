@@ -10,6 +10,7 @@ function fakeStore(registered: string | null = "G1") {
     todos: [] as { title: string; assigneeUserIds: string[]; createdBy: string; sourceMessageId: string }[],
     ideas: [] as { text: string; authorUserId: string; sourceMessageId: string }[],
     ensured: [] as string[],
+    summaries: [] as string[][],
   };
   const store: WebhookStore = {
     async getRegisteredGroup() { return s.group; },
@@ -19,6 +20,7 @@ function fakeStore(registered: string | null = "G1") {
     async createTodo(t) { s.todos.push(t); },
     async createIdea(i) { s.ideas.push(i); },
     async ensureUsers(_g, ids) { s.ensured.push(...ids); },
+    async mentionSummary(only) { s.summaries.push(only); return `SUMMARY:${only.join(",")}`; },
   };
   const replies: string[] = [];
   return { s, store, replies, reply: async (_t: string, text: string) => { replies.push(text); } };
@@ -100,4 +102,40 @@ test("簽章：正確通過、竄改失敗、缺少失敗", async () => {
   assert.equal(await verifySignature("secret123", body, sig), true);
   assert.equal(await verifySignature("secret123", body + " ", sig), false);
   assert.equal(await verifySignature("secret123", body, null), false);
+});
+
+test("tag 傑瓜：回覆待辦一覽（reply），不建立任何東西", async () => {
+  const f = fakeStore();
+  const text = "@傑瓜 這週誰要做什麼";
+  const r = await handleEvents([msg("20", text, { mention: { mentionees: [{ index: 0, length: 3, userId: "U_bot", type: "user", isSelf: true }] } })], f.store, f.reply);
+  assert.deepEqual(r, ["summary"]);
+  assert.deepEqual(f.s.summaries, [[]]);
+  assert.deepEqual(f.replies, ["SUMMARY:"]);
+  assert.equal(f.s.todos.length + f.s.ideas.length, 0);
+});
+
+test("tag 傑瓜＋柏文：只問柏文", async () => {
+  const f = fakeStore();
+  const text = "@傑瓜 @柏文";
+  await handleEvents([msg("21", text, { mention: { mentionees: [
+    { index: 0, length: 3, userId: "U_bot", type: "user", isSelf: true },
+    { index: 4, length: 3, userId: "U_bowen", type: "user" },
+  ] } })], f.store, f.reply);
+  assert.deepEqual(f.s.summaries, [["U_bowen"]]);
+});
+
+test("「/買膠帶 @傑瓜」仍是待辦，傑瓜不會變成負責人", async () => {
+  const f = fakeStore();
+  const text = "/買膠帶 @傑瓜";
+  await handleEvents([msg("22", text, { mention: { mentionees: [{ index: text.indexOf("@傑瓜"), length: 3, userId: "U_bot", type: "user", isSelf: true }] } })], f.store, f.reply);
+  assert.equal(f.s.todos.length, 1);
+  assert.equal(f.s.todos[0].title, "買膠帶");
+  assert.deepEqual(f.s.todos[0].assigneeUserIds, []);
+  assert.equal(f.s.summaries.length, 0);
+});
+
+test("一般聊天有 tag 別人（沒 tag 傑瓜）：不回覆", async () => {
+  const f = fakeStore();
+  await handleEvents([msg("23", "@柏文 晚點打給你", { mention: { mentionees: [{ index: 0, length: 3, userId: "U_bowen", type: "user" }] } })], f.store, f.reply);
+  assert.deepEqual(f.replies, []);
 });
