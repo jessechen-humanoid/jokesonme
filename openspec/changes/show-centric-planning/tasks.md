@@ -30,4 +30,4 @@
 
 ## 6. 收尾
 
-- [ ] 6.1 部署與資料修正：`npm run db:migrate`（正式庫 0009）、`npm run cf:build && npm run cf:deploy`；Jesse 在演出分頁把 10～12 月號改為類型「月號」並填日期、補專場日期、歸檔已演出場次；確認月號的模板待辦自動產生（既有 `ensureTemplateTodos`）。驗收：正式庫 `select kind, count(*) from shows group by 1` 為 `ledger 7、performance 22`；10 月號的 `todos` 出現 23 筆 `source = 'template'`；待辦頁頭顯示正確的「下一場」。[after: 4.5] [after: 5.3] [after: 3.2]
+- [x] 6.1 部署與資料修正：`npm run db:migrate`（正式庫 0009）、`npm run cf:build && npm run cf:deploy`；Jesse 在演出分頁把 10～12 月號改為類型「月號」並填日期、補專場日期、歸檔已演出場次；確認月號的模板待辦自動產生（既有 `ensureTemplateTodos`）。驗收：正式庫 `select kind, count(*) from shows group by 1` 為 `ledger 7、performance 22`；10 月號的 `todos` 出現 23 筆 `source = 'template'`；待辦頁頭顯示正確的「下一場」。（2026-10-03 實際：migration 0009 後為 ledger 7／performance 22；之後 Jesse 決定《續杯：一杯撤》為單一組合專場、只留財務，改為 ledger 8／performance 21。月號模板已由 Jesse 刪減為 21 項，故 10、11、12 月號各產生 21 筆。日期由 agent 依公開行事曆比對、Jesse 確認後以 `platform/scripts/oneoff-show-dates-20261003.mts` 寫入，actor = migration。）[after: 4.5] [after: 5.3] [after: 3.2]
