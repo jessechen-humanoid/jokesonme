@@ -260,18 +260,3 @@ section .card, .card .card { background: var(--surface-2); border: 1px solid var
   .cal-titles em.show { background: var(--brand-3); color: var(--brand-deep); }
   .cal-titles em.event { box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); }
 }
-
-/* 節目表（spec: program-sheet） */
-.program-start { display: flex; gap: 10px; align-items: flex-end; }
-.program-start label { flex: 1; min-width: 0; }
-.program-start label > span { display: block; font-size: var(--fs-secondary); font-weight: 500; color: var(--ink-2); margin-bottom: 6px; }
-.program-item { display: flex; align-items: stretch; gap: 6px; border-top: 1px solid var(--line-2); padding: 8px 0; }
-.program-item:first-of-type { border-top: 0; }
-.program-main { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: flex-start; }
-.program-time { flex: none; width: 48px; font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--fs-secondary); line-height: 1.4; }
-.program-time small { font-weight: 400; color: var(--ink-3); }
-.program-name { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; overflow-wrap: anywhere; }
-.program-name small { flex-basis: 100%; color: var(--ink-3); font-size: var(--fs-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.program-move { display: flex; flex-direction: column; gap: 2px; flex: none; }
-.program-move button { width: 40px; height: 32px; border: 1px solid var(--line-2); background: var(--surface-2); border-radius: 8px; color: var(--ink-2); }
-.program-move button:disabled { opacity: .3; cursor: default; }

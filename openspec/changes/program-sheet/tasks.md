@@ -1,3 +1,5 @@
+> **2026-10-03 Jesse 決定不做**：試想後覺得直接在 Google Doc 做比較快。程式已用 git revert 撤回；`0011_program_sheet` 資料表與欄位留在正式庫閒置（內含 9 月號 11 段轉檔資料），未刪除。若日後重啟，需重新實作 1.2 之後的程式。
+
 ## 1. 資料
 
 - [x] 1.1 依「段落一張表、開始時間放在 shows」新增 0011 migration（`program_items`、`shows.program_start_time` 預設 19:00、audit、RLS、無 DELETE／TRUNCATE），滿足 Program sheet data；驗證：`npm run test:db` 新增測試涵蓋無 actor 被拒、軟刪除留 audit、service_role 硬刪被拒、anon 讀不到，並 `npm run db:migrate` 套用正式庫後跑 `scripts/db-check.sql` 無缺漏
