@@ -52,7 +52,7 @@
 
 ## 9. 演出模板與推播
 
-- [ ] 9.1 Jesse 與 agent 以舊 23 項 Checklist 為草稿定出月號模板（項目、預設負責人、相對天數），並滿足 Monthly show template（只有管理員可編輯）；驗證：Jesse 核准模板內容，member 呼叫模板編輯 API 回 403 [after: 4.4]
+- [x] 9.1 Jesse 與 agent 以舊 23 項 Checklist 為草稿定出月號模板（項目、預設負責人、相對天數），並滿足 Monthly show template（只有管理員可編輯）；驗證：Jesse 核准模板內容，member 呼叫模板編輯 API 回 403（2026-10-03 Jesse 逐項核對：21 項，刪除「簡報放所有成員的演出宣傳」「標記所有音樂／音效 cue 點」；模板頁只有 admin 可進，requirePage('admin')） [after: 4.4]
 - [x] 9.2 實作 Template-generated due dates 與 No templates for special shows（改演出日會平移未完成模板待辦）；驗證：測試 spec 範例表三列、改日期後截止日平移、special 不產生待辦 [after: 9.1, 6.1]
 - [x] 9.3 實作 Pre-show reminder schedule（UTC `0 2 * * *` = 台北 10:00、前 3 天與前 1 天、無未完成不推）與 Reminder content with actual dates（含 LIFF 連結、無 `D-`）；驗證：以固定「今天」測 spec 範例表三列，訊息含 `10/24（六）` 且不含 `D-` [after: 9.2, 6.3]
 - [x] 9.4 落實 Push only for reminders：`line_pushes` 記錄每次推播，管理頁顯示本月用量（次數×8／200）；驗證：測試兩次推播顯示 16／200，並 grep 程式碼確認 push API 只在提醒模組被呼叫 [after: 9.3]
@@ -73,4 +73,4 @@
 
 - [x] 11.1 正式搬遷與對帳：Jesse 下載 Sheet xlsx → 跑搬遷 → 跑對帳；驗證：對帳報告全數 pass，Jesse 確認（2026-10-03 正式搬家：專案 29、收支 186、結算 32、代墊還款 13；對帳 102/102 一致；24 個專案稅務預留一致；Jesse 授權直接切換）[after: 10.6, 4.3]
 - [x] 11.2 完成 Legacy archive after cutover：舊靜態頁改為只顯示新平台連結（取代 Password gate for all pages 與舊 Checklist 頁的入口；show-checklist 的 Initialize checklist from template 等需求一併移除），Sheet 改檢視權限、GAS 不再被呼叫；驗證：開舊 Pages 網址看到導引連結，瀏覽器網路紀錄無 `script.google.com` 請求 [after: 11.1]
-- [ ] 11.3 上線驗收：8 位成員與財務夥伴登入並核准、群組用 `/` 建立一則待辦、用 `#` 存一則靈感、檢查 `audit_log` 有對應紀錄；更新 auto-memory 的部署檢查清單（新網址、Worker、Supabase）；驗證：Jesse 確認全員可用 [after: 11.2]
+- [x] 11.3 上線驗收（Jesse 2026-10-03 改為由他一人驗收，其他成員登入屬日常使用）：Jesse 電腦與 LINE 內登入、群組用 `/` 建立待辦、用 `#` 存靈感、tag 傑瓜收到待辦一覽，`audit_log` 有對應紀錄；更新 auto-memory 的部署檢查清單；驗證：Jesse 確認（2026-10-03：登入 web／liff 兩筆 auth.login、「整理 10 月財務」待辦與「看我募資」靈感已建立、tag 傑瓜有收到回覆；memory 已更新）[after: 11.2]

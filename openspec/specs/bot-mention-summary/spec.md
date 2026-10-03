@@ -1,214 +1,31 @@
-# show-management Specification
+# bot-mention-summary Specification
 
 ## Purpose
 
-TBD - created by archiving change 'build-platform'. Update Purpose after archive.
+Lets anyone in the LINE group ask the bot who still has to do what, by mentioning it, using only free reply messages; the platform sends no push messages at all.
 
 ## Requirements
 
-### Requirement: Show list shared across pages
+### Requirement: Mention summary reply
 
-The system SHALL maintain a single shared show list accessible from the todo page and all finance pages. All shows SHALL be stored in the Supabase `shows` table, each with name, type (`monthly`, `special`, or `other`), optional performance date, and status.
+When a text message in the registered group mentions the bot and is not a `/` or `#` command, the bot SHALL reply (reply API, not push) with the open todos grouped by assignee, each line showing the todo title and its due date in `M/D（週）前` form, followed by a 「未認領」 group and a LIFF link to the todo page. If the message also mentions other people, the reply SHALL list only those people's todos. If there are no open todos, the reply SHALL say so. Each person SHALL show at most 5 todos, nearest due date first, with a 「…還有 N 件」 line for the rest.
 
-#### Scenario: View show list from any page
+##### Example: reply body
 
-- **WHEN** user opens the show dropdown on any page
-- **THEN** the same list of shows is displayed, sourced from the Supabase `shows` table
+| Open todos | Reply contains |
+| ---------- | -------------- |
+| 大弋: Rundown 製作 due 2026-10-19; unassigned: 公關票確認 due 2026-10-21 | 「大弋」 then 「・Rundown 製作 10/19（一）前」, 「未認領」 then 「・公關票確認 10/21（三）前」 |
+| none | 「目前沒有未完成的待辦」 |
 
+#### Scenario: Ask the bot
 
-<!-- @trace
-source: jokesonme-platform-v2
-updated: 2026-10-03
-code:
-  - platform/components/show-picker.tsx
-  - platform/app/pending/page.tsx
-  - platform/scripts/migrate-from-sheet.mts
-  - platform/supabase/migrations/0008_monthly_template.sql
-  - platform/components/tx-board.tsx
-  - platform/lib/finance/calc.ts
-  - platform/components/finance-head.tsx
-  - platform/supabase/migrations/0007_revoke_truncate.sql
-  - platform/app/(app)/ideas/actions.ts
-  - platform/app/api/finance/export/route.ts
-  - platform/lib/members.ts
-  - platform/app/(app)/finance/analytics/page.tsx
-  - platform/app/(app)/finance/import/legacy-import.tsx
-  - platform/app/api/line/webhook/route.ts
-  - platform/public/next.svg
-  - platform/public/window.svg
-  - platform/app/(app)/ideas/page.tsx
-  - platform/app/api/auth/liff/route.ts
-  - platform/lib/finance/reserve.ts
-  - platform/wrangler.toml
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/app/(app)/admin/users/page.tsx
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/me/page.tsx
-  - platform/app/globals.css
-  - platform/supabase/migrations/0003_app_settings.sql
-  - platform/app/(app)/todos/page.tsx
-  - platform/supabase/migrations/0005_users_login.sql
-  - platform/app/(app)/finance/import/page.tsx
-  - platform/lib/line/store.ts
-  - platform/eslint.config.mjs
-  - platform/app/login/page.tsx
-  - platform/supabase/migrations/0001_audit.sql
-  - platform/supabase/migrations/0002_core.sql
-  - platform/lib/shows.ts
-  - platform/tsconfig.json
-  - platform/open-next.config.ts
-  - platform/lib/auth/users.ts
-  - platform/app/(app)/admin/template/actions.ts
-  - platform/app/api/auth/login/route.ts
-  - platform/app/api/auth/logout/route.ts
-  - platform/lib/auth/line-login.ts
-  - platform/components/bottom-nav.tsx
-  - platform/scripts/legacy-oracle.mts
-  - platform/supabase/migrations/0004_message_retention.sql
-  - platform/app/liff/[[...path]]/page.tsx
-  - platform/components/ledger-sheet.tsx
-  - platform/components/idea-list.tsx
-  - platform/app/(app)/shows/page.tsx
-  - platform/lib/audit.ts
-  - platform/app/favicon.ico
-  - js/api.js
-  - platform/next.config.ts
-  - platform/lib/line/signature.ts
-  - platform/lib/line/webhook.ts
-  - platform/public/file.svg
-  - platform/lib/auth/access.ts
-  - platform/CLAUDE.md
-  - platform/app/(app)/admin/users/actions.ts
-  - platform/app/(app)/todos/actions.ts
-  - platform/lib/auth/session.ts
-  - platform/lib/ideas.ts
-  - platform/lib/todos.ts
-  - platform/scripts/db-check.sql
-  - platform/public/vercel.svg
-  - platform/public/globe.svg
-  - platform/scripts/test-db.sh
-  - platform/scripts/db-migrate.sh
-  - platform/lib/templates.ts
-  - platform/scripts/reconcile.mts
-  - platform/app/api/cron/purge-messages/route.ts
-  - platform/app/api/auth/callback/line/route.ts
-  - platform/lib/cron/auth.ts
-  - platform/worker.ts
-  - platform/lib/finance/reconcile.ts
-  - platform/package.json
-  - platform/lib/line/summary.ts
-  - platform/public/legacy/import.css
-  - platform/app/(app)/finance/page.tsx
-  - platform/app/(app)/layout.tsx
-  - platform/app/api/finance/import/route.ts
-  - platform/app/(app)/finance/actions.ts
-  - platform/components/avatar.tsx
-  - platform/lib/line/api.ts
-  - platform/public/legacy/import.js
-  - platform/lib/auth/current.ts
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/shows/actions.ts
-  - platform/scripts/rehearse-migration.sh
-  - platform/AGENTS.md
-  - platform/app/page.tsx
-  - platform/app/liff/[[...path]]/liff-login.tsx
-  - platform/supabase/migrations/0006_finance.sql
-  - platform/README.md
-  - platform/lib/dates.ts
-  - platform/scripts/check-tax-reserves.mts
-  - platform/lib/line/commands.ts
-  - platform/lib/finance/sheet.ts
-  - platform/public/legacy/import-shim.js
-  - platform/components/show-editor.tsx
-  - platform/lib/supabase.ts
-  - platform/app/layout.tsx
-  - platform/app/(app)/finance/transactions/page.tsx
-  - platform/lib/finance/data.ts
-tests:
-  - platform/lib/finance/reserve.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/lib/auth/session.test.ts
-  - platform/lib/templates.test.ts
-  - platform/supabase/test/audit_core.test.sql
-  - platform/lib/finance/calc.test.ts
-  - platform/lib/line/commands.test.ts
-  - platform/lib/auth/access.test.ts
-  - platform/supabase/test/finance.test.sql
-  - platform/supabase/test/retention.test.sql
-  - platform/lib/dates.test.ts
-  - platform/lib/todos.test.ts
-  - platform/supabase/test/local-shim.sql
-  - platform/lib/line/summary.test.ts
--->
+- **WHEN** a member sends 「@傑瓜 這週誰要做什麼」
+- **THEN** the bot replies with every member's open todos and the unclaimed ones, and no push message is sent
 
----
-### Requirement: Pre-loaded default shows
+#### Scenario: Ask about one person
 
-The system SHALL pre-populate the show list with the following 14 shows:
-
-1. 會員與其他收支
-2. 周邊商品收支
-3. 共同基金支出
-4. 看我笑話第 2 季 Opening Party
-5. 看我笑話 4 月號
-6. 看我笑話 5 月號
-7. 看我笑話 6 月號
-8. 看我笑話 7 月號
-9. 看我笑話 8 月號
-10. 看我笑話 9 月號
-11. 看我笑話 10 月號
-12. 看我笑話 11 月號
-13. 看我笑話 12 月號
-14. 看我笑話第 2 季 After Party
-
-#### Scenario: Default shows available on first use
-
-- **WHEN** user opens the platform for the first time
-- **THEN** all 14 default shows are available in the show dropdown
-
-#### Scenario: Virtual show "共同基金支出" is selectable
-
-- **WHEN** user opens the show dropdown on the transaction page
-- **THEN** "共同基金支出" is listed as a selectable option
-
-
-<!-- @trace
-source: tax-reserve-and-fund-payment
-updated: 2026-04-24
-code:
-  - RAW DATA/20260410_看我笑話｜第 2 季 5 月號_活動報名狀態_142筆.xlsx
-  - RAW DATA/20260412_應援訂單_85筆.csv
-  - js/api.js
-  - js/analytics.js
-  - RAW DATA/20260410_看我笑話｜第 2 季 4 月號_活動報名狀態_148筆.xlsx
-  - js/import.js
-  - RAW DATA/20260410_2026 好竹弋漫才專場 《直球》_活動報名狀態_75筆.xlsx
-  - js/transaction.js
-  - .DS_Store
-  - js/shared.js
-  - gas/Code.gs
-  - index.html
-  - RAW DATA/20260410_2026 支薪好友喜劇專場 《向上管理》_活動報名狀態_273筆.xlsx
-  - RAW DATA/20260412_應援撥款明細_444筆.xlsx
-  - css/style.css
-  - RAW DATA/20260412_應援票券訂單_515筆.csv
-  - import.html
--->
-
----
-### Requirement: Add new show
-
-The system SHALL allow admin and members to add a new show by entering a name, choosing a type, and optionally a performance date. A `monthly` show SHALL require a performance date. The new show SHALL appear in the dropdown on all pages immediately after creation.
-
-#### Scenario: Create a new show
-
-- **WHEN** user selects 「新增一檔演出」, enters 「第 2 季 10 月號」, type `monthly`, date 2026-10-24
-- **THEN** the show is stored in Supabase and appears in all show dropdowns
-
-#### Scenario: Monthly show without date
-
-- **WHEN** user submits a `monthly` show without a performance date
-- **THEN** the form shows an error and no show is created
+- **WHEN** a member sends 「@傑瓜 @柏文」
+- **THEN** the reply lists only 柏文's open todos
 
 
 <!-- @trace
@@ -337,53 +154,136 @@ tests:
 -->
 
 ---
-### Requirement: Member selection
+### Requirement: No push messages
 
-The system SHALL provide a member dropdown with the following 8 default members: 傑哥, 柏文, 巧達, 芭樂, 又又, 兔子, 大弋, 竹節蟲. The dropdown SHALL also include an "其他" option that allows free-text input for non-default members.
+The bot SHALL NOT send push, multicast, or broadcast messages; every bot message SHALL be a reply to a group message, so monthly LINE message quota is never consumed.
 
-#### Scenario: Select a default member
+#### Scenario: Quota untouched
 
-- **WHEN** user opens the member dropdown
-- **THEN** all 8 default members are listed as selectable options
-
-#### Scenario: Enter a non-default member
-
-- **WHEN** user selects "其他" from the member dropdown
-- **THEN** a text input field appears allowing the user to type a custom name
+- **WHEN** the platform has run for a month with members using commands and mentions
+- **THEN** LINE's quota consumption endpoint reports 0 messages used by the bot
 
 <!-- @trace
-source: build-platform
-updated: 2026-03-17
+source: jokesonme-platform-v2
+updated: 2026-10-03
 code:
-  - gas/Code.gs
-  - .DS_Store
-  - CLAUDE.md
--->
-
----
-### Requirement: Persist show selection across page navigation
-
-The system SHALL store the user's selected show in sessionStorage when a show is selected, and restore it automatically when any page loads.
-
-#### Scenario: User navigates away and returns
-
-- **WHEN** the user selects a show, navigates to another page, and returns
-- **THEN** the previously selected show SHALL be automatically restored and its data loaded
-
-#### Scenario: Stored show no longer exists
-
-- **WHEN** the stored show name does not match any available option
-- **THEN** the system SHALL silently ignore the stored value and show the default empty state
-
-#### Scenario: Session ends
-
-- **WHEN** the browser tab is closed
-- **THEN** the stored selection SHALL be cleared (sessionStorage behavior)
-
-<!-- @trace
-source: persist-show-selection
-updated: 2026-03-17
-code:
-  - .DS_Store
-  - js/shared.js
+  - platform/components/show-picker.tsx
+  - platform/app/pending/page.tsx
+  - platform/scripts/migrate-from-sheet.mts
+  - platform/supabase/migrations/0008_monthly_template.sql
+  - platform/components/tx-board.tsx
+  - platform/lib/finance/calc.ts
+  - platform/components/finance-head.tsx
+  - platform/supabase/migrations/0007_revoke_truncate.sql
+  - platform/app/(app)/ideas/actions.ts
+  - platform/app/api/finance/export/route.ts
+  - platform/lib/members.ts
+  - platform/app/(app)/finance/analytics/page.tsx
+  - platform/app/(app)/finance/import/legacy-import.tsx
+  - platform/app/api/line/webhook/route.ts
+  - platform/public/next.svg
+  - platform/public/window.svg
+  - platform/app/(app)/ideas/page.tsx
+  - platform/app/api/auth/liff/route.ts
+  - platform/lib/finance/reserve.ts
+  - platform/wrangler.toml
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/app/(app)/admin/users/page.tsx
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/app/(app)/me/page.tsx
+  - platform/app/globals.css
+  - platform/supabase/migrations/0003_app_settings.sql
+  - platform/app/(app)/todos/page.tsx
+  - platform/supabase/migrations/0005_users_login.sql
+  - platform/app/(app)/finance/import/page.tsx
+  - platform/lib/line/store.ts
+  - platform/eslint.config.mjs
+  - platform/app/login/page.tsx
+  - platform/supabase/migrations/0001_audit.sql
+  - platform/supabase/migrations/0002_core.sql
+  - platform/lib/shows.ts
+  - platform/tsconfig.json
+  - platform/open-next.config.ts
+  - platform/lib/auth/users.ts
+  - platform/app/(app)/admin/template/actions.ts
+  - platform/app/api/auth/login/route.ts
+  - platform/app/api/auth/logout/route.ts
+  - platform/lib/auth/line-login.ts
+  - platform/components/bottom-nav.tsx
+  - platform/scripts/legacy-oracle.mts
+  - platform/supabase/migrations/0004_message_retention.sql
+  - platform/app/liff/[[...path]]/page.tsx
+  - platform/components/ledger-sheet.tsx
+  - platform/components/idea-list.tsx
+  - platform/app/(app)/shows/page.tsx
+  - platform/lib/audit.ts
+  - platform/app/favicon.ico
+  - js/api.js
+  - platform/next.config.ts
+  - platform/lib/line/signature.ts
+  - platform/lib/line/webhook.ts
+  - platform/public/file.svg
+  - platform/lib/auth/access.ts
+  - platform/CLAUDE.md
+  - platform/app/(app)/admin/users/actions.ts
+  - platform/app/(app)/todos/actions.ts
+  - platform/lib/auth/session.ts
+  - platform/lib/ideas.ts
+  - platform/lib/todos.ts
+  - platform/scripts/db-check.sql
+  - platform/public/vercel.svg
+  - platform/public/globe.svg
+  - platform/scripts/test-db.sh
+  - platform/scripts/db-migrate.sh
+  - platform/lib/templates.ts
+  - platform/scripts/reconcile.mts
+  - platform/app/api/cron/purge-messages/route.ts
+  - platform/app/api/auth/callback/line/route.ts
+  - platform/lib/cron/auth.ts
+  - platform/worker.ts
+  - platform/lib/finance/reconcile.ts
+  - platform/package.json
+  - platform/lib/line/summary.ts
+  - platform/public/legacy/import.css
+  - platform/app/(app)/finance/page.tsx
+  - platform/app/(app)/layout.tsx
+  - platform/app/api/finance/import/route.ts
+  - platform/app/(app)/finance/actions.ts
+  - platform/components/avatar.tsx
+  - platform/lib/line/api.ts
+  - platform/public/legacy/import.js
+  - platform/lib/auth/current.ts
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/shows/actions.ts
+  - platform/scripts/rehearse-migration.sh
+  - platform/AGENTS.md
+  - platform/app/page.tsx
+  - platform/app/liff/[[...path]]/liff-login.tsx
+  - platform/supabase/migrations/0006_finance.sql
+  - platform/README.md
+  - platform/lib/dates.ts
+  - platform/scripts/check-tax-reserves.mts
+  - platform/lib/line/commands.ts
+  - platform/lib/finance/sheet.ts
+  - platform/public/legacy/import-shim.js
+  - platform/components/show-editor.tsx
+  - platform/lib/supabase.ts
+  - platform/app/layout.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/lib/finance/data.ts
+tests:
+  - platform/lib/finance/reserve.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/lib/auth/session.test.ts
+  - platform/lib/templates.test.ts
+  - platform/supabase/test/audit_core.test.sql
+  - platform/lib/finance/calc.test.ts
+  - platform/lib/line/commands.test.ts
+  - platform/lib/auth/access.test.ts
+  - platform/supabase/test/finance.test.sql
+  - platform/supabase/test/retention.test.sql
+  - platform/lib/dates.test.ts
+  - platform/lib/todos.test.ts
+  - platform/supabase/test/local-shim.sql
+  - platform/lib/line/summary.test.ts
 -->

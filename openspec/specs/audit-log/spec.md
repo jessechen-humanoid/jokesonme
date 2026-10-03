@@ -1,31 +1,19 @@
-# brand-design-system Specification
+# audit-log Specification
 
 ## Purpose
 
-TBD - created by archiving change 'brand-visual-redesign'. Update Purpose after archive.
+Keeps a complete, tamper-resistant record of who changed what and when, including logins and finance exports, at the database layer so no code path can skip it.
 
 ## Requirements
 
-### Requirement: Brand colour tokens
+### Requirement: Automatic data change logging
 
-The system SHALL define the following colour tokens as CSS variables in `:root` and all UI chrome SHALL consume colours through these tokens. No other decorative colours SHALL be introduced. These tokens implement direction B1 「柿子紅品牌版」 chosen by Jesse on 2026-10-03: layout and components follow Jebby Dashboard (paper ground, large white cards, restrained type scale, segmented tabs) without the Jebby character, and persimmon replaces Jebby's lime. Earlier direction C (bright orange) is superseded.
+Every insert, update, and delete on every application table SHALL be recorded by a database trigger with timestamp, table, row id, operation, old values, new values, and actor. Adding a new application table SHALL require attaching the trigger in the same migration. The raw captured LINE messages table SHALL be the only exception: it holds group chat input rather than platform data, is purged after 14 days, and SHALL NOT be audited; todos and ideas created from those messages SHALL still be audited.
 
-- Page ground `--ground`: `#F6F2E8`; secondary ground `--ground-2`: `#EFE9DA`
-- Card surface `--surface`: `#FFFFFF`; list-row surface `--surface-2`: `#FAF8F1`
-- Text `--ink`: `#1E211B`, `--ink-2`: `#585E52`, `--ink-3`: `#8B9184`
-- Lines `--line`: `#E5DFCF`, `--line-2`: `#F0EBDD`
-- Persimmon `--brand`: `#E2673F`, deep `--brand-deep`: `#B84D2A`, tints `--brand-2`: `#F2B9A2`, `--brand-3`: `#FBE3D8`, `--brand-4`: `#FDF1EB`
-- Shadow `--shadow`: `0 1px 2px rgba(31,34,28,.04), 0 10px 26px -14px rgba(31,34,28,.18)`
+#### Scenario: Edit a transaction
 
-#### Scenario: Page ground is warm paper
-
-- **WHEN** user opens any page of the new platform
-- **THEN** the page `body` background is `#F6F2E8`
-
-#### Scenario: Card renders on white surface
-
-- **WHEN** user views a section card
-- **THEN** the card background is `#FFFFFF` with `border-radius: 24px` and the `--shadow` shadow
+- **WHEN** a member changes a transaction amount from 1000 to 1200
+- **THEN** an audit row records the old value 1000, new value 1200, the member, and the time
 
 
 <!-- @trace
@@ -154,19 +142,14 @@ tests:
 -->
 
 ---
-### Requirement: Brand orange usage restriction
+### Requirement: Actor attribution
 
-Persimmon (`--brand`) SHALL be used for exactly these purposes: the title card at the top of each page (one per page, white text), primary action buttons and the floating add button, the current item in navigation, unclaimed tags, checkbox outlines, and due-date emphasis (`--brand-deep` text). Persimmon SHALL NOT be used as the background of section cards, list rows, tables, or body text.
+Each audit row SHALL identify the actor as either an approved user or one of the system actors `line-bot`, `reminder-job`, `migration`. A write with no resolvable actor SHALL be rejected rather than logged anonymously.
 
-#### Scenario: Title card is persimmon
+#### Scenario: Bot-created todo
 
-- **WHEN** user opens the todo page
-- **THEN** the top title card background is `#E2673F` and the section cards below it are `#FFFFFF`
-
-#### Scenario: Due date emphasis
-
-- **WHEN** a todo shows its due date
-- **THEN** the label text colour is `#B84D2A`
+- **WHEN** the slash command creates a todo
+- **THEN** the audit row's actor is `line-bot` and the todo references the message author as creator
 
 
 <!-- @trace
@@ -295,122 +278,14 @@ tests:
 -->
 
 ---
-### Requirement: Semantic colour tokens for financial state
+### Requirement: Login and export events
 
-The system SHALL define semantic colour tokens — and use ONLY these — for financial or state semantics:
+Successful sign-ins, approvals, role changes, and any download or export of finance data SHALL be recorded as audit events. Page views SHALL NOT be recorded.
 
-- Positive / income / settled `--success`: `#4A7C59`
-- Negative / expense / unsettled `--danger`: `#C24E36`
-- Partial / warning `--warning`: `#C08A3E`
+#### Scenario: Export
 
-Each semantic colour SHALL have a corresponding background variant (`--success-bg`, `--danger-bg`, `--warning-bg`) at alpha 0.1 for status badges and highlighted rows. Semantic colours SHALL ONLY be applied to functional cues (amount signs, settlement status, warnings) and SHALL NOT be used decoratively. Every `var(--*)` colour reference emitted by JavaScript-generated markup SHALL resolve to a token defined in `:root`.
-
-#### Scenario: Negative amount rendered in desaturated red
-
-- **WHEN** a net amount is negative
-- **THEN** the value is rendered with colour `#C24E36`
-
-#### Scenario: Positive amount rendered in desaturated green
-
-- **WHEN** a net amount is positive
-- **THEN** the value is rendered with colour `#4A7C59`
-
-#### Scenario: Settled badge colour resolves
-
-- **WHEN** the import page renders a settled-status badge using `var(--success)`
-- **THEN** the badge text renders in `#4A7C59` because `--success` is defined in `:root`
-
-
-<!-- @trace
-source: brand-visual-redesign
-updated: 2026-07-10
-code:
-  - .agents/skills/spectra-apply/SKILL.md
-  - checklist.html
-  - css/style.css
-  - analytics.html
-  - .agents/skills/spectra-archive/SKILL.md
-  - .agents/skills/spectra-commit/SKILL.md
-  - .agents/skills/spectra-drift/SKILL.md
-  - .agents/skills/spectra-propose/SKILL.md
-  - import.html
-  - CLAUDE.md
-  - .agents/skills/spectra-audit/SKILL.md
-  - js/transaction.js
-  - forecast.html
-  - .agents/skills/spectra-discuss/SKILL.md
-  - .agents/skills/spectra-ask/SKILL.md
-  - index.html
-  - opentix.html
-  - .agents/skills/spectra-debug/SKILL.md
-  - .agents/skills/spectra-ingest/SKILL.md
-  - js/import.js
-  - OPTIMIZATION_PLAN.md
-  - AGENTS.md
-  - opentix-analytics.html
-  - js/analytics.js
--->
-
----
-### Requirement: Typography with loaded webfont
-
-All production pages SHALL load the Noto Sans TC webfont (weights 400, 500, 700) from Google Fonts with `display=swap`, and the font stack SHALL be `-apple-system, BlinkMacSystemFont, "Noto Sans TC", "Segoe UI", sans-serif`.
-
-#### Scenario: Webfont link present on every production page
-
-- **WHEN** any of the seven production pages (index, checklist, analytics, forecast, import, opentix, opentix-analytics) is loaded
-- **THEN** its `<head>` contains a `fonts.googleapis.com` stylesheet link requesting Noto Sans TC weights 400, 500, and 700
-
-#### Scenario: Fallback when webfont unavailable
-
-- **WHEN** the webfont fails to load
-- **THEN** text renders with the system font fallback and all functionality remains usable
-
-
-<!-- @trace
-source: brand-visual-redesign
-updated: 2026-07-10
-code:
-  - .agents/skills/spectra-apply/SKILL.md
-  - checklist.html
-  - css/style.css
-  - analytics.html
-  - .agents/skills/spectra-archive/SKILL.md
-  - .agents/skills/spectra-commit/SKILL.md
-  - .agents/skills/spectra-drift/SKILL.md
-  - .agents/skills/spectra-propose/SKILL.md
-  - import.html
-  - CLAUDE.md
-  - .agents/skills/spectra-audit/SKILL.md
-  - js/transaction.js
-  - forecast.html
-  - .agents/skills/spectra-discuss/SKILL.md
-  - .agents/skills/spectra-ask/SKILL.md
-  - index.html
-  - opentix.html
-  - .agents/skills/spectra-debug/SKILL.md
-  - .agents/skills/spectra-ingest/SKILL.md
-  - js/import.js
-  - OPTIMIZATION_PLAN.md
-  - AGENTS.md
-  - opentix-analytics.html
-  - js/analytics.js
--->
-
----
-### Requirement: Corner radius and surface styling
-
-Section cards SHALL use `border-radius: 24px` with `--shadow`; list rows inside a section SHALL use `--surface-2`, a `1px solid var(--line-2)` border, `border-radius: 12px`, and no shadow; inputs and buttons SHALL use `border-radius: 12px`; segmented tabs SHALL use a 12px track with 9px items; bottom sheets SHALL use `border-radius: 24px` on their top corners. Navigation SHALL be a bottom tab bar below 900px viewport width and a left sidebar card at 900px and above.
-
-#### Scenario: Todo row inside a section
-
-- **WHEN** user views a todo row
-- **THEN** it has `#FAF8F1` background, `border-radius: 12px`, a `1px solid #F0EBDD` border, and no box-shadow
-
-#### Scenario: Desktop sidebar
-
-- **WHEN** the viewport is 1280px wide
-- **THEN** navigation renders as a left sidebar card and the bottom tab bar is not shown
+- **WHEN** a finance partner downloads the settlement table
+- **THEN** an audit event records the user, time, and which export
 
 
 <!-- @trace
@@ -539,92 +414,272 @@ tests:
 -->
 
 ---
-### Requirement: Chart colour palette
+### Requirement: Append-only audit log
 
-Chart colours SHALL be defined in a single named constant (`CHART_COLORS`) in `js/analytics.js`, aligned with the semantic tokens. The income ramp SHALL be the six-step green scale `#4A7C59 #5E8F6C #749F80 #8BB095 #A3C1AB #BCD2C2` (dark to light) and the expense ramp SHALL be the six-step warm red scale `#C24E36 #CB6650 #D47D6A #DD9585 #E6ADA1 #EFC6BD` (dark to light). No chart segment SHALL use a colour outside these ramps and the neutral tokens.
+The audit log SHALL reject update and delete from every application role, including the server's service role; only insert SHALL be permitted.
 
-#### Scenario: Income chart uses green ramp
+#### Scenario: Tamper attempt
 
-- **WHEN** the analytics page renders an income breakdown chart
-- **THEN** segment colours are drawn from the six-step green ramp in order from `#4A7C59`
-
-#### Scenario: Expense chart uses warm red ramp
-
-- **WHEN** the analytics page renders an expense breakdown chart
-- **THEN** segment colours are drawn from the six-step warm red ramp in order from `#C24E36`
+- **WHEN** any application credential issues `delete from audit_log`
+- **THEN** the database raises an error and no row is removed
 
 
 <!-- @trace
-source: brand-visual-redesign
-updated: 2026-07-10
+source: jokesonme-platform-v2
+updated: 2026-10-03
 code:
-  - .agents/skills/spectra-apply/SKILL.md
-  - checklist.html
-  - css/style.css
-  - analytics.html
-  - .agents/skills/spectra-archive/SKILL.md
-  - .agents/skills/spectra-commit/SKILL.md
-  - .agents/skills/spectra-drift/SKILL.md
-  - .agents/skills/spectra-propose/SKILL.md
-  - import.html
-  - CLAUDE.md
-  - .agents/skills/spectra-audit/SKILL.md
-  - js/transaction.js
-  - forecast.html
-  - .agents/skills/spectra-discuss/SKILL.md
-  - .agents/skills/spectra-ask/SKILL.md
-  - index.html
-  - opentix.html
-  - .agents/skills/spectra-debug/SKILL.md
-  - .agents/skills/spectra-ingest/SKILL.md
-  - js/import.js
-  - OPTIMIZATION_PLAN.md
-  - AGENTS.md
-  - opentix-analytics.html
-  - js/analytics.js
+  - platform/components/show-picker.tsx
+  - platform/app/pending/page.tsx
+  - platform/scripts/migrate-from-sheet.mts
+  - platform/supabase/migrations/0008_monthly_template.sql
+  - platform/components/tx-board.tsx
+  - platform/lib/finance/calc.ts
+  - platform/components/finance-head.tsx
+  - platform/supabase/migrations/0007_revoke_truncate.sql
+  - platform/app/(app)/ideas/actions.ts
+  - platform/app/api/finance/export/route.ts
+  - platform/lib/members.ts
+  - platform/app/(app)/finance/analytics/page.tsx
+  - platform/app/(app)/finance/import/legacy-import.tsx
+  - platform/app/api/line/webhook/route.ts
+  - platform/public/next.svg
+  - platform/public/window.svg
+  - platform/app/(app)/ideas/page.tsx
+  - platform/app/api/auth/liff/route.ts
+  - platform/lib/finance/reserve.ts
+  - platform/wrangler.toml
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/app/(app)/admin/users/page.tsx
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/app/(app)/me/page.tsx
+  - platform/app/globals.css
+  - platform/supabase/migrations/0003_app_settings.sql
+  - platform/app/(app)/todos/page.tsx
+  - platform/supabase/migrations/0005_users_login.sql
+  - platform/app/(app)/finance/import/page.tsx
+  - platform/lib/line/store.ts
+  - platform/eslint.config.mjs
+  - platform/app/login/page.tsx
+  - platform/supabase/migrations/0001_audit.sql
+  - platform/supabase/migrations/0002_core.sql
+  - platform/lib/shows.ts
+  - platform/tsconfig.json
+  - platform/open-next.config.ts
+  - platform/lib/auth/users.ts
+  - platform/app/(app)/admin/template/actions.ts
+  - platform/app/api/auth/login/route.ts
+  - platform/app/api/auth/logout/route.ts
+  - platform/lib/auth/line-login.ts
+  - platform/components/bottom-nav.tsx
+  - platform/scripts/legacy-oracle.mts
+  - platform/supabase/migrations/0004_message_retention.sql
+  - platform/app/liff/[[...path]]/page.tsx
+  - platform/components/ledger-sheet.tsx
+  - platform/components/idea-list.tsx
+  - platform/app/(app)/shows/page.tsx
+  - platform/lib/audit.ts
+  - platform/app/favicon.ico
+  - js/api.js
+  - platform/next.config.ts
+  - platform/lib/line/signature.ts
+  - platform/lib/line/webhook.ts
+  - platform/public/file.svg
+  - platform/lib/auth/access.ts
+  - platform/CLAUDE.md
+  - platform/app/(app)/admin/users/actions.ts
+  - platform/app/(app)/todos/actions.ts
+  - platform/lib/auth/session.ts
+  - platform/lib/ideas.ts
+  - platform/lib/todos.ts
+  - platform/scripts/db-check.sql
+  - platform/public/vercel.svg
+  - platform/public/globe.svg
+  - platform/scripts/test-db.sh
+  - platform/scripts/db-migrate.sh
+  - platform/lib/templates.ts
+  - platform/scripts/reconcile.mts
+  - platform/app/api/cron/purge-messages/route.ts
+  - platform/app/api/auth/callback/line/route.ts
+  - platform/lib/cron/auth.ts
+  - platform/worker.ts
+  - platform/lib/finance/reconcile.ts
+  - platform/package.json
+  - platform/lib/line/summary.ts
+  - platform/public/legacy/import.css
+  - platform/app/(app)/finance/page.tsx
+  - platform/app/(app)/layout.tsx
+  - platform/app/api/finance/import/route.ts
+  - platform/app/(app)/finance/actions.ts
+  - platform/components/avatar.tsx
+  - platform/lib/line/api.ts
+  - platform/public/legacy/import.js
+  - platform/lib/auth/current.ts
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/shows/actions.ts
+  - platform/scripts/rehearse-migration.sh
+  - platform/AGENTS.md
+  - platform/app/page.tsx
+  - platform/app/liff/[[...path]]/liff-login.tsx
+  - platform/supabase/migrations/0006_finance.sql
+  - platform/README.md
+  - platform/lib/dates.ts
+  - platform/scripts/check-tax-reserves.mts
+  - platform/lib/line/commands.ts
+  - platform/lib/finance/sheet.ts
+  - platform/public/legacy/import-shim.js
+  - platform/components/show-editor.tsx
+  - platform/lib/supabase.ts
+  - platform/app/layout.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/lib/finance/data.ts
+tests:
+  - platform/lib/finance/reserve.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/lib/auth/session.test.ts
+  - platform/lib/templates.test.ts
+  - platform/supabase/test/audit_core.test.sql
+  - platform/lib/finance/calc.test.ts
+  - platform/lib/line/commands.test.ts
+  - platform/lib/auth/access.test.ts
+  - platform/supabase/test/finance.test.sql
+  - platform/supabase/test/retention.test.sql
+  - platform/lib/dates.test.ts
+  - platform/lib/todos.test.ts
+  - platform/supabase/test/local-shim.sql
+  - platform/lib/line/summary.test.ts
 -->
 
 ---
-### Requirement: No emoji in UI chrome
+### Requirement: Financial soft delete
 
-The system SHALL NOT render emoji characters in UI chrome (navigation, buttons, labels, headings, static copy). Emoji present in user-entered content SHALL be preserved as entered.
+Deleting a transaction, settlement, or advance-reimbursement record SHALL mark it deleted with actor and time instead of removing the row; deleted records SHALL be excluded from all totals and lists.
 
-#### Scenario: UI labels contain no emoji
+#### Scenario: Delete a transaction
 
-- **WHEN** user views navigation labels, buttons, headings, and other static UI strings
-- **THEN** no emoji characters appear in those strings
-
-#### Scenario: User-entered notes preserve emoji
-
-- **WHEN** a transaction note containing an emoji is rendered in a list
-- **THEN** the emoji is displayed as entered
+- **WHEN** a member deletes a transaction
+- **THEN** it disappears from the list and totals, and the row still exists marked deleted
 
 <!-- @trace
-source: brand-visual-redesign
-updated: 2026-07-10
+source: jokesonme-platform-v2
+updated: 2026-10-03
 code:
-  - .agents/skills/spectra-apply/SKILL.md
-  - checklist.html
-  - css/style.css
-  - analytics.html
-  - .agents/skills/spectra-archive/SKILL.md
-  - .agents/skills/spectra-commit/SKILL.md
-  - .agents/skills/spectra-drift/SKILL.md
-  - .agents/skills/spectra-propose/SKILL.md
-  - import.html
-  - CLAUDE.md
-  - .agents/skills/spectra-audit/SKILL.md
-  - js/transaction.js
-  - forecast.html
-  - .agents/skills/spectra-discuss/SKILL.md
-  - .agents/skills/spectra-ask/SKILL.md
-  - index.html
-  - opentix.html
-  - .agents/skills/spectra-debug/SKILL.md
-  - .agents/skills/spectra-ingest/SKILL.md
-  - js/import.js
-  - OPTIMIZATION_PLAN.md
-  - AGENTS.md
-  - opentix-analytics.html
-  - js/analytics.js
+  - platform/components/show-picker.tsx
+  - platform/app/pending/page.tsx
+  - platform/scripts/migrate-from-sheet.mts
+  - platform/supabase/migrations/0008_monthly_template.sql
+  - platform/components/tx-board.tsx
+  - platform/lib/finance/calc.ts
+  - platform/components/finance-head.tsx
+  - platform/supabase/migrations/0007_revoke_truncate.sql
+  - platform/app/(app)/ideas/actions.ts
+  - platform/app/api/finance/export/route.ts
+  - platform/lib/members.ts
+  - platform/app/(app)/finance/analytics/page.tsx
+  - platform/app/(app)/finance/import/legacy-import.tsx
+  - platform/app/api/line/webhook/route.ts
+  - platform/public/next.svg
+  - platform/public/window.svg
+  - platform/app/(app)/ideas/page.tsx
+  - platform/app/api/auth/liff/route.ts
+  - platform/lib/finance/reserve.ts
+  - platform/wrangler.toml
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/app/(app)/admin/users/page.tsx
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/app/(app)/me/page.tsx
+  - platform/app/globals.css
+  - platform/supabase/migrations/0003_app_settings.sql
+  - platform/app/(app)/todos/page.tsx
+  - platform/supabase/migrations/0005_users_login.sql
+  - platform/app/(app)/finance/import/page.tsx
+  - platform/lib/line/store.ts
+  - platform/eslint.config.mjs
+  - platform/app/login/page.tsx
+  - platform/supabase/migrations/0001_audit.sql
+  - platform/supabase/migrations/0002_core.sql
+  - platform/lib/shows.ts
+  - platform/tsconfig.json
+  - platform/open-next.config.ts
+  - platform/lib/auth/users.ts
+  - platform/app/(app)/admin/template/actions.ts
+  - platform/app/api/auth/login/route.ts
+  - platform/app/api/auth/logout/route.ts
+  - platform/lib/auth/line-login.ts
+  - platform/components/bottom-nav.tsx
+  - platform/scripts/legacy-oracle.mts
+  - platform/supabase/migrations/0004_message_retention.sql
+  - platform/app/liff/[[...path]]/page.tsx
+  - platform/components/ledger-sheet.tsx
+  - platform/components/idea-list.tsx
+  - platform/app/(app)/shows/page.tsx
+  - platform/lib/audit.ts
+  - platform/app/favicon.ico
+  - js/api.js
+  - platform/next.config.ts
+  - platform/lib/line/signature.ts
+  - platform/lib/line/webhook.ts
+  - platform/public/file.svg
+  - platform/lib/auth/access.ts
+  - platform/CLAUDE.md
+  - platform/app/(app)/admin/users/actions.ts
+  - platform/app/(app)/todos/actions.ts
+  - platform/lib/auth/session.ts
+  - platform/lib/ideas.ts
+  - platform/lib/todos.ts
+  - platform/scripts/db-check.sql
+  - platform/public/vercel.svg
+  - platform/public/globe.svg
+  - platform/scripts/test-db.sh
+  - platform/scripts/db-migrate.sh
+  - platform/lib/templates.ts
+  - platform/scripts/reconcile.mts
+  - platform/app/api/cron/purge-messages/route.ts
+  - platform/app/api/auth/callback/line/route.ts
+  - platform/lib/cron/auth.ts
+  - platform/worker.ts
+  - platform/lib/finance/reconcile.ts
+  - platform/package.json
+  - platform/lib/line/summary.ts
+  - platform/public/legacy/import.css
+  - platform/app/(app)/finance/page.tsx
+  - platform/app/(app)/layout.tsx
+  - platform/app/api/finance/import/route.ts
+  - platform/app/(app)/finance/actions.ts
+  - platform/components/avatar.tsx
+  - platform/lib/line/api.ts
+  - platform/public/legacy/import.js
+  - platform/lib/auth/current.ts
+  - platform/components/todo-board.tsx
+  - platform/app/(app)/shows/actions.ts
+  - platform/scripts/rehearse-migration.sh
+  - platform/AGENTS.md
+  - platform/app/page.tsx
+  - platform/app/liff/[[...path]]/liff-login.tsx
+  - platform/supabase/migrations/0006_finance.sql
+  - platform/README.md
+  - platform/lib/dates.ts
+  - platform/scripts/check-tax-reserves.mts
+  - platform/lib/line/commands.ts
+  - platform/lib/finance/sheet.ts
+  - platform/public/legacy/import-shim.js
+  - platform/components/show-editor.tsx
+  - platform/lib/supabase.ts
+  - platform/app/layout.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/lib/finance/data.ts
+tests:
+  - platform/lib/finance/reserve.test.ts
+  - platform/lib/line/webhook.test.ts
+  - platform/lib/auth/session.test.ts
+  - platform/lib/templates.test.ts
+  - platform/supabase/test/audit_core.test.sql
+  - platform/lib/finance/calc.test.ts
+  - platform/lib/line/commands.test.ts
+  - platform/lib/auth/access.test.ts
+  - platform/supabase/test/finance.test.sql
+  - platform/supabase/test/retention.test.sql
+  - platform/lib/dates.test.ts
+  - platform/lib/todos.test.ts
+  - platform/supabase/test/local-shim.sql
+  - platform/lib/line/summary.test.ts
 -->
