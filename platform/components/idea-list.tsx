@@ -6,25 +6,13 @@ import { useOptimistic, useState, useTransition } from "react";
 import { assignIdea, createIdea, setIdeaArchived, updateIdea } from "@/app/(app)/ideas/actions";
 import { formatTaipeiDateTime } from "@/lib/dates";
 import ShowPicker, { type PickerData } from "@/components/show-picker";
+import RichText from "@/components/rich-text";
 
 export type IdeaView = { id: string; text: string; author: string; when: string; showId: string | null; showName: string | null; viaLine: boolean };
 /** inbox = 還沒歸位、all = 全部、archived = 已封存、show = 某場演出頁 */
 export type IdeaListMode = "inbox" | "all" | "archived" | "show";
 
 type Patch = { id: string; showId?: string | null; showName?: string | null; remove?: boolean };
-
-function Linkified({ text }: { text: string }) {
-  const parts = text.split(/(https?:\/\/[^\s]+)/g);
-  return (
-    <>
-      {parts.map((p, i) =>
-        /^https?:\/\//.test(p) ? (
-          <a key={i} href={p} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: "var(--brand-deep)", wordBreak: "break-all" }}>{p}</a>
-        ) : <span key={i}>{p}</span>,
-      )}
-    </>
-  );
-}
 
 export default function IdeaList(props: {
   ideas: IdeaView[]; picker: PickerData; mode: IdeaListMode; contextShowId: string | null; emptyText: React.ReactNode; allowCreate: boolean;
@@ -70,9 +58,16 @@ export default function IdeaList(props: {
       {ideas.length === 0 ? <div className="empty">{props.emptyText}</div> : null}
       {ideas.map((i) => (
         <div key={i.id} className="card">
-          <button type="button" className="title" onClick={() => props.mode !== "archived" && setEditing(i)} style={{ whiteSpace: "pre-wrap", background: "none", border: 0, padding: 0, textAlign: "left", width: "100%", cursor: props.mode === "archived" ? "default" : "pointer" }}>
-            <Linkified text={i.text} />
-          </button>
+          {/* 內容含標題、條列等區塊元素，不能放在 <button> 裡；改用可點、可用鍵盤操作的 div */}
+          <div
+            className={`idea-body${props.mode === "archived" ? "" : " editable"}`}
+            role={props.mode === "archived" ? undefined : "button"}
+            tabIndex={props.mode === "archived" ? undefined : 0}
+            onClick={() => props.mode !== "archived" && setEditing(i)}
+            onKeyDown={(e) => { if (props.mode !== "archived" && (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); setEditing(i); } }}
+          >
+            <RichText text={i.text} />
+          </div>
           <div className="meta">
             <span className="tag">{i.author}</span>
             <span>{formatTaipeiDateTime(i.when)}</span>

@@ -97,3 +97,17 @@ test("/行程 邊界：2/30 無效、9:5 不算時間、全形斜線與 @人 挖
   const text = "/行程 10／12 排練 @傑瓜";
   assert.deepEqual(parseCommand({ text, today, mentions: [{ index: text.indexOf("@"), length: 3, isSelf: true }] }), { kind: "event", date: "2026-10-12", time: null, title: "排練" });
 });
+
+// idea-rich-text：/靈感 保留換行（spec Example: multi-line idea）
+test("/靈感 多行：保留換行，只壓縮行內空白", () => {
+  assert.deepEqual(parseCommand({ text: "/靈感 看我名場面\n題目 1. 壁咚\n題目 2. 領帶" }), { kind: "idea", text: "看我名場面\n題目 1. 壁咚\n題目 2. 領帶" });
+  assert.deepEqual(parseCommand({ text: "/靈感 標題\n\n  第二段" }), { kind: "idea", text: "標題\n\n第二段" });
+  assert.deepEqual(parseCommand({ text: "/靈感\n第一行\n第二行" }), { kind: "idea", text: "第一行\n第二行" });
+  const text = "/靈感 想法 @傑瓜\n第二行";
+  assert.deepEqual(parseCommand({ text, mentions: [{ index: text.indexOf("@"), length: 3, isSelf: true }] }), { kind: "idea", text: "想法\n第二行" });
+});
+
+test("待辦與行程標題仍是單行", () => {
+  assert.deepEqual(parseCommand({ text: "/買膠帶\n兩卷" }), { kind: "todo", title: "買膠帶 兩卷", assigneeUserIds: [] });
+  assert.deepEqual(parseCommand({ text: "/行程 10/12 開會\n帶電腦", today: "2026-10-03" }), { kind: "event", date: "2026-10-12", time: null, title: "開會 帶電腦" });
+});

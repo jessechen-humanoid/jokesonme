@@ -37,14 +37,18 @@ export const USAGE_TEXT = [
   "想知道誰要做什麼：tag 傑瓜",
 ].join("\n");
 
-/** 把 mention 的文字（例如「@柏文」）從原文挖掉，再整理空白。index/length 以原文的 UTF-16 位置計。 */
-function stripMentions(text: string, mentions: Mention[]): string {
+/**
+ * 把 mention 的文字（例如「@柏文」）從原文挖掉，再整理空白。index/length 以原文的 UTF-16 位置計。
+ * keepLines：靈感要保留換行（只整理每行內的空白）；待辦、行程標題壓成單行。
+ */
+function stripMentions(text: string, mentions: Mention[], keepLines = false): string {
   const sorted = [...mentions].sort((a, b) => b.index - a.index);
   let out = text;
   for (const m of sorted) {
     if (m.index < 0 || m.index + m.length > out.length) continue;
     out = out.slice(0, m.index) + out.slice(m.index + m.length);
   }
+  if (keepLines) return out.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/[ \t\u3000]+/g, " ").trim()).join("\n").trim();
   return out.replace(/\s+/g, " ").trim();
 }
 
@@ -101,7 +105,7 @@ export function parseCommand(input: CommandInput): Command {
   // `/` ＋ 類型詞：在挖掉 @ 的文字上判斷（tag 傑瓜不會混進標題）
   const plain = stripMentions(input.text, mentions).replace(/^\s*[/／]/, "").trim();
   if (afterKeyword(plain, "說明") === "") return { kind: "usage" };
-  const idea = afterKeyword(plain, "靈感");
+  const idea = afterKeyword(stripMentions(input.text, mentions, true).replace(/^\s*[/／]/, "").trim(), "靈感");
   if (idea !== null) {
     if (idea) return { kind: "idea", text: idea };
     return input.quotedMessageId ? { kind: "idea-from-quote", quotedMessageId: input.quotedMessageId } : { kind: "usage" };
