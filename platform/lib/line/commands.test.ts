@@ -111,3 +111,18 @@ test("待辦與行程標題仍是單行", () => {
   assert.deepEqual(parseCommand({ text: "/買膠帶\n兩卷" }), { kind: "todo", title: "買膠帶 兩卷", assigneeUserIds: [] });
   assert.deepEqual(parseCommand({ text: "/行程 10/12 開會\n帶電腦", today: "2026-10-03" }), { kind: "event", date: "2026-10-12", time: null, title: "開會 帶電腦" });
 });
+
+// speed-and-note-alias：/筆記、/note 等同 /靈感（spec Example: aliases）
+test("/筆記、/note（不分大小寫）存靈感；後面要接空白或結尾", () => {
+  for (const t of ["/筆記 讓觀眾投票", "/note 讓觀眾投票", "/NOTE 讓觀眾投票", "／Note 讓觀眾投票"]) assert.deepEqual(parseCommand({ text: t }), { kind: "idea", text: "讓觀眾投票" }, t);
+  assert.deepEqual(parseCommand({ text: "/notebook 要買" }), { kind: "todo", title: "notebook 要買", assigneeUserIds: [] });
+  assert.deepEqual(parseCommand({ text: "/筆記本要買" }), { kind: "todo", title: "筆記本要買", assigneeUserIds: [] });
+  assert.deepEqual(parseCommand({ text: "/note 第一行\n第二行" }), { kind: "idea", text: "第一行\n第二行" });
+  assert.deepEqual(parseCommand({ text: "/note", quotedMessageId: "Q9" }), { kind: "idea-from-quote", quotedMessageId: "Q9" });
+  assert.deepEqual(parseCommand({ text: "/筆記" }), { kind: "usage" });
+});
+
+test("小抄提到 /筆記 與 /note", async () => {
+  const { USAGE_TEXT } = await import("./commands.ts");
+  assert.ok(USAGE_TEXT.includes("/筆記") && USAGE_TEXT.includes("/note"));
+});

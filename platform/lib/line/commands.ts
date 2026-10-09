@@ -28,10 +28,13 @@ const IDEA_PREFIXES = ["#", "＃"];
 
 export const QUOTE_MISSING_TEXT = "找不到被回覆的那則訊息（可能是傑瓜加入群組前、或超過 14 天的訊息）。請改用「#內容」或「/內容」直接輸入。";
 
+/** 存靈感的類型詞：/靈感、/筆記、/note（英文不分大小寫） */
+const IDEA_KEYWORDS = ["靈感", "筆記", "note"];
+
 export const USAGE_TEXT = [
   "傑瓜小抄：開頭打 / 就好",
   "/內容 → 建待辦（加 @人 就是負責人）",
-  "/靈感 內容 → 存進靈感庫",
+  "/靈感 內容 → 存進靈感庫（/筆記、/note 也可以）",
   "/行程 10/12 19:00 內容 → 記到行事曆（時間可省略）",
   "/說明 → 再看一次這張小抄",
   "想知道誰要做什麼：tag 傑瓜",
@@ -54,7 +57,7 @@ function stripMentions(text: string, mentions: Mention[], keepLines = false): st
 
 /** 類型詞後面要接空白或結尾才算（`/靈感會議要訂場地` 仍是待辦）。回傳類型詞後的內容，不是就回 null。 */
 function afterKeyword(body: string, keyword: string): string | null {
-  if (!body.startsWith(keyword)) return null;
+  if (body.slice(0, keyword.length).toLowerCase() !== keyword.toLowerCase()) return null; // note／NOTE 都算
   const rest = body.slice(keyword.length);
   if (rest !== "" && !/^\s/.test(rest)) return null;
   return rest.trim();
@@ -105,7 +108,8 @@ export function parseCommand(input: CommandInput): Command {
   // `/` ＋ 類型詞：在挖掉 @ 的文字上判斷（tag 傑瓜不會混進標題）
   const plain = stripMentions(input.text, mentions).replace(/^\s*[/／]/, "").trim();
   if (afterKeyword(plain, "說明") === "") return { kind: "usage" };
-  const idea = afterKeyword(stripMentions(input.text, mentions, true).replace(/^\s*[/／]/, "").trim(), "靈感");
+  const ideaBody = stripMentions(input.text, mentions, true).replace(/^\s*[/／]/, "").trim();
+  const idea = IDEA_KEYWORDS.map((k) => afterKeyword(ideaBody, k)).find((r) => r !== null) ?? null;
   if (idea !== null) {
     if (idea) return { kind: "idea", text: idea };
     return input.quotedMessageId ? { kind: "idea-from-quote", quotedMessageId: input.quotedMessageId } : { kind: "usage" };

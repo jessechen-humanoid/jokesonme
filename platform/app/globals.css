@@ -282,3 +282,10 @@ section .card, .card .card { background: var(--surface-2); border: 1px solid var
 .rich code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-secondary); background: var(--ground-2); border-radius: 4px; padding: 1px 4px; }
 .rich a { color: var(--brand-deep); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
 .rich strong { font-weight: 700; }
+
+/* 換頁骨架（spec mobile-first-ui「Instant loading skeleton」） */
+.skeleton-head { min-height: 112px; }
+.sk { background: var(--ground-2); border-radius: 6px; animation: sk-pulse 1.2s ease-in-out infinite; }
+.sk-light { background: rgba(255,255,255,.28); }
+@keyframes sk-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }

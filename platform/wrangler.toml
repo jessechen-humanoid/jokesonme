@@ -6,10 +6,12 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 # account_id 不寫死，由環境變數 CLOUDFLARE_ACCOUNT_ID 提供。
 # 金鑰（SUPABASE_*、LINE_*、AUTH_SECRET、CRON_SECRET）一律 `wrangler secret put`，永遠不進這個檔。
 
-# 智慧放置：免費方案在台灣的請求常被送到美國機房，而資料庫在東京。
-# 讓 Worker 在靠近 Supabase 的地方執行，一頁多次查詢就不用每次跨洋（2026-10-03 實測 cf-ray 為 SJC）。
+# 指定在東京執行（speed-and-note-alias）：免費方案台灣請求會進美國機房，資料庫在東京。
+# smart 模式實測反而放到西雅圖（cf-placement: remote-SEA，因 supabase.co 也走 Cloudflare，判斷不出遠近）；
+# hostname 模式同理無效。改指定 AWS 東京後為 remote-NRT，2026-10-09 實測各頁中位數 0.52–0.68s → 0.31–0.37s。
 [placement]
-mode = "smart"
+mode = "targeted"
+region = "aws:ap-northeast-1"
 
 [assets]
 directory = ".open-next/assets"
