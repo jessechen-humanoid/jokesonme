@@ -22,4 +22,4 @@
 
 - [x] 4.1 對照改版前每頁顯示的資訊清單（見 design.md「資訊保留清單」），確認每一項改版後仍看得到；驗證：逐頁截圖對照清單人工核對（2026-10-22 已做；只拿掉演出文件）
 - [x] 4.2 `npm test`、`npm run typecheck`、`npm run lint`、`npm run cf:build` 全部退出碼 0；375px 與 1280px 逐頁截圖、`scrollWidth` 等於視窗寬
-- [ ] 4.3 截圖給 Jesse 看過、同意後部署；驗證：Jesse 確認 [after: 4.1, 4.2]
+- [x] 4.3 截圖給 Jesse 看過、同意後部署（2026-10-22 Jesse 同意，版本 8c6f3f4d）；驗證：Jesse 確認 [after: 4.1, 4.2]
