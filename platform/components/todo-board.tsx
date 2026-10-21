@@ -61,8 +61,8 @@ export default function TodoBoard(props: {
   initialShowId?: string | null;
   /** 演出頁有自己的＋選單，不顯示這裡的浮動按鈕 */
   showFab?: boolean;
-  /** 台北今天；用來決定哪一場是「最近的演出」而預設展開 */
-  today?: string;
+  /** 台北今天；用來決定哪一場是「最近的演出」而預設展開，也用來給截止日上色 */
+  today: string;
 }) {
   const [groups, patch] = useOptimistic(props.groups, applyPatch);
   const [, startTransition] = useTransition();
@@ -88,7 +88,7 @@ export default function TodoBoard(props: {
   // 只展開最近的一場（spec todo-board「Only the nearest show group is expanded」）：
   // 今天或之後最早的演出群組；沒有的話第一個群組。「沒有掛演出」恆展開，不受這個開關影響。
   const visibleGroups = groups.filter((g) => g.todos.some((t) => !!t.doneAt === props.showDone));
-  const today = props.today ?? "";
+  const today = props.today;
   const nearest = visibleGroups.find((g) => g.key !== "none" && g.performanceDate && g.performanceDate >= today) ?? visibleGroups.find((g) => g.key !== "none");
   const [open, setOpen] = useState<Set<string>>(() => new Set(nearest ? [nearest.key] : []));
   const toggleGroup = (key: string) =>

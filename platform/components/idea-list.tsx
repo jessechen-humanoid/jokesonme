@@ -161,6 +161,7 @@ function Composer({ picker, fixedShowId, onSave }: { picker: PickerData; fixedSh
     if (!t) return ref.current?.focus();
     onSave(t, showId);
     setText("");
+    if (ref.current) ref.current.style.height = "";
     if (!fixedShowId) setShowId(null);
   };
   return (
@@ -171,7 +172,12 @@ function Composer({ picker, fixedShowId, onSave }: { picker: PickerData; fixedSh
         placeholder="寫下筆記或靈感…（支援 Markdown）"
         value={text}
         maxLength={4000}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          // iPhone（LIFF）的 Safari 不支援 field-sizing，手動讓輸入框跟著內容長高
+          e.currentTarget.style.height = "auto";
+          e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+        }}
         onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(); } }}
       />
       <div className="composer-bar">

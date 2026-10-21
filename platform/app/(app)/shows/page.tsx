@@ -38,7 +38,8 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
             <div className="hero-stats">
               <div><b>{formatMonthDay(next.performanceDate!)}</b><span>演出日</span></div>
               <div><b>{daysBetween(today, next.performanceDate!)} 天</b><span>倒數</span></div>
-              <div><b>{noteCount(next.id)}／{openCount(next.id)}</b><span>筆記／待辦</span></div>
+              <div><b>{noteCount(next.id)} 則</b><span>筆記</span></div>
+              <div><b>{openCount(next.id)} 件</b><span>未完成待辦</span></div>
             </div>
           </Link>
         ) : (
