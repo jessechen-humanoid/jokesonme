@@ -36,10 +36,10 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/fin
         </div>
         {show ? (
           <>
-            <div className="grid-stats" style={{ marginBottom: 12 }}>
+            <div className="grid-stats">
               <div className="card"><small>收入</small><span className="amount pos">{money(income)}</span></div>
               <div className="card"><small>支出</small><span className="amount neg">{money(expense)}</span></div>
-              <div className="card"><small>淨利</small><span className={`amount ${income + expense >= 0 ? "pos" : "neg"}`}>{money(income + expense)}</span></div>
+              <div className="card wide"><small>淨利</small><span className={`amount ${income + expense >= 0 ? "pos" : "neg"}`}>{money(income + expense)}</span></div>
             </div>
             <TxBoard
               key={showId}

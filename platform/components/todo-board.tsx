@@ -4,8 +4,9 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { claimTodo, createTodo, deleteTodo, toggleDone, updateTodo } from "@/app/(app)/todos/actions";
 import Link from "next/link";
-import { formatDueLabel, formatMonthDay, formatTaipeiDateTime } from "@/lib/dates";
+import { dueUrgency, formatDueLabel, formatMonthDay, formatTaipeiDateTime } from "@/lib/dates";
 import ShowPicker, { type PickerData } from "@/components/show-picker";
+import { IconChevron, IconPlus } from "@/components/icons";
 
 export type BoardTodo = {
   id: string;
@@ -113,7 +114,7 @@ export default function TodoBoard(props: {
               <section key={g.key} className="collapsed">
                 <button type="button" className="section group-toggle" aria-expanded={false} onClick={() => toggleGroup(g.key)}>
                   <b>{g.title}</b>
-                  <span>{g.performanceDate ? `${formatMonthDay(g.performanceDate)}・` : ""}{visible.length} 件 ▸</span>
+                  <span>{g.performanceDate ? `${formatMonthDay(g.performanceDate)}・` : ""}{visible.length} 件<IconChevron className="chev" /></span>
                 </button>
               </section>
             );
@@ -125,7 +126,7 @@ export default function TodoBoard(props: {
                 <span>
                   {g.performanceDate ? `${formatMonthDay(g.performanceDate)}演出` : `${visible.length} 件`}
                   {g.key !== "none" && groups.length > 1 ? (
-                    <button type="button" className="group-collapse" aria-expanded={true} aria-label={`收合 ${g.title}`} onClick={() => toggleGroup(g.key)}>▾</button>
+                    <button type="button" className="group-collapse" aria-expanded={true} aria-label={`收合 ${g.title}`} onClick={() => toggleGroup(g.key)}><IconChevron className="chev" /></button>
                   ) : null}
                 </span>
               </div>
@@ -144,7 +145,7 @@ export default function TodoBoard(props: {
                     <button className="row-main" type="button" onClick={() => setSelected(t.id)} style={{ background: "none", border: 0, padding: 0, textAlign: "left", cursor: "pointer" }}>
                       <div className="title">{t.title}</div>
                       <div className="meta">
-                        {t.dueDate ? <span className="due">{formatDueLabel(t.dueDate)}</span> : null}
+                        {t.dueDate ? <span className={`due ${dueUrgency(t.dueDate, today, done)}`}>{formatDueLabel(t.dueDate)}</span> : null}
                         {t.assignees.length ? t.assignees.map((u) => <span key={u} className="tag">{name(u)}</span>) : <span className="tag free">未認領</span>}
                         <span>{SOURCE_LABEL[t.source]}</span>
                         {done && t.doneBy ? <span>{name(t.doneBy)} 完成</span> : null}
@@ -158,7 +159,7 @@ export default function TodoBoard(props: {
         })
       )}
 
-      {props.showFab !== false ? <button className="fab" type="button" aria-label="新增待辦" onClick={() => setSelected("new")}>+</button> : null}
+      {props.showFab !== false ? <button className="fab" type="button" aria-label="新增待辦" onClick={() => setSelected("new")}><IconPlus /></button> : null}
 
       {selected ? (
         <Sheet

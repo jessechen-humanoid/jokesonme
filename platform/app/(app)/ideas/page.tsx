@@ -4,13 +4,14 @@ import { listIdeas } from "@/lib/ideas";
 import { listPerformances, pickableShows, toPickerData } from "@/lib/shows";
 import { listUsers, nameMap } from "@/lib/todos";
 import { todayInTaipei } from "@/lib/dates";
-import Avatar from "@/components/avatar";
+import { displayName } from "@/lib/auth/users";
+import TopBar from "@/components/top-bar";
 import IdeaList, { type IdeaListMode } from "@/components/idea-list";
 
-// 靈感分頁（spec idea-library「Idea library page」）：還沒歸位／全部／已封存。
+// 筆記分頁（spec idea-library「Idea library page」；資料表與路徑仍叫 ideas）：全部（預設）／未分演出／已封存。
 export default async function IdeasPage({ searchParams }: PageProps<"/ideas">) {
   const sp = await searchParams;
-  const mode: IdeaListMode = sp.v === "all" ? "all" : sp.v === "archived" ? "archived" : "inbox";
+  const mode: IdeaListMode = sp.v === "inbox" ? "inbox" : sp.v === "archived" ? "archived" : "all";
   const me = await requirePage("ideas", "/ideas");
   const actor = `user:${me.id}` as const;
   const [active, archived, shows, users] = await Promise.all([
@@ -23,21 +24,18 @@ export default async function IdeasPage({ searchParams }: PageProps<"/ideas">) {
   const showNames = new Map(shows.map((s) => [s.id, s.name]));
   const inbox = active.filter((i) => !i.showId);
   const list = mode === "inbox" ? inbox : mode === "all" ? active : archived;
-  const tab = (v: IdeaListMode, label: string) => (
-    <Link className={`chip ${mode === v ? "on" : ""}`} href={v === "inbox" ? "/ideas" : `/ideas?v=${v}`}>{label}</Link>
+  const tab = (v: IdeaListMode, label: React.ReactNode) => (
+    <Link className={mode === v ? "on" : ""} href={v === "all" ? "/ideas" : `/ideas?v=${v}`}>{label}</Link>
   );
 
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <h1 className="page-title">靈感</h1>
-        <div className="chips" style={{ marginBottom: 0, marginTop: 10 }}>
-          {tab("inbox", `還沒歸位 ${inbox.length}`)}
-          {tab("all", `全部 ${active.length}`)}
-          {tab("archived", "已封存")}
-        </div>
-      </header>
+      <TopBar me={me} title="筆記" />
+      <nav className="seg-tabs" aria-label="篩選筆記">
+        {tab("all", <>全部 <span className="count">{active.length}</span></>)}
+        {tab("inbox", <>未分演出 <span className="count">{inbox.length}</span></>)}
+        {tab("archived", "已封存")}
+      </nav>
       <div className="content">
         <IdeaList
           key={mode}
@@ -48,10 +46,11 @@ export default async function IdeasPage({ searchParams }: PageProps<"/ideas">) {
           picker={toPickerData(pickableShows(shows, todayInTaipei()))}
           mode={mode}
           contextShowId={null}
+          composer={mode !== "archived"}
+          me={displayName(me)}
           emptyText={
-            mode === "inbox" ? <>都歸位了。<br />在群組打「#內容」，靈感會先存到這裡。</> : mode === "all" ? "還沒有靈感" : "沒有封存的靈感"
+            mode === "archived" ? "沒有封存的筆記" : <>還沒有筆記。<br />在上面直接寫，或在群組打「/筆記 內容」。</>
           }
-          allowCreate={mode !== "archived"}
         />
       </div>
     </main>

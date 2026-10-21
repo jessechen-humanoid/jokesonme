@@ -1,4 +1,6 @@
 import Link from "next/link";
+import TopBar from "@/components/top-bar";
+import { IconChevron } from "@/components/icons";
 import { getCurrentUser } from "@/lib/auth/current";
 import { displayName } from "@/lib/auth/users";
 import { redirect } from "next/navigation";
@@ -10,16 +12,14 @@ export default async function MePage() {
   if (!me || me.status !== "approved" || !me.role) redirect("/login");
   return (
     <main className="page">
-      <header className="head">
-        <div className="brand" style={{ marginBottom: 12 }}>看我笑話</div>
-        <h1 className="page-title">{displayName(me)}</h1>
-        <p className="page-sub">{ROLE_LABEL[me.role]}・LINE：{me.display_name}</p>
-      </header>
+      <TopBar me={me} title={displayName(me)} sub={<>{ROLE_LABEL[me.role]}・LINE：{me.display_name}</>} />
       <div className="content">
         {me.role === "admin" ? (
           <>
-            <Link className="card" style={{ display: "block" }} href="/admin/users"><div className="title">登入核准</div></Link>
-            <Link className="card" style={{ display: "block" }} href="/admin/template"><div className="title">月號模板</div></Link>
+            <section>
+              <Link className="card link-row" href="/admin/users"><span className="row-main">登入核准</span><IconChevron className="chev" /></Link>
+              <Link className="card link-row" href="/admin/template"><span className="row-main">月號模板</span><IconChevron className="chev" /></Link>
+            </section>
           </>
         ) : null}
         <form action="/api/auth/logout" method="post">

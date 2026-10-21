@@ -45,3 +45,13 @@ export function formatTaipeiStamp(isoTimestamp: string): string {
   const time = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
   return `${formatMonthDay(todayInTaipei(d))} ${time}`;
 }
+
+export type DueUrgency = "overdue" | "soon" | "later" | "none";
+
+/** 截止日急迫度（spec todo-board「Due date urgency colouring」；待辦清單在瀏覽器端用，所以放這裡不放 todos.ts）：過期／今天到三天內／之後；已完成或沒截止日不上色。日期都是 YYYY-MM-DD（台北）。 */
+export function dueUrgency(dueDate: string | null, today: string, done: boolean): DueUrgency {
+  if (!dueDate || done) return "none";
+  if (dueDate < today) return "overdue";
+  const soonLimit = new Date(Date.parse(`${today}T00:00:00Z`) + 3 * 86400000).toISOString().slice(0, 10);
+  return dueDate <= soonLimit ? "soon" : "later";
+}

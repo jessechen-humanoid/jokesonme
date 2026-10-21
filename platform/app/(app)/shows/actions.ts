@@ -55,23 +55,3 @@ export async function updateShow(fd: FormData): Promise<{ ok: boolean; error?: s
   revalidatePath("/todos");
   return { ok: true };
 }
-
-/** 文件連結（rundown／簡報／問卷）：空白 = 移除。 */
-export async function saveShowLink(fd: FormData): Promise<{ ok: boolean; error?: string }> {
-  const me = await requireAction("planning");
-  const showId = String(fd.get("show_id") ?? "");
-  const kind = String(fd.get("kind") ?? "");
-  const url = String(fd.get("url") ?? "").trim();
-  if (!["rundown", "presentation", "survey"].includes(kind)) return { ok: false, error: "類型不正確" };
-  const client = db(`user:${me.id}`);
-  if (!url) {
-    const { error } = await client.from("show_links").delete().eq("show_id", showId).eq("kind", kind);
-    if (error) return { ok: false, error: "移除失敗" };
-  } else {
-    if (!/^https?:\/\//.test(url)) return { ok: false, error: "連結要以 https:// 開頭" };
-    const { error } = await client.from("show_links").upsert({ show_id: showId, kind, url }, { onConflict: "show_id,kind" });
-    if (error) return { ok: false, error: "儲存失敗，請再試一次" };
-  }
-  revalidatePath(`/shows/${showId}`);
-  return { ok: true };
-}

@@ -1,7 +1,7 @@
 import { requirePage } from "@/lib/auth/current";
 import { listTemplateItems } from "@/lib/templates";
 import { MEMBER_NAMES } from "@/lib/members";
-import Avatar from "@/components/avatar";
+import TopBar from "@/components/top-bar";
 import { deleteTemplateItem, saveTemplateItem } from "./actions";
 
 const when = (d: number) => (d < 0 ? `演出前 ${-d} 天` : d > 0 ? `演出後 ${d} 天` : "演出當天");
@@ -11,10 +11,7 @@ export default async function TemplatePage() {
   const items = await listTemplateItems(`user:${me.id}`, "monthly");
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <h1 className="page-title">月號模板</h1>
-      </header>
+      <TopBar me={me} title="月號模板" back={{ href: "/me", label: "帳號" }} />
       <div className="content">
         <div className="notice">建立月號（有演出日）時會照這份清單產生待辦，截止日 = 演出日 ± 天數。改模板不影響已經建立的待辦。</div>
         {items.map((i) => (

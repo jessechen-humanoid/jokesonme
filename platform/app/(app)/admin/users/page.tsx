@@ -2,7 +2,7 @@ import { requirePage } from "@/lib/auth/current";
 import { listUsers } from "@/lib/todos";
 import { MEMBER_NAMES } from "@/lib/members";
 import { displayName, type UserRow } from "@/lib/auth/users";
-import Avatar from "@/components/avatar";
+import TopBar from "@/components/top-bar";
 import { approveUser, revokeUser } from "./actions";
 
 const ROLE_LABEL = { admin: "管理員", member: "成員", finance_partner: "財務夥伴" } as const;
@@ -16,14 +16,7 @@ export default async function AdminUsersPage() {
 
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top">
-          <div className="brand">看我笑話</div>
-          <Avatar user={me} />
-        </div>
-        <h1 className="page-title">登入核准</h1>
-        <p className="page-sub">等待核准 {pending.length} 人・已核准 {approved.length} 人</p>
-      </header>
+      <TopBar me={me} title="登入核准" back={{ href: "/me", label: "帳號" }} sub={<>等待核准 {pending.length} 人・已核准 {approved.length} 人</>} />
       <div className="content">
         <div className="section"><b>等待核准</b><span>{pending.length} 人</span></div>
         {pending.length === 0 ? <p className="empty">沒有等待核准的人</p> : pending.map((u) => <ApproveCard key={u.id} u={u} />)}
@@ -61,8 +54,8 @@ function UserLine({ u }: { u: UserRow }) {
   return (
     <div className="title">
       {displayName(u)}
-      {u.member_name && u.member_name !== u.display_name ? <span style={{ color: "var(--ink-3)", fontSize: "var(--fs-secondary)" }}>（LINE：{u.display_name}）</span> : null}
-      {!u.last_login_at ? <span style={{ color: "var(--ink-3)", fontSize: "var(--fs-secondary)" }}>・尚未登入過，從群組自動建立</span> : null}
+      {u.member_name && u.member_name !== u.display_name ? <span style={{ color: "var(--ink-2)", fontSize: "var(--fs-secondary)" }}>（LINE：{u.display_name}）</span> : null}
+      {!u.last_login_at ? <span style={{ color: "var(--ink-2)", fontSize: "var(--fs-secondary)" }}>・尚未登入過，從群組自動建立</span> : null}
     </div>
   );
 }

@@ -6,7 +6,8 @@ import { buildDays, monthGrid, shiftMonth, type DayItem } from "@/lib/calendar/d
 import { listEvents } from "@/lib/events";
 import { listTodos } from "@/lib/todos";
 import { formatMonthDay, formatTaipeiStamp, todayInTaipei } from "@/lib/dates";
-import Avatar from "@/components/avatar";
+import TopBar from "@/components/top-bar";
+import { IconChevron, IconChevronLeft, IconPlus } from "@/components/icons";
 import { removeEvent, saveEvent } from "./actions";
 
 const KIND_LABEL = { show: "演出", event: "行程", todo: "待辦" } as const;
@@ -36,18 +37,15 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
 
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <h1 className="page-title">行事曆</h1>
-      </header>
-      <div className="content">
-        {feed.status === "stale" ? <div className="notice">演出資料停在 {formatTaipeiStamp(feed.fetchedAt)}</div> : null}
-        {feed.status === "missing" ? <div className="notice">演出資料讀不到，目前只顯示內部行程與待辦。</div> : null}
+      <TopBar me={me} title="行事曆" />
+      <div className="content cal-split">
         <section>
+          {feed.status === "stale" ? <div className="notice">演出資料停在 {formatTaipeiStamp(feed.fetchedAt)}</div> : null}
+          {feed.status === "missing" ? <div className="notice">演出資料讀不到，目前只顯示內部行程與待辦。</div> : null}
           <div className="cal-nav">
-            <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label="上個月">‹</Link>
+            <Link href={`/calendar?m=${shiftMonth(month, -1)}`} aria-label="上個月"><IconChevronLeft /></Link>
             <b>{y} 年 {m} 月</b>
-            <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label="下個月">›</Link>
+            <Link href={`/calendar?m=${shiftMonth(month, 1)}`} aria-label="下個月"><IconChevron /></Link>
           </div>
           <div className="cal-grid" role="grid">
             {WEEK.map((w) => <div key={w} className="cal-wd">{w}</div>)}
@@ -70,11 +68,11 @@ export default async function CalendarPage({ searchParams }: PageProps<"/calenda
           <div className="cal-legend"><span><i className="show" />演出</span><span><i className="event" />內部行程</span><span><i className="todo" />待辦截止</span></div>
         </section>
         <section>
-          <div className="section"><b>{formatMonthDay(picked)}</b><span>{dayItems.length ? `${dayItems.length} 項` : ""}</span></div>
+          <div className="section"><h2>{formatMonthDay(picked)}</h2><span>{dayItems.length ? `${dayItems.length} 項` : ""}</span></div>
           {dayItems.length ? dayItems.map((i, n) => <DayRow key={n} item={i} editHref={i.kind === "event" ? href({ edit: i.id! }) : undefined} />) : <p className="empty">這天沒有安排</p>}
         </section>
       </div>
-      <Link className="fab" href={href({ new: "1" })} aria-label="新增內部行程">+</Link>
+      <Link className="fab" href={href({ new: "1" })} aria-label="新增內部行程"><IconPlus /></Link>
 
       {sheetOpen ? (
         <div className="sheet-backdrop">

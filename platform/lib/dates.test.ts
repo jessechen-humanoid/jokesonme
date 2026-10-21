@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { addDays, formatDueLabel, formatMonthDay, formatTaipeiDateTime, todayInTaipei } from "./dates.ts";
+import { addDays, dueUrgency, formatDueLabel, formatMonthDay, formatTaipeiDateTime, todayInTaipei } from "./dates.ts";
 
 test("formatMonthDay：spec 範例表", () => {
   assert.equal(formatMonthDay("2026-10-21"), "10/21（三）");
@@ -35,4 +35,14 @@ test("addDays 跨月", () => {
 test("訊息時間用台北日期：UTC 10/3 18:30 是台北 10/4 凌晨", () => {
   assert.match(formatTaipeiDateTime("2026-10-03T18:30:00Z"), /^10\/4（日） /);
   assert.match(formatTaipeiDateTime("2026-10-03T02:25:00Z"), /^10\/3（六） /);
+});
+
+test("截止日急迫度：過期、今天到三天內、之後、已完成不上色", () => {
+  assert.equal(dueUrgency("2026-10-20", "2026-10-22", false), "overdue");
+  assert.equal(dueUrgency("2026-10-22", "2026-10-22", false), "soon");
+  assert.equal(dueUrgency("2026-10-25", "2026-10-22", false), "soon");
+  assert.equal(dueUrgency("2026-10-26", "2026-10-22", false), "later");
+  assert.equal(dueUrgency("2026-11-01", "2026-10-30", false), "soon"); // 跨月
+  assert.equal(dueUrgency("2026-10-20", "2026-10-22", true), "none");
+  assert.equal(dueUrgency(null, "2026-10-22", false), "none");
 });

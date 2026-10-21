@@ -44,10 +44,10 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/financ
         <div className="grid-stats">
           <div className="card"><small>年度總收入</small><span className="amount pos">{money(sum.totalIncome)}</span></div>
           <div className="card"><small>年度總支出</small><span className="amount neg">{money(sum.totalExpense)}</span></div>
-          <div className="card"><small>年度淨利</small><span className={`amount ${cls(sum.netProfit)}`}>{money(sum.netProfit)}</span></div>
+          <div className="card wide"><small>年度淨利</small><span className={`amount ${cls(sum.netProfit)}`}>{money(sum.netProfit)}</span></div>
         </div>
 
-        <div className="section"><b>看我笑話共同基金</b></div>
+        <div className="section"><h2>看我笑話共同基金</h2></div>
         <div className="grid-stats">
           <div className="card"><small>共同收入</small><span className="amount pos">{money(fund.commonIncome)}</span></div>
           <div className="card"><small>共同支出</small><span className="amount neg">{money(fund.commonExpense)}</span></div>
@@ -57,8 +57,22 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/financ
           <div className="card"><small>基金餘額</small><span className={`amount ${cls(fund.fundBalance)}`}>{money(fund.fundBalance)}</span></div>
         </div>
 
-        <div className="section"><b>成員年度報表</b><span>左右滑動看全部欄位</span></div>
-        <div className="table-wrap">
+        <div className="section"><h2>成員年度報表</h2></div>
+        <div className="member-cards mobile-only">
+          {members.map((m) => (
+            <div key={m.name} className="member-card">
+              <header><b>{m.name}</b></header>
+              <dl>
+                <dt>已收款淨利</dt><dd>{money(m.settled)}</dd>
+                <dt>未收款淨利</dt><dd className={cls(m.unsettledNet)}>{money(m.unsettledNet)}</dd>
+                <dt>代墊未結清</dt><dd className={m.advanceUnsettled !== 0 ? "neg" : ""} title={m.advanceUnsettled < 0 ? "超還：代墊已結清大於代墊總額" : undefined}>{plain(m.advanceUnsettled)}</dd>
+                <dt>代墊已結清</dt><dd>{plain(m.advanceCleared)}</dd>
+                <dt>年度分配淨利</dt><dd className={cls(m.annualNet)}>{money(m.annualNet)}</dd>
+              </dl>
+            </div>
+          ))}
+        </div>
+        <div className="table-wrap desk-only">
           <table className="table">
             <thead>
               <tr><th>成員</th><th>已收款淨利</th><th>未收款淨利</th><th>代墊未結清</th><th>代墊已結清</th><th>年度分配淨利</th></tr>
@@ -82,7 +96,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/financ
         <Shares title="收入佔比" items={categoryShares(txs, "income")} kind="pos" />
         <Shares title="支出佔比" items={categoryShares(txs, "expense")} kind="neg" />
 
-        <div className="section" id="pnl"><b>各專案損益</b><span>點欄位名稱排序</span></div>
+        <div className="section" id="pnl"><h2>各專案損益</h2><span>點欄位名稱排序</span></div>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -113,21 +127,17 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/financ
 
 function Shares({ title, items, kind }: { title: string; items: CategoryShare[]; kind: "pos" | "neg" }) {
   return (
-    <>
-      <div className="section"><b>{title}</b></div>
-      <div className="card">
-        {items.length === 0 ? <p className="empty" style={{ padding: 8 }}>尚無{kind === "pos" ? "收入" : "支出"}紀錄</p> : items.map((c) => (
-          <div key={c.name} style={{ marginBottom: 10 }}>
-            <div className="row" style={{ justifyContent: "space-between", fontSize: "var(--fs-body)" }}>
-              <span>{c.name}</span>
-              <span style={{ color: "var(--text-secondary)" }}>${c.amount.toLocaleString()}（{c.pct.toFixed(1)}%）</span>
-            </div>
-            <div style={{ height: 8, background: "var(--surface-2)", borderRadius: 4, marginTop: 4 }}>
-              <div style={{ width: `${c.pct}%`, height: 8, borderRadius: 4, background: kind === "pos" ? "var(--success)" : "var(--danger-fin)" }} />
-            </div>
+    <section>
+      <div className="section"><h2>{title}</h2></div>
+      {items.length === 0 ? <p className="empty" style={{ padding: 8 }}>尚無{kind === "pos" ? "收入" : "支出"}紀錄</p> : items.map((c) => (
+        <div key={c.name} className="share-row">
+          <div className="share-head">
+            <span>{c.name}</span>
+            <span>${c.amount.toLocaleString()}（{c.pct.toFixed(1)}%）</span>
           </div>
-        ))}
-      </div>
-    </>
+          <div className="bar"><i style={{ width: `${c.pct}%`, background: kind === "pos" ? "var(--success)" : "var(--danger-fin)" }} /></div>
+        </div>
+      ))}
+    </section>
   );
 }

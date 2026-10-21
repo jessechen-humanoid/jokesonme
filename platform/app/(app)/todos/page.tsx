@@ -4,7 +4,9 @@ import { applyFilter, assignableUsers, groupByShow, listTodos, listUsers, nameMa
 import { daysBetween, listPerformances, pickableShows, toPickerData } from "@/lib/shows";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
 import { displayName } from "@/lib/auth/users";
-import Avatar from "@/components/avatar";
+import TopBar from "@/components/top-bar";
+import { IconChevron } from "@/components/icons";
+import DateBadge from "@/components/date-badge";
 import TodoBoard from "@/components/todo-board";
 
 function q(params: Record<string, string | undefined>): string {
@@ -37,26 +39,28 @@ export default async function TodosPage({ searchParams }: PageProps<"/todos">) {
 
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top">
-          <div className="brand">看我笑話</div>
-          <Avatar user={me} />
-        </div>
-        <h1 className="page-title">待辦</h1>
-        <div className="chips" style={{ marginTop: 10 }}>
-          <Link className={`chip ${filter === "mine" ? "on" : ""}`} href={q({ done: doneParam })}>我的 {counts.mine}</Link>
-          <Link className={`chip ${filter === "all" ? "on" : ""}`} href={q({ f: "all", done: doneParam })}>全部 {counts.all}</Link>
-          <Link className={`chip ${filter === "unclaimed" ? "on" : ""}`} href={q({ f: "unclaimed", done: doneParam })}>未認領 {counts.unclaimed}</Link>
-        </div>
-        {next ? (
-          <Link className="next-line" href={`/shows/${next.id}`}>
-            <span>下一場・還有 {daysBetween(today, next.performanceDate!)} 天</span>
-            <b>{next.name}・{formatMonthDay(next.performanceDate!)} ›</b>
-          </Link>
-        ) : (
-          <Link className="next-line" href="/shows"><span>還沒排下一場演出</span><b>到演出補日期 ›</b></Link>
-        )}
-      </header>
+      <TopBar me={me} title="待辦" />
+      <nav className="seg-tabs" aria-label="篩選待辦">
+        <Link className={filter === "mine" ? "on" : ""} href={q({ done: doneParam })}>我的 <span className="count">{counts.mine}</span></Link>
+        <Link className={filter === "all" ? "on" : ""} href={q({ f: "all", done: doneParam })}>全部 <span className="count">{counts.all}</span></Link>
+        <Link className={filter === "unclaimed" ? "on" : ""} href={q({ f: "unclaimed", done: doneParam })}>未認領 <span className="count">{counts.unclaimed}</span></Link>
+      </nav>
+      {next ? (
+        <Link className="next-row" href={`/shows/${next.id}`}>
+          <DateBadge date={next.performanceDate} />
+          <span className="row-main">
+            <small>下一場・還有 {daysBetween(today, next.performanceDate!)} 天</small>
+            <b>{next.name}</b>
+            <span className="meta" style={{ marginTop: 0 }}>{formatMonthDay(next.performanceDate!)}</span>
+          </span>
+          <IconChevron className="chev" />
+        </Link>
+      ) : (
+        <Link className="next-row" href="/shows">
+          <span className="row-main"><small>還沒排下一場演出</small><b>到演出補日期</b></span>
+          <IconChevron className="chev" />
+        </Link>
+      )}
 
       <div className="content">
         {showDone ? <div className="notice">正在看已完成的待辦</div> : null}

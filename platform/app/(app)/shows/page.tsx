@@ -3,7 +3,10 @@ import { requirePage } from "@/lib/auth/current";
 import { daysBetween, listPerformances, pickableShows, SHOW_TYPE_LABEL, type Show } from "@/lib/shows";
 import { listTodos } from "@/lib/todos";
 import { formatMonthDay, todayInTaipei } from "@/lib/dates";
-import Avatar from "@/components/avatar";
+import TopBar from "@/components/top-bar";
+import DateBadge from "@/components/date-badge";
+import { IconChevron, IconPlus } from "@/components/icons";
+import { listIdeas } from "@/lib/ideas";
 import { createShow } from "./actions";
 
 const ERRORS: Record<string, string> = {
@@ -18,45 +21,43 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   const sp = await searchParams;
   const me = await requirePage("planning", "/shows");
   const today = todayInTaipei();
-  const [shows, todos] = await Promise.all([listPerformances(`user:${me.id}`), listTodos(`user:${me.id}`)]);
+  const [shows, todos, ideas] = await Promise.all([listPerformances(`user:${me.id}`), listTodos(`user:${me.id}`), listIdeas(`user:${me.id}`, {})]);
   const { next, upcoming, more } = pickableShows(shows, today);
   const openCount = (id: string) => todos.filter((t) => t.show?.id === id && !t.doneAt).length;
+  const noteCount = (id: string) => ideas.filter((i) => i.showId === id).length;
   const err = typeof sp.err === "string" ? ERRORS[sp.err] : undefined;
 
   return (
     <main className="page">
-      <header className="head">
-        <div className="head-top"><div className="brand">看我笑話</div><Avatar user={me} /></div>
-        <h1 className="page-title">演出</h1>
-      </header>
+      <TopBar me={me} title="演出" />
       <div className="content">
         {next ? (
-          <Link href={`/shows/${next.id}`} className="card next-card">
-            <small>下一場・還有 {daysBetween(today, next.performanceDate!)} 天</small>
-            <div className="next-card-title">{next.name}</div>
-            <div className="meta">
-              <span className="due">{formatMonthDay(next.performanceDate!)}</span>
-              <span className="tag">{SHOW_TYPE_LABEL[next.type]}</span>
-              <span>未完成待辦 {openCount(next.id)} 件</span>
+          <Link href={`/shows/${next.id}`} className="hero">
+            <div className="hero-top"><span>下一場・{SHOW_TYPE_LABEL[next.type]}</span><IconChevron className="chev" /></div>
+            <div className="hero-title">{next.name}</div>
+            <div className="hero-stats">
+              <div><b>{formatMonthDay(next.performanceDate!)}</b><span>演出日</span></div>
+              <div><b>{daysBetween(today, next.performanceDate!)} 天</b><span>倒數</span></div>
+              <div><b>{noteCount(next.id)}／{openCount(next.id)}</b><span>筆記／待辦</span></div>
             </div>
           </Link>
         ) : (
-          <p className="empty">還沒有排日期的演出。點下面的演出、按「編輯演出資訊」填日期，或按右下角 ＋ 新增。</p>
+          <p className="empty">還沒有排日期的演出。點下面的演出、按右上角的編輯填日期，或按右下角 ＋ 新增。</p>
         )}
         {upcoming.length > 1 ? (
           <section>
-            <div className="section"><b>之後</b><span>{upcoming.length - 1} 場</span></div>
-            {upcoming.slice(1).map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} />)}
+            <div className="section"><h2>之後</h2><span>{upcoming.length - 1} 場</span></div>
+            {upcoming.slice(1).map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} notes={noteCount(s.id)} />)}
           </section>
         ) : null}
         {more.length ? (
           <details className="more-shows">
             <summary>已演出／其他（{more.length}）</summary>
-            {more.map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} />)}
+            {more.map((s) => <ShowRow key={s.id} s={s} open={openCount(s.id)} notes={noteCount(s.id)} />)}
           </details>
         ) : null}
       </div>
-      <Link className="fab" href="/shows?new=1" aria-label="新增演出">+</Link>
+      <Link className="fab" href="/shows?new=1" aria-label="新增演出"><IconPlus /></Link>
 
       {sp.new === "1" ? (
         <div className="sheet-backdrop">
@@ -87,15 +88,20 @@ export default async function ShowsPage({ searchParams }: PageProps<"/shows">) {
   );
 }
 
-function ShowRow({ s, open }: { s: Show; open: number }) {
+function ShowRow({ s, open, notes }: { s: Show; open: number; notes: number }) {
   return (
     <Link href={`/shows/${s.id}`} className="card show-row">
-      <span className="show-row-name">{s.name}</span>
-      <span className="show-row-meta">
-        {s.performanceDate ? formatMonthDay(s.performanceDate) : "沒有日期"}
-        {s.status === "archived" ? "・已歸檔" : ""}
-        {open ? `・${open} 件` : ""}
+      <DateBadge date={s.performanceDate} />
+      <span className="show-row-main">
+        <span className="show-row-name">{s.name}</span>
+        <span className="meta">
+          {s.performanceDate ? <span>{formatMonthDay(s.performanceDate)}</span> : null}
+          <span>筆記 {notes}</span>
+          <span>待辦 {open}</span>
+          {s.status === "archived" ? <span className="tag">已歸檔</span> : null}
+        </span>
       </span>
+      <IconChevron className="chev" />
     </Link>
   );
 }
