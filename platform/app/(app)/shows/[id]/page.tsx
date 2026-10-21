@@ -39,10 +39,9 @@ export default async function ShowPlanningPage({ params, searchParams }: PagePro
         back={{ href: "/shows", label: "演出" }}
         sub={
           <>
-            <span className="tag">{SHOW_TYPE_LABEL[show.type]}</span>
-            <span>{date ? `${formatMonthDay(date)}演出` : "還沒填演出日期"}</span>
+            <span>{SHOW_TYPE_LABEL[show.type]}・{date ? `${formatMonthDay(date)}演出` : "還沒填演出日期"}</span>
             {days !== null && days >= 0 && show.status !== "archived" ? <span className="due soon">{days === 0 ? "就是今天" : `還有 ${days} 天`}</span> : null}
-            {show.status === "archived" ? <span className="tag">已歸檔</span> : null}
+            {show.status === "archived" ? <span>・已歸檔</span> : null}
           </>
         }
         actions={<ShowInfoButton show={{ id: show.id, name: show.name, type: show.type, performanceDate: show.performance_date, status: show.status }} />}

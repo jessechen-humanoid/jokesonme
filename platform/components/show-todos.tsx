@@ -13,6 +13,14 @@ export default function ShowTodos({ open: openCount, total, nextDue, today, newH
   const done = total - openCount;
   return (
     <div className="show-todos">
+      {/* 電腦版：跟左欄「筆記」同一種標題列，兩欄頂端對齊；手機用下面的摘要卡 */}
+      <div className="section desk-only">
+        <h2>待辦</h2>
+        <span>
+          未完成 {openCount} 件{total ? `・已完成 ${done}／${total}` : ""}
+          {nextDue ? <span className={`due ${dueUrgency(nextDue, today, false)}`}>最近截止 {formatMonthDay(nextDue)}</span> : null}
+        </span>
+      </div>
       <button type="button" className="summary-card" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         <span className="row-main">
           <b>待辦</b>

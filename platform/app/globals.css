@@ -70,7 +70,7 @@ button { cursor: pointer; }
 /* 內容：白色區塊；區塊內的列用分隔線，不再一層卡片包一層卡片 */
 .content { display: flex; flex-direction: column; }
 .content > section, .panel, .show-todos-body > section { background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 12px; }
-.section { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 4px 10px; min-height: 28px; }
+.section { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 10px; min-height: 32px; }
 .content > section .section, .panel .section { margin: 0 0 8px; }
 .section b, .section h2 { font-size: var(--fs-title); font-weight: 700; }
 .section > span { font-size: var(--fs-secondary); color: var(--ink-2); flex: none; display: inline-flex; align-items: center; gap: 6px; }
@@ -400,7 +400,6 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .show-todos-body.open { display: block; }
 @media (min-width: 900px) {
   .show-todos-body { display: block; }
-  .show-todos .summary-card { cursor: default; }
-  .show-todos .summary-card .chev { display: none; }
+  .show-todos .summary-card { display: none; }
 }
 .show-todos-body section > .section:first-child { display: none; } /* 演出頁只有這場一組，不用再顯示群組標題 */
