@@ -28,6 +28,49 @@ export async function listTransactions(actor: Actor, showId?: string): Promise<T
   return (data ?? []).map(toTx);
 }
 
+export type LogRow = TxRow & { createdAt: string; legacy: boolean; addedBy: string | null; deletedAt: string | null; deletedBy: string | null };
+
+/**
+ * 逐筆紀錄（對帳用）：依加入順序由新到舊，跨所有專案。
+ * 加入者以操作紀錄（audit_log 的 INSERT）為準，對不到才退回登記人；10/3 從舊表搬入的列 legacy=true（舊表沒有加入時間）。
+ */
+export async function listRecentTransactions(actor: Actor, limit: number, includeDeleted: boolean): Promise<LogRow[]> {
+  const client = db(actor);
+  let q = client
+    .from("transactions")
+    .select(`${TX_SELECT}, created_at, deleted_at, deleted_by`)
+    .order("created_at", { ascending: false })
+    .order("sort_order", { ascending: false })
+    .limit(limit);
+  if (!includeDeleted) q = q.is("deleted_at", null);
+  const { data, error } = await q.returns<(DbTx & { created_at: string; deleted_at: string | null; deleted_by: string | null })[]>();
+  if (error) throw new Error(`list recent transactions: ${error.message}`);
+  const rows = data ?? [];
+
+  const { data: inserts, error: e1 } = await client
+    .from("audit_log")
+    .select("row_id, actor")
+    .eq("table_name", "transactions")
+    .eq("op", "INSERT")
+    .in("row_id", rows.map((r) => r.id));
+  if (e1) throw new Error(`read audit_log: ${e1.message}`);
+  const actorOf = new Map((inserts ?? []).map((a: { row_id: string; actor: string }) => [a.row_id, a.actor]));
+  const userIds = [...new Set([...actorOf.values()].filter((a) => a.startsWith("user:")).map((a) => a.slice(5)))];
+  const { data: users, error: e2 } = userIds.length
+    ? await client.from("users").select("id, member_name, display_name").in("id", userIds)
+    : { data: [], error: null };
+  if (e2) throw new Error(`read users: ${e2.message}`);
+  const nameOf = new Map((users ?? []).map((u: { id: string; member_name: string | null; display_name: string }) => [u.id, u.member_name || u.display_name]));
+
+  return rows.map((r) => {
+    const a = actorOf.get(r.id);
+    const legacy = a === "migration";
+    // 稅務預留是有人存收入時順手產生的，算在「系統」名下才不會被誤認成那個人手動加的
+    const addedBy = r.auto_generated ? "系統" : a?.startsWith("user:") ? (nameOf.get(a.slice(5)) ?? r.recorded_by) : r.recorded_by;
+    return { ...toTx(r), createdAt: r.created_at, legacy, addedBy, deletedAt: r.deleted_at, deletedBy: r.deleted_by };
+  });
+}
+
 export async function listLedger(actor: Actor, table: "settlements" | "advance_repayments"): Promise<Ledger[]> {
   const { data, error } = await db(actor).from(table).select("id, member, amount, date, notes, sort_order").is("deleted_at", null).order("sort_order");
   if (error) throw new Error(`list ${table}: ${error.message}`);
