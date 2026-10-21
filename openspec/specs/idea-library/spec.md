@@ -8,142 +8,29 @@ Keeps the troupe's show ideas from the LINE group in one place where they can be
 
 ### Requirement: Idea library page
 
-The platform SHALL provide an ideas page with three views: 「還沒歸位」 (non-archived ideas without a show, newest first, with the count in the chip), 「全部」 (every non-archived idea with its show name), and 「已封存」. Each idea SHALL show its text, author, time, and whether it came from LINE. Admin and members SHALL access it; `finance_partner` SHALL NOT. Explanatory copy about the `#` command SHALL appear only in the empty state of 「還沒歸位」, not in the page header.
+The platform SHALL provide a notes page labelled 「筆記」 (ideas saved from the web or by `/靈感`、`/筆記`、`/note` in LINE) with three views: 「全部」 (default; every non-archived note newest first, each with its show name when it has one), 「未分演出」 (non-archived notes without a show, with the count in the control), and 「已封存」. Each note SHALL show its text, author, time, and whether it came from LINE. The page SHALL offer an inline composer at the top that saves a note without opening a panel, optionally choosing a show before saving. Admin and members SHALL access it; `finance_partner` SHALL NOT. Explanatory copy about the LINE commands SHALL appear only in empty states.
 
-#### Scenario: View unsorted ideas
+#### Scenario: View notes
 
-- **WHEN** a member opens the ideas page
-- **THEN** the 「還沒歸位」 view is selected and lists every unassigned, non-archived idea with author and time
+- **WHEN** a member opens the notes page
+- **THEN** the 「全部」 view is selected and lists every non-archived note with author, time, and show name
 
-#### Scenario: Empty inbox
+#### Scenario: Empty unassigned view
 
-- **WHEN** there are no unassigned ideas
-- **THEN** the empty state explains that 「#內容」 in the group saves an idea here
-
-
-<!-- @trace
-source: show-centric-planning
-updated: 2026-10-03
-code:
-  - platform/app/(app)/finance/import/page.tsx
-  - platform/supabase/migrations/0009_show_kind.sql
-  - platform/lib/events.ts
-  - platform/lib/supabase.ts
-  - platform/components/idea-list.tsx
-  - platform/components/bottom-nav.tsx
-  - platform/app/globals.css
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/ideas/page.tsx
-  - platform/supabase/migrations/0010_internal_events.sql
-  - platform/app/(app)/calendar/page.tsx
-  - platform/components/add-menu.tsx
-  - platform/lib/line/commands.ts
-  - platform/lib/calendar/feed.ts
-  - platform/app/(app)/shows/actions.ts
-  - platform/lib/line/summary.ts
-  - platform/app/(app)/shows/page.tsx
-  - platform/app/(app)/calendar/actions.ts
-  - platform/lib/calendar/ics.ts
-  - platform/lib/dates.ts
-  - platform/eslint.config.mjs
-  - platform/components/show-editor.tsx
-  - platform/components/finance-show-select.tsx
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
-  - platform/lib/line/quick-reply.ts
-  - platform/wrangler.toml
-  - platform/app/api/line/webhook/route.ts
-  - platform/scripts/oneoff-show-dates-20261003.mts
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/finance/transactions/page.tsx
-  - platform/components/show-picker.tsx
-  - platform/app/(app)/todos/page.tsx
-  - platform/lib/calendar/days.ts
-  - platform/lib/line/api.ts
-  - platform/lib/line/store.ts
-  - platform/lib/shows.ts
-  - platform/lib/line/webhook.ts
-tests:
-  - platform/lib/line/commands.test.ts
-  - platform/lib/calendar/days.test.ts
-  - platform/lib/events.test.ts
-  - platform/lib/calendar/feed.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/supabase/test/internal_events.test.sql
-  - platform/lib/line/quick-reply.test.ts
-  - platform/lib/line/summary.test.ts
-  - platform/supabase/test/show_kind.test.sql
-  - platform/lib/calendar/ics.test.ts
-  - platform/lib/shows.test.ts
--->
+- **WHEN** there are no notes without a show and the member opens 「未分演出」
+- **THEN** the empty state explains that 「/筆記 內容」 in the group saves a note here
 
 ---
 ### Requirement: Assign idea to a show
 
-Each idea card in 「還沒歸位」 and 「全部」 SHALL offer a one-tap button 「→ {next show name}」 that attaches the idea to the next upcoming performance, and an 「其他…」 button that opens the shared show picker. When there is no upcoming performance, the one-tap button SHALL be hidden and only 「其他…」 remains. A member SHALL be able to move an idea to another show or back to no show through the picker, and to edit or archive an idea from its edit panel opened by tapping the card text; archived ideas SHALL be restorable from 「已封存」. An idea that leaves the current view (for example, assigned while viewing 「還沒歸位」) SHALL disappear from the list immediately. Ledger rows SHALL never be offered.
+Note cards SHALL NOT carry assignment buttons. Each card SHALL show one quiet show tag: the show's name when assigned, or 「選演出」 in secondary text when not. Tapping the tag SHALL open the shared show picker, through which a member SHALL move the note to another show or back to no show. The edit panel, opened by tapping the note text, SHALL allow editing the text, changing the show, and archiving; archived notes SHALL be restorable from 「已封存」. A note that leaves the current view SHALL disappear from the list immediately. Ledger rows SHALL never be offered.
 
 #### Scenario: Assign to November show
 
-- **WHEN** a member taps 「其他…」 on 「讓觀眾投票決定結局」 and picks 「第 2 季 11 月號」
-- **THEN** the idea leaves 「還沒歸位」 and appears on that show's page
+- **WHEN** a member taps 「選演出」 on 「讓觀眾投票決定結局」 and picks 「第 2 季 11 月號」
+- **THEN** the tag reads 「第 2 季 11 月號」 and the note appears on that show's page
 
-#### Scenario: One tap to the next show
+#### Scenario: No assignment buttons
 
-- **WHEN** 10 月號 is the next show and a member taps 「→ 10 月號」 on an idea
-- **THEN** the idea is attached to 10 月號 without any further choice
-
-<!-- @trace
-source: show-centric-planning
-updated: 2026-10-03
-code:
-  - platform/app/(app)/finance/import/page.tsx
-  - platform/supabase/migrations/0009_show_kind.sql
-  - platform/lib/events.ts
-  - platform/lib/supabase.ts
-  - platform/components/idea-list.tsx
-  - platform/components/bottom-nav.tsx
-  - platform/app/globals.css
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/ideas/page.tsx
-  - platform/supabase/migrations/0010_internal_events.sql
-  - platform/app/(app)/calendar/page.tsx
-  - platform/components/add-menu.tsx
-  - platform/lib/line/commands.ts
-  - platform/lib/calendar/feed.ts
-  - platform/app/(app)/shows/actions.ts
-  - platform/lib/line/summary.ts
-  - platform/app/(app)/shows/page.tsx
-  - platform/app/(app)/calendar/actions.ts
-  - platform/lib/calendar/ics.ts
-  - platform/lib/dates.ts
-  - platform/eslint.config.mjs
-  - platform/components/show-editor.tsx
-  - platform/components/finance-show-select.tsx
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
-  - platform/lib/line/quick-reply.ts
-  - platform/wrangler.toml
-  - platform/app/api/line/webhook/route.ts
-  - platform/scripts/oneoff-show-dates-20261003.mts
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/finance/transactions/page.tsx
-  - platform/components/show-picker.tsx
-  - platform/app/(app)/todos/page.tsx
-  - platform/lib/calendar/days.ts
-  - platform/lib/line/api.ts
-  - platform/lib/line/store.ts
-  - platform/lib/shows.ts
-  - platform/lib/line/webhook.ts
-tests:
-  - platform/lib/line/commands.test.ts
-  - platform/lib/calendar/days.test.ts
-  - platform/lib/events.test.ts
-  - platform/lib/calendar/feed.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/supabase/test/internal_events.test.sql
-  - platform/lib/line/quick-reply.test.ts
-  - platform/lib/line/summary.test.ts
-  - platform/supabase/test/show_kind.test.sql
-  - platform/lib/calendar/ics.test.ts
-  - platform/lib/shows.test.ts
--->
+- **WHEN** a member views the notes page
+- **THEN** no card shows a 「→ 下一場」 or 「其他…」 button

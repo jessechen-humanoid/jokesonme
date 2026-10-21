@@ -156,143 +156,22 @@ tests:
 ---
 ### Requirement: Brand orange usage restriction
 
-Persimmon (`--brand`) SHALL be used for exactly these purposes: the title card at the top of each page (one per page, white text), primary action buttons and the floating add button, the current item in navigation, unclaimed tags, checkbox outlines, and due-date emphasis (`--brand-deep` text). Persimmon SHALL NOT be used as the background of section cards, list rows, tables, or body text.
+Persimmon (`--brand`) SHALL be used for exactly these purposes: the next-show highlight card on the shows page (one per page, white text), primary action buttons and the floating add button, the current item in navigation, unclaimed tags, checkbox outlines, and due-date emphasis (`--brand-deep` text). Page headers SHALL NOT use a persimmon background. Persimmon SHALL NOT be used as the background of section cards, list rows, tables, or body text.
 
-#### Scenario: Title card is persimmon
+#### Scenario: Page header is not persimmon
 
 - **WHEN** user opens the todo page
-- **THEN** the top title card background is `#E2673F` and the section cards below it are `#FFFFFF`
+- **THEN** the page header has no persimmon background and the section cards below it are `#FFFFFF`
+
+#### Scenario: Next show card is persimmon
+
+- **WHEN** user opens the shows page while an upcoming performance exists
+- **THEN** only the next-show card uses the `#E2673F` background
 
 #### Scenario: Due date emphasis
 
-- **WHEN** a todo shows its due date
+- **WHEN** a todo due within three days shows its due date
 - **THEN** the label text colour is `#B84D2A`
-
-
-<!-- @trace
-source: jokesonme-platform-v2
-updated: 2026-10-03
-code:
-  - platform/components/show-picker.tsx
-  - platform/app/pending/page.tsx
-  - platform/scripts/migrate-from-sheet.mts
-  - platform/supabase/migrations/0008_monthly_template.sql
-  - platform/components/tx-board.tsx
-  - platform/lib/finance/calc.ts
-  - platform/components/finance-head.tsx
-  - platform/supabase/migrations/0007_revoke_truncate.sql
-  - platform/app/(app)/ideas/actions.ts
-  - platform/app/api/finance/export/route.ts
-  - platform/lib/members.ts
-  - platform/app/(app)/finance/analytics/page.tsx
-  - platform/app/(app)/finance/import/legacy-import.tsx
-  - platform/app/api/line/webhook/route.ts
-  - platform/public/next.svg
-  - platform/public/window.svg
-  - platform/app/(app)/ideas/page.tsx
-  - platform/app/api/auth/liff/route.ts
-  - platform/lib/finance/reserve.ts
-  - platform/wrangler.toml
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/app/(app)/admin/users/page.tsx
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/me/page.tsx
-  - platform/app/globals.css
-  - platform/supabase/migrations/0003_app_settings.sql
-  - platform/app/(app)/todos/page.tsx
-  - platform/supabase/migrations/0005_users_login.sql
-  - platform/app/(app)/finance/import/page.tsx
-  - platform/lib/line/store.ts
-  - platform/eslint.config.mjs
-  - platform/app/login/page.tsx
-  - platform/supabase/migrations/0001_audit.sql
-  - platform/supabase/migrations/0002_core.sql
-  - platform/lib/shows.ts
-  - platform/tsconfig.json
-  - platform/open-next.config.ts
-  - platform/lib/auth/users.ts
-  - platform/app/(app)/admin/template/actions.ts
-  - platform/app/api/auth/login/route.ts
-  - platform/app/api/auth/logout/route.ts
-  - platform/lib/auth/line-login.ts
-  - platform/components/bottom-nav.tsx
-  - platform/scripts/legacy-oracle.mts
-  - platform/supabase/migrations/0004_message_retention.sql
-  - platform/app/liff/[[...path]]/page.tsx
-  - platform/components/ledger-sheet.tsx
-  - platform/components/idea-list.tsx
-  - platform/app/(app)/shows/page.tsx
-  - platform/lib/audit.ts
-  - platform/app/favicon.ico
-  - js/api.js
-  - platform/next.config.ts
-  - platform/lib/line/signature.ts
-  - platform/lib/line/webhook.ts
-  - platform/public/file.svg
-  - platform/lib/auth/access.ts
-  - platform/CLAUDE.md
-  - platform/app/(app)/admin/users/actions.ts
-  - platform/app/(app)/todos/actions.ts
-  - platform/lib/auth/session.ts
-  - platform/lib/ideas.ts
-  - platform/lib/todos.ts
-  - platform/scripts/db-check.sql
-  - platform/public/vercel.svg
-  - platform/public/globe.svg
-  - platform/scripts/test-db.sh
-  - platform/scripts/db-migrate.sh
-  - platform/lib/templates.ts
-  - platform/scripts/reconcile.mts
-  - platform/app/api/cron/purge-messages/route.ts
-  - platform/app/api/auth/callback/line/route.ts
-  - platform/lib/cron/auth.ts
-  - platform/worker.ts
-  - platform/lib/finance/reconcile.ts
-  - platform/package.json
-  - platform/lib/line/summary.ts
-  - platform/public/legacy/import.css
-  - platform/app/(app)/finance/page.tsx
-  - platform/app/(app)/layout.tsx
-  - platform/app/api/finance/import/route.ts
-  - platform/app/(app)/finance/actions.ts
-  - platform/components/avatar.tsx
-  - platform/lib/line/api.ts
-  - platform/public/legacy/import.js
-  - platform/lib/auth/current.ts
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/shows/actions.ts
-  - platform/scripts/rehearse-migration.sh
-  - platform/AGENTS.md
-  - platform/app/page.tsx
-  - platform/app/liff/[[...path]]/liff-login.tsx
-  - platform/supabase/migrations/0006_finance.sql
-  - platform/README.md
-  - platform/lib/dates.ts
-  - platform/scripts/check-tax-reserves.mts
-  - platform/lib/line/commands.ts
-  - platform/lib/finance/sheet.ts
-  - platform/public/legacy/import-shim.js
-  - platform/components/show-editor.tsx
-  - platform/lib/supabase.ts
-  - platform/app/layout.tsx
-  - platform/app/(app)/finance/transactions/page.tsx
-  - platform/lib/finance/data.ts
-tests:
-  - platform/lib/finance/reserve.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/lib/auth/session.test.ts
-  - platform/lib/templates.test.ts
-  - platform/supabase/test/audit_core.test.sql
-  - platform/lib/finance/calc.test.ts
-  - platform/lib/line/commands.test.ts
-  - platform/lib/auth/access.test.ts
-  - platform/supabase/test/finance.test.sql
-  - platform/supabase/test/retention.test.sql
-  - platform/lib/dates.test.ts
-  - platform/lib/todos.test.ts
-  - platform/supabase/test/local-shim.sql
-  - platform/lib/line/summary.test.ts
--->
 
 ---
 ### Requirement: Semantic colour tokens for financial state
@@ -627,4 +506,137 @@ code:
   - AGENTS.md
   - opentix-analytics.html
   - js/analytics.js
+-->
+
+---
+### Requirement: Four-step type scale
+
+All platform pages SHALL use only four text sizes: 24px for page titles and key figures, 17px for section, sheet, and card headings, 15px for body text, list item titles, buttons, and table cells, and 13px for secondary text such as dates, tags, labels, hints, chips, and navigation labels. Secondary text SHALL use `--ink-2` (`#585E52`) or darker; `--ink-3` SHALL be reserved for placeholders and disabled states. Form inputs and selects SHALL use 16px so mobile browsers do not zoom. Glyph-only controls (the floating add button, icons, and month arrows) are exempt. Monetary amounts SHALL NOT wrap inside a number. Components SHALL NOT hard-code other font sizes.
+
+##### Example: sizes found on a page
+
+| Page (375px) | Allowed distinct sizes |
+| ------------ | ---------------------- |
+| /todos | subset of 13, 15, 17, 24 (plus 16 inside inputs) |
+| /finance/analytics | subset of 13, 15, 17, 24 |
+
+#### Scenario: Audit a page
+
+- **WHEN** every visible text element on /calendar is measured at 375px width
+- **THEN** no computed font size other than 13px, 15px, 16px (inputs), 17px, or 24px is found outside glyph-only controls
+
+#### Scenario: Large amount on a phone
+
+- **WHEN** the yearly income is $1,678,303 and the analytics page is viewed at 375px
+- **THEN** the amount renders on one line
+
+---
+### Requirement: Consistent padding and alignment
+
+White section cards and standalone cards SHALL use 16px inner padding; section headings inside a card SHALL start at the card's content edge with no extra inset; rows nested inside a card SHALL use 12px horizontal padding so their text aligns with buttons and chips above them. Chips in one wrapped row SHALL center their content vertically.
+
+#### Scenario: Show picker sheet
+
+- **WHEN** the show picker sheet is open with multi-line chips, single-line chips, and the expanded list
+- **THEN** single-line chips 「不掛演出」 and 「收起」 have their text vertically centred, and the expanded list's row text starts at the same x position as the chip text
+
+
+<!-- @trace
+source: visual-consistency
+updated: 2026-10-22
+code:
+  - platform/app/globals.css
+  - platform/components/rich-text.tsx
+  - platform/lib/line/commands.ts
+  - platform/app/(app)/admin/users/page.tsx
+  - platform/app/(app)/calendar/page.tsx
+  - platform/components/date-badge.tsx
+  - platform/components/show-editor.tsx
+  - platform/app/(app)/finance/log/page.tsx
+  - platform/app/(app)/loading.tsx
+  - platform/components/add-menu.tsx
+  - platform/components/show-todos.tsx
+  - platform/components/top-bar.tsx
+  - platform/wrangler.toml
+  - platform/lib/dates.ts
+  - platform/components/tx-board.tsx
+  - platform/scripts/oneoff-idea-newlines-20261005.mts
+  - platform/app/(app)/shows/page.tsx
+  - platform/app/(app)/finance/analytics/page.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/lib/finance/data.ts
+  - platform/app/liff/[[...path]]/liff-login.tsx
+  - platform/components/icons.tsx
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/lib/markdown.ts
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/app/(app)/todos/page.tsx
+  - platform/components/bottom-nav.tsx
+  - platform/app/login/page.tsx
+  - platform/app/(app)/ideas/page.tsx
+  - platform/components/idea-list.tsx
+  - platform/app/pending/page.tsx
+  - platform/components/finance-head.tsx
+  - platform/app/(app)/me/page.tsx
+  - platform/app/(app)/shows/actions.ts
+  - platform/components/todo-board.tsx
+tests:
+  - platform/lib/markdown.test.ts
+  - platform/lib/line/commands.test.ts
+  - platform/lib/dates.test.ts
+-->
+
+---
+### Requirement: Styled select controls
+
+Every select control SHALL share the input styling (44px minimum height, 12px radius, same border and background) with a custom chevron 14px from the right edge and no native arrow.
+
+#### Scenario: Finance show selector
+
+- **WHEN** a member opens 收支紀錄 on desktop
+- **THEN** the show selector looks like the other inputs and its chevron sits 14px from the right edge
+
+<!-- @trace
+source: visual-consistency
+updated: 2026-10-22
+code:
+  - platform/app/globals.css
+  - platform/components/rich-text.tsx
+  - platform/lib/line/commands.ts
+  - platform/app/(app)/admin/users/page.tsx
+  - platform/app/(app)/calendar/page.tsx
+  - platform/components/date-badge.tsx
+  - platform/components/show-editor.tsx
+  - platform/app/(app)/finance/log/page.tsx
+  - platform/app/(app)/loading.tsx
+  - platform/components/add-menu.tsx
+  - platform/components/show-todos.tsx
+  - platform/components/top-bar.tsx
+  - platform/wrangler.toml
+  - platform/lib/dates.ts
+  - platform/components/tx-board.tsx
+  - platform/scripts/oneoff-idea-newlines-20261005.mts
+  - platform/app/(app)/shows/page.tsx
+  - platform/app/(app)/finance/analytics/page.tsx
+  - platform/app/(app)/finance/transactions/page.tsx
+  - platform/lib/finance/data.ts
+  - platform/app/liff/[[...path]]/liff-login.tsx
+  - platform/components/icons.tsx
+  - platform/app/(app)/shows/[id]/page.tsx
+  - platform/lib/markdown.ts
+  - platform/app/(app)/admin/template/page.tsx
+  - platform/app/(app)/todos/page.tsx
+  - platform/components/bottom-nav.tsx
+  - platform/app/login/page.tsx
+  - platform/app/(app)/ideas/page.tsx
+  - platform/components/idea-list.tsx
+  - platform/app/pending/page.tsx
+  - platform/components/finance-head.tsx
+  - platform/app/(app)/me/page.tsx
+  - platform/app/(app)/shows/actions.ts
+  - platform/components/todo-board.tsx
+tests:
+  - platform/lib/markdown.test.ts
+  - platform/lib/line/commands.test.ts
+  - platform/lib/dates.test.ts
 -->

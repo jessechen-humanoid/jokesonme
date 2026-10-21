@@ -904,74 +904,17 @@ tests:
 ---
 ### Requirement: Todo page header without duplicate numbers
 
-The todo page header SHALL show each count exactly once: the filter chips carry the counts (「我的 N」「全部 N」「未認領 N」) and the header SHALL NOT render separate statistic cards. Below the chips the header SHALL show one 「下一場」 line with the next performance's name, date in `M/D（週）` form, and days remaining, linking to that show's page; when there is no upcoming performance the line SHALL read 「還沒排下一場演出」 and link to the shows page.
+The todo page header SHALL show each count exactly once: the segmented control carries the counts (「我的 N」「全部 N」「未認領 N」) and the header SHALL NOT render separate statistic cards. Below the control the page SHALL show one 「下一場」 row with the next performance's name, date in `M/D（週）` form, and days remaining, linking to that show's page; when there is no upcoming performance the row SHALL read 「還沒排下一場演出」 and link to the shows page.
 
 #### Scenario: Header with a next show
 
 - **WHEN** today is 2026-10-03 and the next show is 「看我笑話 10 月號」 on 2026-10-24
-- **THEN** the header shows the chips with counts, no statistic cards, and the line 「下一場・還有 21 天 看我笑話 10 月號・10/24（六）」 linking to that show
+- **THEN** the page shows the segmented control with counts, no statistic cards, and a row with 「下一場」, 「還有 21 天」, 「看我笑話 10 月號」 and 「10/24（六）」 linking to that show
 
 #### Scenario: Header without a next show
 
 - **WHEN** no active performance is dated on or after today
-- **THEN** the line reads 「還沒排下一場演出」 and links to the shows page
-
-
-<!-- @trace
-source: show-centric-planning
-updated: 2026-10-03
-code:
-  - platform/app/(app)/finance/import/page.tsx
-  - platform/supabase/migrations/0009_show_kind.sql
-  - platform/lib/events.ts
-  - platform/lib/supabase.ts
-  - platform/components/idea-list.tsx
-  - platform/components/bottom-nav.tsx
-  - platform/app/globals.css
-  - platform/components/todo-board.tsx
-  - platform/app/(app)/ideas/page.tsx
-  - platform/supabase/migrations/0010_internal_events.sql
-  - platform/app/(app)/calendar/page.tsx
-  - platform/components/add-menu.tsx
-  - platform/lib/line/commands.ts
-  - platform/lib/calendar/feed.ts
-  - platform/app/(app)/shows/actions.ts
-  - platform/lib/line/summary.ts
-  - platform/app/(app)/shows/page.tsx
-  - platform/app/(app)/calendar/actions.ts
-  - platform/lib/calendar/ics.ts
-  - platform/lib/dates.ts
-  - platform/eslint.config.mjs
-  - platform/components/show-editor.tsx
-  - platform/components/finance-show-select.tsx
-  - platform/app/(app)/admin/template/page.tsx
-  - platform/lib/calendar/fixtures/show-calendar-20261003.ics
-  - platform/lib/line/quick-reply.ts
-  - platform/wrangler.toml
-  - platform/app/api/line/webhook/route.ts
-  - platform/scripts/oneoff-show-dates-20261003.mts
-  - platform/app/(app)/shows/[id]/page.tsx
-  - platform/app/(app)/finance/transactions/page.tsx
-  - platform/components/show-picker.tsx
-  - platform/app/(app)/todos/page.tsx
-  - platform/lib/calendar/days.ts
-  - platform/lib/line/api.ts
-  - platform/lib/line/store.ts
-  - platform/lib/shows.ts
-  - platform/lib/line/webhook.ts
-tests:
-  - platform/lib/line/commands.test.ts
-  - platform/lib/calendar/days.test.ts
-  - platform/lib/events.test.ts
-  - platform/lib/calendar/feed.test.ts
-  - platform/lib/line/webhook.test.ts
-  - platform/supabase/test/internal_events.test.sql
-  - platform/lib/line/quick-reply.test.ts
-  - platform/lib/line/summary.test.ts
-  - platform/supabase/test/show_kind.test.sql
-  - platform/lib/calendar/ics.test.ts
-  - platform/lib/shows.test.ts
--->
+- **THEN** the row reads 「還沒排下一場演出」 and links to the shows page
 
 ---
 ### Requirement: Show group header links to the show page
@@ -1105,3 +1048,13 @@ tests:
   - platform/lib/calendar/ics.test.ts
   - platform/lib/shows.test.ts
 -->
+
+---
+### Requirement: Due date urgency colouring
+
+An open todo's due label SHALL be coloured by urgency relative to today in Asia/Taipei: overdue labels SHALL use the danger colour on its tinted background, labels due today through three days ahead SHALL use `--brand-deep` on `--brand-4`, and later labels SHALL use `--ink-2`. Done todos SHALL NOT be coloured.
+
+#### Scenario: Overdue todo
+
+- **WHEN** today is 2026-10-22 and an open todo is due 2026-10-20
+- **THEN** its label 「10/20（二）前」 uses the danger colour
