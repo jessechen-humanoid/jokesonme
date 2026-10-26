@@ -32,7 +32,7 @@ export default async function IdeasPage({ searchParams }: PageProps<"/ideas">) {
     <main className="page">
       <TopBar me={me} title="筆記" />
       <Link href="/ideas/venue-availability" className="venue-entry-link">
-        <span><b>2027 場地檔期</b><small>查看大廳、小廳週末空檔與系列節目建議</small></span>
+        <span><b>2027 場地檔期</b><small>大廳帶狀節目每月建議日與月曆</small></span>
         <span aria-hidden="true">查看 ›</span>
       </Link>
       <nav className="seg-tabs" aria-label="篩選筆記">

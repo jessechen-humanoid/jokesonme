@@ -170,64 +170,107 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .source small { display: block; color: var(--ink-2); margin-bottom: 4px; font-size: var(--fs-secondary); }
 .notice { background: var(--brand-4); border: 1px solid var(--brand-3); color: var(--ink); border-radius: 12px; padding: 12px 14px; font-size: var(--fs-secondary); margin-bottom: 12px; }
 
-/* 2027 venue availability */
+/* 2027 venue availability：大廳帶狀節目月曆（仿 Google 日曆月檢視） */
 .venue-entry-link { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; margin:0 0 12px; border:1px solid var(--brand-3); border-radius:14px; background:var(--brand-4); color:var(--ink); }
 .venue-entry-link > span:first-child { display:grid; gap:2px; min-width:0; }
 .venue-entry-link b { font-size:var(--fs-body); }
 .venue-entry-link small { color:var(--ink-2); font-size:var(--fs-secondary); }
 .venue-entry-link > span:last-child { color:var(--brand-deep); font-weight:700; font-size:var(--fs-secondary); white-space:nowrap; }
-.venue-page .content { gap:12px; }
-.venue-intro { padding:18px !important; }
+.page.venue-page { max-width:1000px; }
 .venue-eyebrow { color:var(--brand-deep); font-size:var(--fs-secondary); font-weight:700; letter-spacing:.03em; }
+.venue-intro { padding:18px !important; }
 .venue-intro h2 { margin:3px 0 5px; font-size:20px; line-height:1.4; }
-.venue-intro > p, .venue-hall-intro { color:var(--ink-2); font-size:var(--fs-secondary); }
-.venue-recommendations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:16px; }
-.venue-recommendation { min-width:0; padding:14px; border:1px solid var(--line-2); border-radius:15px; background:var(--surface-2); }
-.venue-recommendation-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-.venue-recommendation-hall { color:var(--brand-deep); font-size:var(--fs-secondary); font-weight:700; }
-.venue-recommendation h3 { font-size:var(--fs-body); line-height:1.45; }
-.venue-recommendation-meta { margin-top:3px; color:var(--ink-2); font-size:12px; }
-.venue-score { flex:none; min-width:64px; text-align:center; padding:5px 8px; border-radius:12px; }
-.venue-score.perfect { color:var(--success); background:var(--success-bg); }
-.venue-score.partial { color:var(--warning); background:var(--warning-bg); }
-.venue-score b { display:block; font-size:20px; line-height:1.2; font-variant-numeric:tabular-nums; }
-.venue-score b small { font-size:12px; }
-.venue-score span { display:block; font-size:11px; }
-.venue-date-track { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; margin-top:13px; }
-.venue-date-track span { display:block; padding:4px 2px; border-radius:7px; text-align:center; font-size:11px; font-variant-numeric:tabular-nums; }
-.venue-date-track .free { color:var(--success); background:var(--success-bg); }
-.venue-date-track .busy { color:var(--danger-fin); background:var(--danger-bg); text-decoration:line-through; }
-.venue-rec-note { margin-top:8px; font-size:12px; color:var(--danger-fin); }
-.venue-alternatives { display:grid; gap:7px; margin-top:13px; padding:12px; border-radius:12px; background:var(--ground); font-size:var(--fs-secondary); }
-.venue-method-note { display:flex; gap:10px; align-items:flex-start; color:var(--ink-2); font-size:var(--fs-secondary); }
-.venue-method-note b { flex:none; color:var(--ink); }
-.content > section.venue-hall { padding:16px; }
-.venue-hall-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.venue-hall-heading h2 { font-size:var(--fs-title); }
-.venue-hall-heading > span { flex:none; color:var(--ink-2); font-size:var(--fs-secondary); }
-.venue-hall-intro { margin:3px 0 12px; }
-.venue-month-list { border-top:1px solid var(--line-2); }
-.venue-month { border-bottom:1px solid var(--line-2); }
-.venue-month summary { display:flex; align-items:center; gap:9px; min-height:44px; cursor:pointer; list-style:none; }
-.venue-month summary::-webkit-details-marker { display:none; }
-.venue-month summary b { min-width:54px; font-size:var(--fs-body); }
-.venue-month summary span { color:var(--ink-2); font-size:var(--fs-secondary); }
-.venue-month summary i { margin-left:auto; font-style:normal; color:var(--ink-3); transition:transform .15s ease; }
-.venue-month[open] summary i { transform:rotate(180deg); }
-.venue-month-days { padding:0 0 10px; }
-.venue-day { display:grid; grid-template-columns:minmax(92px,.8fr) minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:stretch; padding:4px 0; }
-.venue-day-date { align-self:center; font-size:var(--fs-secondary); font-weight:500; font-variant-numeric:tabular-nums; }
-.venue-slot { min-width:0; display:grid; grid-template-columns:auto 1fr; align-items:center; column-gap:5px; padding:4px 7px; border-radius:8px; font-size:12px; line-height:1.4; }
-.venue-slot b { font-weight:500; }
-.venue-slot.available { color:var(--success); background:var(--success-bg); }
-.venue-slot.booked { color:var(--danger-fin); background:var(--danger-bg); }
-.venue-slot.unavailable { color:var(--ink-3); background:var(--ground); }
-.venue-slot small { grid-column:1/-1; overflow-wrap:anywhere; font-size:10px; }
+.venue-intro > p:not(.venue-eyebrow) { color:var(--ink-2); font-size:var(--fs-secondary); max-width:66ch; }
+.venue-rules { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.venue-rules span { font-size:12px; padding:3px 9px; border-radius:999px; }
+.venue-rules .ok { color:var(--success); background:var(--success-bg); }
+.venue-rules .part { color:var(--warning); background:var(--warning-bg); }
+/* 月曆 */
+.content > section.vc { padding:0; overflow:hidden; }
+.vc-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; padding:10px 12px; border-bottom:1px solid var(--line-2); }
+.vc-nav { display:flex; gap:2px; }
+.vc-nav button { width:34px; height:34px; border-radius:50%; border:0; background:none; font-size:20px; line-height:1; color:var(--ink-2); }
+.vc-nav button:hover:not(:disabled) { background:var(--ground); }
+.vc-nav button:disabled { opacity:.3; cursor:default; }
+.vc-title { font-size:var(--fs-title); font-weight:700; min-width:7.5em; }
+.vc-months { display:flex; flex-wrap:wrap; gap:4px; margin-left:auto; }
+.vc-months button { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-variant-numeric:tabular-nums; }
+.vc-months button[aria-pressed="true"] { background:var(--ink); color:var(--surface); border-color:var(--ink); }
+.vc-months button.flag::after { content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--brand); margin-left:5px; vertical-align:middle; }
+.vc-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.vc-dow { font-size:12px; color:var(--ink-2); text-align:center; padding:8px 0 2px; border-left:1px solid var(--line-2); }
+.vc-dow:first-child { border-left:0; }
+.vc-cell { min-width:0; min-height:118px; display:flex; flex-direction:column; gap:2px; padding:4px 4px 6px; border-top:1px solid var(--line-2); border-left:1px solid var(--line-2); }
+.vc-cell:nth-child(7n+1) { border-left:0; }
+.vc-cell.we { background:var(--surface-2); }
+.vc-cell.out { background:var(--ground); }
+.vc-cell.out > * { opacity:.45; }
+.vc-cell.rec { box-shadow:inset 0 0 0 2px var(--brand); }
+.vc-num { text-align:center; font-size:var(--fs-secondary); line-height:22px; font-variant-numeric:tabular-nums; }
+.vc-num em { font-style:normal; }
+.vc-hol { font-size:11px; line-height:1.3; text-align:center; color:var(--danger-fin); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vc-ev { font-size:12px; line-height:1.45; padding:0 4px; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vc-ev::before { content:""; display:inline-block; width:7px; height:7px; margin-right:5px; border-radius:50%; background:var(--ink-3); vertical-align:1px; }
+.vc-ev.ours { color:var(--brand-deep); font-weight:500; }
+.vc-ev.ours::before { background:var(--brand); }
+.vc-ev.om { color:var(--success); }
+.vc-ev.om::before { background:var(--success); }
+.vc-ev.pick { padding:1px 6px; background:var(--brand); color:#fff; font-weight:700; }
+.vc-ev.alt { padding:0 5px; border:1px dashed var(--brand); color:var(--ink); }
+.vc-ev.pick::before, .vc-ev.alt::before { display:none; }
+.vc-legend { display:flex; flex-wrap:wrap; gap:6px 14px; padding:10px 12px; border-top:1px solid var(--line-2); font-size:12px; color:var(--ink-2); }
+.vc-legend span { display:inline-flex; align-items:center; gap:6px; }
+.vc-legend .sw { width:22px; height:12px; border-radius:3px; }
+.vc-legend .sw.pick { background:var(--brand); }
+.vc-legend .sw.alt { border:1px dashed var(--brand); }
+.vc-legend .dot { width:8px; height:8px; border-radius:50%; background:var(--ink-3); }
+.vc-legend .dot.ours { background:var(--brand); }
+.vc-legend .dot.om { background:var(--success); }
+.vc-legend .hol-key { color:var(--danger-fin); }
+/* 當月說明 */
+.content > section.vc-detail { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); gap:16px; padding:18px; }
+.vc-big { font-size:30px; font-weight:700; line-height:1.15; font-variant-numeric:tabular-nums; }
+.vc-big small { margin-left:8px; font-size:var(--fs-body); }
+.vc-big small.sun { color:var(--danger-fin); }
+.vc-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.vc-chip { font-size:12px; padding:2px 8px; border-radius:6px; }
+.vc-chip.good { color:var(--success); background:var(--success-bg); }
+.vc-chip.same { color:var(--brand-deep); background:var(--brand-3); }
+.vc-chip.warn { color:var(--danger-fin); background:var(--danger-bg); }
+.vc-detail-body { display:flex; flex-direction:column; gap:10px; font-size:14px; }
+.vc-alt { display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:3px; }
+.vc-alt span { color:var(--ink-2); }
+/* 全年總表 */
+.vc-year h2, .venue-notes h2 { font-size:var(--fs-title); margin-bottom:10px; }
+.vc-table { overflow-x:auto; }
+.vc-table table { width:100%; min-width:560px; border-collapse:collapse; font-size:14px; }
+.vc-table th, .vc-table td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line-2); }
+.vc-table th { font-size:12px; font-weight:500; color:var(--ink-2); }
+.vc-table tbody tr { cursor:pointer; }
+.vc-table tbody tr:hover td, .vc-table tbody tr[aria-current="true"] td { background:var(--surface-2); }
+.vc-table tbody tr:last-child td { border-bottom:0; }
+.vc-table td.m { color:var(--ink-2); }
+.vc-table td.d { font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.vc-table .ok { color:var(--success); }
+.vc-table .bad { color:var(--danger-fin); }
+.vc-table .same { color:var(--brand-deep); }
+.vc-hint { margin-top:6px; font-size:12px; color:var(--ink-3); }
+/* 判斷依據 */
+.venue-notes ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:14px; }
+.venue-source { margin-top:12px; font-size:12px; color:var(--ink-2); }
+.venue-source a { text-decoration:underline; text-underline-offset:3px; }
 .venue-back-link { display:inline-block; margin-top:3px; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px; font-size:var(--fs-secondary); }
+@media(max-width:720px) { .content > section.vc-detail { grid-template-columns:1fr; } }
 @media(max-width:600px) {
-  .venue-recommendations { grid-template-columns:1fr; }
-  .venue-day { grid-template-columns:minmax(82px,.7fr) minmax(0,1fr) minmax(0,1fr); gap:4px; }
-  .venue-slot { grid-template-columns:1fr; gap:1px; padding:4px 5px; font-size:11px; }
+  .vc-title { min-width:0; }
+  .vc-months { margin-left:0; }
+  .vc-cell { min-height:96px; padding:3px 2px 5px; }
+  .vc-dow { font-size:11px; }
+  .vc-num { font-size:12px; }
+  .vc-num em { display:none; }
+  .vc-hol { font-size:9.5px; }
+  .vc-ev { font-size:10.5px; padding:0 2px; }
+  .vc-ev::before { width:6px; height:6px; margin-right:3px; }
 }
 
 /* 登入與等待頁 */
