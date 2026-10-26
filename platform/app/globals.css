@@ -170,6 +170,66 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .source small { display: block; color: var(--ink-2); margin-bottom: 4px; font-size: var(--fs-secondary); }
 .notice { background: var(--brand-4); border: 1px solid var(--brand-3); color: var(--ink); border-radius: 12px; padding: 12px 14px; font-size: var(--fs-secondary); margin-bottom: 12px; }
 
+/* 2027 venue availability */
+.venue-entry-link { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; margin:0 0 12px; border:1px solid var(--brand-3); border-radius:14px; background:var(--brand-4); color:var(--ink); }
+.venue-entry-link > span:first-child { display:grid; gap:2px; min-width:0; }
+.venue-entry-link b { font-size:var(--fs-body); }
+.venue-entry-link small { color:var(--ink-2); font-size:var(--fs-secondary); }
+.venue-entry-link > span:last-child { color:var(--brand-deep); font-weight:700; font-size:var(--fs-secondary); white-space:nowrap; }
+.venue-page .content { gap:12px; }
+.venue-intro { padding:18px !important; }
+.venue-eyebrow { color:var(--brand-deep); font-size:var(--fs-secondary); font-weight:700; letter-spacing:.03em; }
+.venue-intro h2 { margin:3px 0 5px; font-size:20px; line-height:1.4; }
+.venue-intro > p, .venue-hall-intro { color:var(--ink-2); font-size:var(--fs-secondary); }
+.venue-recommendations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:16px; }
+.venue-recommendation { min-width:0; padding:14px; border:1px solid var(--line-2); border-radius:15px; background:var(--surface-2); }
+.venue-recommendation-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.venue-recommendation-hall { color:var(--brand-deep); font-size:var(--fs-secondary); font-weight:700; }
+.venue-recommendation h3 { font-size:var(--fs-body); line-height:1.45; }
+.venue-recommendation-meta { margin-top:3px; color:var(--ink-2); font-size:12px; }
+.venue-score { flex:none; min-width:64px; text-align:center; padding:5px 8px; border-radius:12px; }
+.venue-score.perfect { color:var(--success); background:var(--success-bg); }
+.venue-score.partial { color:var(--warning); background:var(--warning-bg); }
+.venue-score b { display:block; font-size:20px; line-height:1.2; font-variant-numeric:tabular-nums; }
+.venue-score b small { font-size:12px; }
+.venue-score span { display:block; font-size:11px; }
+.venue-date-track { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; margin-top:13px; }
+.venue-date-track span { display:block; padding:4px 2px; border-radius:7px; text-align:center; font-size:11px; font-variant-numeric:tabular-nums; }
+.venue-date-track .free { color:var(--success); background:var(--success-bg); }
+.venue-date-track .busy { color:var(--danger-fin); background:var(--danger-bg); text-decoration:line-through; }
+.venue-rec-note { margin-top:8px; font-size:12px; color:var(--danger-fin); }
+.venue-alternatives { display:grid; gap:7px; margin-top:13px; padding:12px; border-radius:12px; background:var(--ground); font-size:var(--fs-secondary); }
+.venue-method-note { display:flex; gap:10px; align-items:flex-start; color:var(--ink-2); font-size:var(--fs-secondary); }
+.venue-method-note b { flex:none; color:var(--ink); }
+.content > section.venue-hall { padding:16px; }
+.venue-hall-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.venue-hall-heading h2 { font-size:var(--fs-title); }
+.venue-hall-heading > span { flex:none; color:var(--ink-2); font-size:var(--fs-secondary); }
+.venue-hall-intro { margin:3px 0 12px; }
+.venue-month-list { border-top:1px solid var(--line-2); }
+.venue-month { border-bottom:1px solid var(--line-2); }
+.venue-month summary { display:flex; align-items:center; gap:9px; min-height:44px; cursor:pointer; list-style:none; }
+.venue-month summary::-webkit-details-marker { display:none; }
+.venue-month summary b { min-width:54px; font-size:var(--fs-body); }
+.venue-month summary span { color:var(--ink-2); font-size:var(--fs-secondary); }
+.venue-month summary i { margin-left:auto; font-style:normal; color:var(--ink-3); transition:transform .15s ease; }
+.venue-month[open] summary i { transform:rotate(180deg); }
+.venue-month-days { padding:0 0 10px; }
+.venue-day { display:grid; grid-template-columns:minmax(92px,.8fr) minmax(0,1fr) minmax(0,1fr); gap:6px; align-items:stretch; padding:4px 0; }
+.venue-day-date { align-self:center; font-size:var(--fs-secondary); font-weight:500; font-variant-numeric:tabular-nums; }
+.venue-slot { min-width:0; display:grid; grid-template-columns:auto 1fr; align-items:center; column-gap:5px; padding:4px 7px; border-radius:8px; font-size:12px; line-height:1.4; }
+.venue-slot b { font-weight:500; }
+.venue-slot.available { color:var(--success); background:var(--success-bg); }
+.venue-slot.booked { color:var(--danger-fin); background:var(--danger-bg); }
+.venue-slot.unavailable { color:var(--ink-3); background:var(--ground); }
+.venue-slot small { grid-column:1/-1; overflow-wrap:anywhere; font-size:10px; }
+.venue-back-link { display:inline-block; margin-top:3px; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px; font-size:var(--fs-secondary); }
+@media(max-width:600px) {
+  .venue-recommendations { grid-template-columns:1fr; }
+  .venue-day { grid-template-columns:minmax(82px,.7fr) minmax(0,1fr) minmax(0,1fr); gap:4px; }
+  .venue-slot { grid-template-columns:1fr; gap:1px; padding:4px 5px; font-size:11px; }
+}
+
 /* 登入與等待頁 */
 .center { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 24px 16px; max-width: 420px; margin: 0 auto; }
 .center .page-sub { margin-top: 0; }
