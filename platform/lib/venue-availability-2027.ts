@@ -177,65 +177,31 @@ export function isOpenMicSunday(date: string) {
   return days >= 0 && days % 14 === 0;
 }
 
-export type ChipTone = "good" | "warn";
 export type Slot = "下午" | "晚上";
-export type MonthPick = {
+export const SLOT_TIME: Record<Slot, string> = { "下午": "13:30–17:30", "晚上": "18:00–22:00" };
+export type BookingStatus = "洽詢中" | "已確認";
+
+/** 2027 帶狀節目訂場清單（大廳、公開售票演出）。訂到之後把 status 改成「已確認」。 */
+export type Booking = {
   month: number;
   date: string;
   slot: Slot;
   sunday?: boolean;
-  /** 有犧牲某條理想條件 */
-  tradeoff: boolean;
-  chips: [ChipTone, string][];
+  /** 距最近一場看我笑話 */
+  gap: string;
+  status: BookingStatus;
   note: string;
-  /** [日期, 時段, 理由] */
-  alts: [string, Slot, string][];
 };
 
-/** 主推排法：以下午為主（3 月只有週日晚上一個合格時段）。 */
-export const monthPicks2027: MonthPick[] = [
-  { month: 3, date: "2027-03-14", slot: "晚上", sunday: true, tradeoff: true, chips: [["good", "距 13 天"], ["warn", "只能週日晚上"]],
-    note: "3 月整個月只有這一個合格時段：週末下午不是被訂走就是看我笑話當天，週六晚上也都沒空。所以 3 月不管怎麼排都是週日晚上。",
-    alts: [] },
-  { month: 4, date: "2027-04-25", slot: "下午", sunday: true, tradeoff: true, chips: [["warn", "距 1 天"], ["warn", "改週日"]],
-    note: "另外兩個合格的下午都在兒童節清明連假（4/3–4/6）。4/25 沒撞節日，但就在 4/24 看我笑話的隔天，是你說「最慘可以接受」的間隔。",
-    alts: [["2027-04-03", "下午", "距 7 天，但是兒童節清明連假第一天"], ["2027-04-04", "下午", "距 8 天，但是兒童節當天"]] },
-  { month: 5, date: "2027-05-15", slot: "下午", tradeoff: false, chips: [["good", "距 7 天"]],
-    note: "隔兩週的 5/8 是母親節前一天，所以退一步選間隔一週、沒撞節日的 5/15。",
-    alts: [["2027-05-29", "下午", "距 7 天，沒有節日"], ["2027-05-08", "下午", "前後各 14 天，但是母親節前一天"]] },
-  { month: 6, date: "2027-06-06", slot: "下午", sunday: true, tradeoff: true, chips: [["good", "距 13 天"], ["warn", "改週日"]],
-    note: "6 月的週六下午、晚上都沒有合格空檔，只能改週日。6/6 全天空，端午在週三不影響。",
-    alts: [["2027-06-13", "下午", "距 6 天，晚上有 open mic"]] },
-  { month: 7, date: "2027-07-10", slot: "下午", tradeoff: false, chips: [["good", "距 14 天"]],
-    note: "上一場 6/19 隔 21 天，下一場 7/24 隔 14 天。",
-    alts: [["2027-07-17", "下午", "距 7 天"], ["2027-07-11", "下午", "距 13 天，但改週日"]] },
-  { month: 8, date: "2027-08-14", slot: "下午", tradeoff: false, chips: [["good", "距 7 天"]],
-    note: "隔兩週的 8/7 下午已被訂走，8/8 又是父親節，所以選間隔一週的 8/14。",
-    alts: [["2027-08-01", "晚上", "距 8 天，但改週日晚上"], ["2027-08-29", "下午", "距 9/4 只有 6 天，而且改週日"]] },
-  { month: 9, date: "2027-09-12", slot: "下午", sunday: true, tradeoff: true, chips: [["warn", "距 6 天"], ["warn", "改週日"]],
-    note: "9 月已有三場看我笑話（9/4、9/5、9/18），沒有任何下午能隔滿一週。9/12 離前後兩場是 7 天和 6 天。",
-    alts: [["2027-09-26", "晚上", "距 8 天，但要改晚上"], ["2027-09-19", "下午", "距 1 天"]] },
-  { month: 10, date: "2027-10-02", slot: "下午", tradeoff: false, chips: [["good", "前後各 14 天"]],
-    note: "避開了國慶和光復節連假。",
-    alts: [["2027-10-03", "下午", "距 13 天，但改週日"]] },
-  { month: 11, date: "2027-11-06", slot: "下午", tradeoff: false, chips: [["good", "距 14 天"]],
-    note: "上一場 10/16 隔 21 天，下一場 11/20 隔 14 天。",
-    alts: [["2027-11-27", "下午", "距 7 天；當天晚上也有空，是全年唯一合格的週六晚上"], ["2027-11-07", "下午", "距 13 天，但改週日"]] },
-  { month: 12, date: "2027-12-04", slot: "下午", tradeoff: false, chips: [["good", "前後各 14 天"]],
-    note: "避開了行憲紀念日連假和聖誕節。",
-    alts: [["2027-12-05", "下午", "距 13 天，但改週日"]] },
-];
-
-/** 另一種排法：10 個月全部排晚上（週六晚上幾乎都被訂走，所以幾乎都是週日晚上）。[日期, 距看我笑話天數, 備註] */
-export const eveningPlan2027: [string, number, string][] = [
-  ["2027-03-14", 13, ""],
-  ["2027-04-25", 1, "看我笑話隔天"],
-  ["2027-05-23", 1, "看我笑話隔天"],
-  ["2027-06-06", 13, ""],
-  ["2027-07-04", 15, ""],
-  ["2027-08-01", 8, ""],
-  ["2027-09-26", 8, ""],
-  ["2027-10-24", 8, "光復節連假（10/10 也是國慶日，沒有不撞節日的晚上）"],
-  ["2027-11-07", 13, "也可以改 11/27 週六晚上（距 7 天）"],
-  ["2027-12-05", 13, ""],
+export const bookings2027: Booking[] = [
+  { month: 3, date: "2027-03-14", slot: "晚上", sunday: true, gap: "距 13 天", status: "洽詢中", note: "3 月只有這個時段符合條件。另外問卡米地 3/13（六）有沒有空，有的話改到 3/13。" },
+  { month: 4, date: "2027-04-25", slot: "下午", sunday: true, gap: "距 1 天", status: "洽詢中", note: "在 4/24 看我笑話的隔天；其他下午都在兒童節清明連假。" },
+  { month: 5, date: "2027-05-15", slot: "下午", gap: "距 7 天", status: "洽詢中", note: "避開母親節週末。" },
+  { month: 6, date: "2027-06-06", slot: "下午", sunday: true, gap: "距 13 天", status: "洽詢中", note: "6 月週六沒有符合條件的時段。" },
+  { month: 7, date: "2027-07-10", slot: "下午", gap: "距 14 天", status: "洽詢中", note: "" },
+  { month: 8, date: "2027-08-14", slot: "下午", gap: "距 7 天", status: "洽詢中", note: "避開父親節。" },
+  { month: 9, date: "2027-09-12", slot: "下午", sunday: true, gap: "距 6 天", status: "洽詢中", note: "9 月有三場看我笑話（9/4、9/5、9/18），夾在中間。" },
+  { month: 10, date: "2027-10-02", slot: "下午", gap: "距 14 天", status: "洽詢中", note: "避開國慶和光復節連假。" },
+  { month: 11, date: "2027-11-06", slot: "下午", gap: "距 14 天", status: "洽詢中", note: "" },
+  { month: 12, date: "2027-12-04", slot: "下午", gap: "距 14 天", status: "洽詢中", note: "避開行憲紀念日連假和聖誕節。" },
 ];

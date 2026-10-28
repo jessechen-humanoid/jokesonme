@@ -1,7 +1,7 @@
 "use client";
-// 2027 大廳帶狀節目月曆：仿 Google 日曆月檢視，切換 3–12 月；格子裡是大廳場次、建議日（實心）與備選（虛線）。
+// 2027 大廳帶狀節目月曆：仿 Google 日曆月檢視，切換 3–12 月；格子裡是大廳場次與我們要訂的帶狀節目。
 import { useState } from "react";
-import { hallEvents2027, holidays2027, isOpenMicSunday, monthPicks2027 } from "@/lib/venue-availability-2027";
+import { SLOT_TIME, bookings2027, hallEvents2027, holidays2027, isOpenMicSunday } from "@/lib/venue-availability-2027";
 
 const WEEKDAYS = "日一二三四五六";
 const HEAD = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
@@ -18,10 +18,7 @@ function clock(hm: string) {
   return `${part}${h > 12 ? h - 12 : h}${m ? `:${String(m).padStart(2, "0")}` : "點"}`;
 }
 
-const pickByDate = new Map(monthPicks2027.map((p) => [p.date, p]));
-const altByDate = new Map(monthPicks2027.flatMap((p) => p.alts.map((a) => [a[0], a] as const)));
-const slotClock = (slot: string) => (slot === "晚上" ? "晚上6點" : "下午1:30");
-const when = (p: { date: string; slot: string }) => `週${weekday(p.date)} ${p.slot}`;
+const bookingByDate = new Map(bookings2027.map((b) => [b.date, b]));
 
 function monthDays(month: number) {
   const first = new Date(Date.UTC(2027, month - 1, 1));
@@ -37,10 +34,31 @@ function monthDays(month: number) {
 
 export default function VenueCalendar() {
   const [month, setMonth] = useState(3);
-  const pick = monthPicks2027.find((p) => p.month === month)!;
+  const booking = bookings2027.find((b) => b.month === month)!;
 
   return (
     <>
+      <section className="vc-year">
+        <h2>訂場清單</h2>
+        <div className="vc-table">
+          <table>
+            <thead><tr><th>月</th><th>日期</th><th>時段</th><th>距看我笑話</th><th>狀態</th></tr></thead>
+            <tbody>
+              {bookings2027.map((b) => (
+                <tr key={b.month} aria-current={b.month === month} onClick={() => setMonth(b.month)}>
+                  <td className="m">{b.month}月</td>
+                  <td className="d">{md(b.date)}（{weekday(b.date)}）</td>
+                  <td>{b.slot} {SLOT_TIME[b.slot]}</td>
+                  <td className={b.gap === "距 1 天" || b.gap === "距 6 天" ? "bad" : "ok"}>{b.gap}</td>
+                  <td><span className={`vc-status ${b.status === "已確認" ? "done" : ""}`}>{b.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="vc-hint">點任一列可以切到那個月的月曆。</p>
+      </section>
+
       <section className="vc">
         <div className="vc-bar">
           <div className="vc-nav">
@@ -49,8 +67,8 @@ export default function VenueCalendar() {
           </div>
           <b className="vc-title">2027年{month}月</b>
           <div className="vc-months">
-            {monthPicks2027.map((p) => (
-              <button type="button" key={p.month} className={p.tradeoff ? "flag" : undefined} aria-pressed={p.month === month} onClick={() => setMonth(p.month)}>{p.month}月</button>
+            {bookings2027.map((b) => (
+              <button type="button" key={b.month} aria-pressed={b.month === month} onClick={() => setMonth(b.month)}>{b.month}月</button>
             ))}
           </div>
         </div>
@@ -60,16 +78,14 @@ export default function VenueCalendar() {
             const key = iso(d);
             const out = d.getUTCMonth() !== month - 1;
             const wd = d.getUTCDay();
-            const isPick = !out && pickByDate.has(key);
-            const alt = out ? undefined : altByDate.get(key);
+            const mine = out ? undefined : bookingByDate.get(key);
             const holiday = holidays2027[key];
-            const cls = ["vc-cell", out && "out", !out && (wd === 0 || wd === 6) && "we", isPick && "rec"].filter(Boolean).join(" ");
+            const cls = ["vc-cell", out && "out", !out && (wd === 0 || wd === 6) && "we", mine && "rec"].filter(Boolean).join(" ");
             return (
               <div className={cls} key={key}>
                 <div className="vc-num">{d.getUTCDate() === 1 ? <><em>{d.getUTCMonth() + 1}月 </em>1日</> : d.getUTCDate()}</div>
                 {holiday ? <div className="vc-hol" title={holiday}>{holiday}</div> : null}
-                {isPick ? <div className="vc-ev pick" title={`建議：帶狀節目 ${pickByDate.get(key)!.slot}場`}>★ {slotClock(pickByDate.get(key)!.slot)} 帶狀節目</div> : null}
-                {alt ? <div className="vc-ev alt" title={`備選：${alt[1]}（${alt[2]}）`}>備選 {slotClock(alt[1])}</div> : null}
+                {mine ? <div className="vc-ev pick" title={`帶狀節目 ${SLOT_TIME[mine.slot]}（${mine.status}）`}>★ 帶狀節目 {mine.slot}</div> : null}
                 {(hallEvents2027[key] ?? []).map(([time, title], i) => (
                   <div className={`vc-ev${title.includes("看我笑話") ? " ours" : ""}`} key={i} title={`${clock(time)} ${title}`}>{clock(time)} {title}</div>
                 ))}
@@ -79,8 +95,7 @@ export default function VenueCalendar() {
           })}
         </div>
         <div className="vc-legend">
-          <span><i className="sw pick" />建議日</span>
-          <span><i className="sw alt" />備選</span>
+          <span><i className="sw pick" />帶狀節目（要訂的場次）</span>
           <span><i className="dot ours" />看我笑話已訂</span>
           <span><i className="dot om" />漫才 open mic（推算）</span>
           <span><i className="dot" />別人已訂</span>
@@ -90,44 +105,17 @@ export default function VenueCalendar() {
 
       <section className="vc-detail">
         <div>
-          <p className="venue-eyebrow">{month} 月建議</p>
-          <p className="vc-big">{md(pick.date)}<small className={pick.sunday ? "sun" : undefined}>{when(pick)}</small></p>
-          <div className="vc-chips">{pick.chips.map(([tone, text]) => <span className={`vc-chip ${tone}`} key={text}>{text}</span>)}</div>
-        </div>
-        <div className="vc-detail-body">
-          <p>{pick.note}</p>
-          <div>
-            <p className="venue-eyebrow">備選</p>
-            {pick.alts.length ? pick.alts.map(([date, slot, why]) => (
-              <p className="vc-alt" key={date + slot}><b>{md(date)}（{weekday(date)}）{slot}</b><span>{why}</span></p>
-            )) : <p className="vc-alt"><span>沒有其他合格的時段</span></p>}
+          <p className="venue-eyebrow">{month} 月場次</p>
+          <p className="vc-big">{md(booking.date)}<small className={booking.sunday ? "sun" : undefined}>週{weekday(booking.date)} {booking.slot}</small></p>
+          <div className="vc-chips">
+            <span className={`vc-status ${booking.status === "已確認" ? "done" : ""}`}>{booking.status}</span>
+            <span className={`vc-chip ${booking.gap === "距 1 天" || booking.gap === "距 6 天" ? "warn" : "good"}`}>{booking.gap}</span>
           </div>
         </div>
-      </section>
-
-      <section className="vc-year">
-        <h2>全年總表</h2>
-        <div className="vc-table">
-          <table>
-            <thead><tr><th>月</th><th>建議日</th><th>時段</th><th>距看我笑話</th><th>取捨</th></tr></thead>
-            <tbody>
-              {monthPicks2027.map((p) => {
-                const gap = p.chips.filter(([tone, t]) => tone !== "warn" || t.startsWith("距"));
-                const cost = p.chips.filter(([tone, t]) => tone === "warn" && !t.startsWith("距")).map(([, t]) => t);
-                return (
-                  <tr key={p.month} aria-current={p.month === month} onClick={() => setMonth(p.month)}>
-                    <td className="m">{p.month}月</td>
-                    <td className="d">{md(p.date)}（{weekday(p.date)}）</td>
-                    <td className={p.sunday ? "bad" : undefined}>{when(p)}</td>
-                    <td>{gap.map(([tone, t]) => <span className={tone === "warn" ? "bad" : "ok"} key={t}>{t}</span>)}</td>
-                    <td className={cost.length ? "bad" : undefined}>{cost.join("、") || "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="vc-detail-body">
+          <p><b>{SLOT_TIME[booking.slot]}</b>・大廳・公開售票演出</p>
+          {booking.note ? <p className="vc-note">{booking.note}</p> : null}
         </div>
-        <p className="vc-hint">點任一列可以切到那個月的月曆。</p>
       </section>
     </>
   );

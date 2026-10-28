@@ -181,10 +181,6 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .venue-intro { padding:18px !important; }
 .venue-intro h2 { margin:3px 0 5px; font-size:20px; line-height:1.4; }
 .venue-intro > p:not(.venue-eyebrow) { color:var(--ink-2); font-size:var(--fs-secondary); max-width:66ch; }
-.venue-rules { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
-.venue-rules span { font-size:12px; padding:3px 9px; border-radius:999px; }
-.venue-rules .ok { color:var(--success); background:var(--success-bg); }
-.venue-rules .part { color:var(--warning); background:var(--warning-bg); }
 /* 月曆 */
 .content > section.vc { padding:0; overflow:hidden; }
 .vc-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; padding:10px 12px; border-bottom:1px solid var(--line-2); }
@@ -196,7 +192,6 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-months { display:flex; flex-wrap:wrap; gap:4px; margin-left:auto; }
 .vc-months button { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-variant-numeric:tabular-nums; }
 .vc-months button[aria-pressed="true"] { background:var(--ink); color:var(--surface); border-color:var(--ink); }
-.vc-months button.flag::after { content:""; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--brand); margin-left:5px; vertical-align:middle; }
 .vc-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
 .vc-dow { font-size:12px; color:var(--ink-2); text-align:center; padding:8px 0 2px; border-left:1px solid var(--line-2); }
 .vc-dow:first-child { border-left:0; }
@@ -216,13 +211,11 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-ev.om { color:var(--success); }
 .vc-ev.om::before { background:var(--success); }
 .vc-ev.pick { padding:1px 6px; background:var(--brand); color:#fff; font-weight:700; }
-.vc-ev.alt { padding:0 5px; border:1px dashed var(--brand); color:var(--ink); }
-.vc-ev.pick::before, .vc-ev.alt::before { display:none; }
+.vc-ev.pick::before { display:none; }
 .vc-legend { display:flex; flex-wrap:wrap; gap:6px 14px; padding:10px 12px; border-top:1px solid var(--line-2); font-size:12px; color:var(--ink-2); }
 .vc-legend span { display:inline-flex; align-items:center; gap:6px; }
 .vc-legend .sw { width:22px; height:12px; border-radius:3px; }
 .vc-legend .sw.pick { background:var(--brand); }
-.vc-legend .sw.alt { border:1px dashed var(--brand); }
 .vc-legend .dot { width:8px; height:8px; border-radius:50%; background:var(--ink-3); }
 .vc-legend .dot.ours { background:var(--brand); }
 .vc-legend .dot.om { background:var(--success); }
@@ -237,11 +230,11 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-chip.good { color:var(--success); background:var(--success-bg); }
 .vc-chip.warn { color:var(--danger-fin); background:var(--danger-bg); }
 .vc-detail-body { display:flex; flex-direction:column; gap:10px; font-size:14px; }
-.vc-alt { display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:3px; }
-.vc-alt span { color:var(--ink-2); }
+.vc-note { color:var(--ink-2); }
+.vc-status { display:inline-block; font-size:12px; padding:2px 8px; border-radius:6px; color:var(--warning); background:var(--warning-bg); white-space:nowrap; }
+.vc-status.done { color:var(--success); background:var(--success-bg); }
 /* 全年總表 */
-.vc-year h2, .venue-notes h2, .venue-evening h2 { font-size:var(--fs-title); margin-bottom:10px; }
-.venue-evening > p { color:var(--ink-2); font-size:var(--fs-secondary); margin:-4px 0 10px; max-width:70ch; }
+.vc-year h2, .venue-notes h2 { font-size:var(--fs-title); margin-bottom:10px; }
 .vc-table { overflow-x:auto; }
 .vc-table table { width:100%; min-width:560px; border-collapse:collapse; font-size:14px; }
 .vc-table th, .vc-table td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line-2); }
