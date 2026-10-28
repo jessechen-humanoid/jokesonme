@@ -235,13 +235,13 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .vc-chip { font-size:12px; padding:2px 8px; border-radius:6px; }
 .vc-chip.good { color:var(--success); background:var(--success-bg); }
-.vc-chip.same { color:var(--brand-deep); background:var(--brand-3); }
 .vc-chip.warn { color:var(--danger-fin); background:var(--danger-bg); }
 .vc-detail-body { display:flex; flex-direction:column; gap:10px; font-size:14px; }
 .vc-alt { display:flex; flex-wrap:wrap; gap:2px 8px; margin-top:3px; }
 .vc-alt span { color:var(--ink-2); }
 /* 全年總表 */
-.vc-year h2, .venue-notes h2 { font-size:var(--fs-title); margin-bottom:10px; }
+.vc-year h2, .venue-notes h2, .venue-evening h2 { font-size:var(--fs-title); margin-bottom:10px; }
+.venue-evening > p { color:var(--ink-2); font-size:var(--fs-secondary); margin:-4px 0 10px; max-width:70ch; }
 .vc-table { overflow-x:auto; }
 .vc-table table { width:100%; min-width:560px; border-collapse:collapse; font-size:14px; }
 .vc-table th, .vc-table td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line-2); }
@@ -253,7 +253,6 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-table td.d { font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
 .vc-table .ok { color:var(--success); }
 .vc-table .bad { color:var(--danger-fin); }
-.vc-table .same { color:var(--brand-deep); }
 .vc-hint { margin-top:6px; font-size:12px; color:var(--ink-3); }
 /* 判斷依據 */
 .venue-notes ul { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:14px; }

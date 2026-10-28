@@ -20,6 +20,8 @@ function clock(hm: string) {
 
 const pickByDate = new Map(monthPicks2027.map((p) => [p.date, p]));
 const altByDate = new Map(monthPicks2027.flatMap((p) => p.alts.map((a) => [a[0], a] as const)));
+const slotClock = (slot: string) => (slot === "晚上" ? "晚上6點" : "下午1:30");
+const when = (p: { date: string; slot: string }) => `週${weekday(p.date)} ${p.slot}`;
 
 function monthDays(month: number) {
   const first = new Date(Date.UTC(2027, month - 1, 1));
@@ -66,8 +68,8 @@ export default function VenueCalendar() {
               <div className={cls} key={key}>
                 <div className="vc-num">{d.getUTCDate() === 1 ? <><em>{d.getUTCMonth() + 1}月 </em>1日</> : d.getUTCDate()}</div>
                 {holiday ? <div className="vc-hol" title={holiday}>{holiday}</div> : null}
-                {isPick ? <div className="vc-ev pick" title="建議：帶狀節目 下午場 13:30–17:30">★ 下午1:30 帶狀節目</div> : null}
-                {alt ? <div className="vc-ev alt" title={`備選：${alt[1]}（${alt[2]}）`}>備選 {alt[1] === "晚上" ? "晚上6點" : "下午1:30"}</div> : null}
+                {isPick ? <div className="vc-ev pick" title={`建議：帶狀節目 ${pickByDate.get(key)!.slot}場`}>★ {slotClock(pickByDate.get(key)!.slot)} 帶狀節目</div> : null}
+                {alt ? <div className="vc-ev alt" title={`備選：${alt[1]}（${alt[2]}）`}>備選 {slotClock(alt[1])}</div> : null}
                 {(hallEvents2027[key] ?? []).map(([time, title], i) => (
                   <div className={`vc-ev${title.includes("看我笑話") ? " ours" : ""}`} key={i} title={`${clock(time)} ${title}`}>{clock(time)} {title}</div>
                 ))}
@@ -89,16 +91,16 @@ export default function VenueCalendar() {
       <section className="vc-detail">
         <div>
           <p className="venue-eyebrow">{month} 月建議</p>
-          <p className="vc-big">{md(pick.date)}<small className={pick.sunday ? "sun" : undefined}>{pick.when}</small></p>
+          <p className="vc-big">{md(pick.date)}<small className={pick.sunday ? "sun" : undefined}>{when(pick)}</small></p>
           <div className="vc-chips">{pick.chips.map(([tone, text]) => <span className={`vc-chip ${tone}`} key={text}>{text}</span>)}</div>
         </div>
         <div className="vc-detail-body">
           <p>{pick.note}</p>
           <div>
             <p className="venue-eyebrow">備選</p>
-            {pick.alts.map(([date, slot, why]) => (
-              <p className="vc-alt" key={date}><b>{md(date)}（{weekday(date)}）{slot}</b><span>{why}</span></p>
-            ))}
+            {pick.alts.length ? pick.alts.map(([date, slot, why]) => (
+              <p className="vc-alt" key={date + slot}><b>{md(date)}（{weekday(date)}）{slot}</b><span>{why}</span></p>
+            )) : <p className="vc-alt"><span>沒有其他合格的時段</span></p>}
           </div>
         </div>
       </section>
@@ -116,8 +118,8 @@ export default function VenueCalendar() {
                   <tr key={p.month} aria-current={p.month === month} onClick={() => setMonth(p.month)}>
                     <td className="m">{p.month}月</td>
                     <td className="d">{md(p.date)}（{weekday(p.date)}）</td>
-                    <td className={p.sunday ? "bad" : undefined}>{p.when}</td>
-                    <td>{gap.map(([tone, t]) => <span className={tone === "warn" ? "bad" : tone === "good" ? "ok" : "same"} key={t}>{t}</span>)}</td>
+                    <td className={p.sunday ? "bad" : undefined}>{when(p)}</td>
+                    <td>{gap.map(([tone, t]) => <span className={tone === "warn" ? "bad" : "ok"} key={t}>{t}</span>)}</td>
                     <td className={cost.length ? "bad" : undefined}>{cost.join("、") || "—"}</td>
                   </tr>
                 );
