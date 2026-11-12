@@ -293,6 +293,11 @@ test("以前年度未付：只列還有人未付的年度，由新到舊；超�
   ]);
   // 都付清 → 沒有提示
   assert.deepEqual(priorYearsUnpaid(rows, [...paid(MEMBERS, "2026-12-10"), ...paid(MEMBERS, "2027-12-10")], [], years, "2028"), []);
+  // 1 月出款預設算前一年的分潤：傑哥 2027-01-10 領 2026 的份 → 2026 的提示消失
+  const others = paid(MEMBERS.filter((m) => m !== "傑哥"), "2026-12-10");
+  assert.deepEqual(priorYearsUnpaid(rows, [...others, led("傑哥", 1000, "2027-01-10")], [], years, "2027"), []);
+  // 2 月才出款、分潤年度記成 2027 → 2026 仍然算未付（幫忙抓出年度選錯）
+  assert.deepEqual(priorYearsUnpaid(rows, [...others, { ...led("傑哥", 1000, "2027-02-05"), forYear: "2027" }], [], years, "2027"), [{ year: "2026", members: 1, amount: 1000 }]);
 });
 
 test("上次出款：每位成員最近一筆正數結算的日期；負數校正列不算；沒領過的不出現", () => {

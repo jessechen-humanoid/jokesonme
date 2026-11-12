@@ -121,7 +121,7 @@ export default function ShowPnlTable({ txs, shows, year, sort, dir, series, base
             </table>
           </div>
           <div className={`pnl-list mobile-only${compact ? "" : " panel"}`}>
-            <div className="pnl-sort"><span>排序</span>{sortLink("date", "日期")}{sortLink("net", "淨利")}{sortLink("income", "收入")}{sortLink("expense", "成本")}</div>
+            <div className="pnl-sort"><span>排序</span>{sortLink("date", "日期")}{sortLink("net", "淨利")}{sortLink("income", "收入")}{sortLink("expense", "成本")}{sortLink("name", "名稱")}</div>
             {items(perf)}
             {ledger.length ? <div className="pnl-group">{GROUP_LABEL}</div> : null}
             {items(ledger)}
@@ -133,7 +133,7 @@ export default function ShowPnlTable({ txs, shows, year, sort, dir, series, base
               <span className={`pnl-net${total.net < 0 ? " neg" : ""}`}>{money(total.net)}</span>
             </div>
           </div>
-          {limited && rows.length > shown.length && moreHref ? <Link className="toggle-done" href={moreHref}>看全部 {rows.length} 項</Link> : null}
+          {limited && rows.length > shown.length && moreHref ? <Link className="toggle-done" href={moreHref}>看全部 {rows.length} 項 →</Link> : null}
         </>
       )}
     </>

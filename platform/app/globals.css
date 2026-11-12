@@ -135,7 +135,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 @media (min-width: 900px) { .split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; } }
 @media (max-width: 899px) { .split > * + * { margin-top: 16px; } }
 /* 顯示切換：用 !important，才不會被後面元件自己的 display 蓋掉 */
-@media (max-width: 899px) { .desk-only { display: none !important; } }
+@media (max-width: 899.98px) { .desk-only { display: none !important; } } /* .98：瀏覽器縮放時寬度可能是小數，避免 899.5px 兩份同時出現 */
 @media (min-width: 900px) { .mobile-only { display: none !important; } }
 
 /* 表單與底部面板 */

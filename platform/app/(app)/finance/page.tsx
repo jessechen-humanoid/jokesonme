@@ -117,7 +117,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
         </section>
 
         <section id="shows">
-          <div className="section"><h2>演出收支</h2><Link href="/finance/shows">全部 <IconChevron className="chev" /></Link></div>
+          <div className="section"><h2>演出收支</h2><Link href={showsHref}>全部 <IconChevron className="chev" /></Link></div>
           <ShowPnlTable txs={txs} shows={shows} year={year} sort={sort} dir={dir} series={series} basePath="/finance" anchor="#shows" compact limit={5} moreHref={showsHref} />
         </section>
 
