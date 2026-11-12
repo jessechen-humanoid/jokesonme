@@ -1,31 +1,36 @@
-/* 視覺：柿子紅品牌版，2026-10-22 改版（openspec change ui-redesign）。
-   米色紙張底＋白色卡片；頁首是精簡頂列（不再有柿子紅標題卡）。
-   柿子紅只用在：演出列表的「下一場」大卡、主要按鈕與＋、目前分頁、急件日期、未認領標籤、勾選框外框。 */
+/* 視覺：看我笑話品牌三色，2026-11-12 改版（openspec change brand-palette-terracotta-navy）。
+   米白底＋白色卡片；赤陶橘是主色、海軍藍是輔色。
+   赤陶橘只用在：「下一場」大卡、主要按鈕與＋、目前分頁、急件日期、未認領標籤、勾選框外框、行事曆的今天。
+   海軍藍用在：篩選與選項的選取狀態、行事曆選到的那一天、圖表主要系列、「看我笑話」系列標籤。 */
 :root {
-  --ground: #F6F2E8;
-  --ground-2: #ECE5D4;
+  --ground: #F5F1E6;
+  --ground-2: #EDE7D9;
   --surface: #FFFFFF;
-  --surface-2: #FAF8F1;
-  --ink: #1E211B;
-  --ink-2: #4F554A;
-  --ink-3: #7A8074;
-  --line: #E2DBC9;
-  --line-2: #EFE9DB;
-  --brand: #E2673F;
-  --brand-deep: #B84D2A;
-  --brand-2: #F2B9A2;
-  --brand-3: #FBE3D8;
-  --brand-4: #FDF1EB;
-  --success: #3F6139; --success-bg: #E3ECDF;
-  --danger-fin: #A23B2A; --danger-bg: #F8E1DB;
-  --warning: #8F6A16; --warning-bg: #FAF1D6;
-  --shadow: 0 1px 2px rgba(31,34,28,.05), 0 8px 24px -16px rgba(31,34,28,.22);
-  --shadow-sm: 0 1px 2px rgba(31,34,28,.06);
+  --surface-2: #FAF8F2;
+  --ink: #17181C;
+  --ink-2: #4D4F57;
+  --ink-3: #65676F;
+  --line: #E1DBCB;
+  --line-2: #EEE9DC;
+  --brand: #C9562C;
+  --brand-deep: #9E3F1C;
+  --brand-2: #EBB8A3;
+  --brand-3: #F6DDD1;
+  --brand-4: #FBEEE8;
+  --accent: #1F2F6E;
+  --accent-2: #A9B3D6;
+  --accent-3: #DDE1F1;
+  --accent-4: #EEF0F8;
+  --success: #1F7A4D; --success-bg: #E6F2EB;
+  --danger-fin: #C2382E; --danger-bg: #FBE9E6;
+  --warning: #8A6410; --warning-bg: #FAF1D6;
+  --shadow: 0 1px 2px rgba(23,24,28,.05), 0 8px 24px -16px rgba(23,24,28,.22);
+  --shadow-sm: 0 1px 2px rgba(23,24,28,.06);
   /* 字級四級（spec brand-design-system「Four-step type scale」）：24 頁名與重點數字／17 區塊標題／15 內文與按鈕／13 次要文字。輸入框 16 避免手機放大。 */
   --fs-display: 24px; --fs-title: 17px; --fs-body: 15px; --fs-secondary: 13px; --fs-label: var(--fs-secondary); --fs-input: 16px;
   --nav-h: 64px;
   --side-w: 220px;
-  --border-hover: #CFC7B3;
+  --border-hover: #CCC5B2;
 }
 
 * { box-sizing: border-box; }
@@ -100,7 +105,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .toggle-done { display: block; text-align: center; font-size: var(--fs-secondary); color: var(--ink-2); padding: 12px; text-decoration: underline; text-underline-offset: 3px; }
 
 /* 浮動新增鈕 */
-.fab { position: fixed; right: max(16px, calc(50% - 380px + 16px)); bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 18px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; z-index: 20; box-shadow: 0 6px 18px -6px rgba(184,77,42,.6); border: 0; padding: 0; }
+.fab { position: fixed; right: max(16px, calc(50% - 380px + 16px)); bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); width: 56px; height: 56px; border-radius: 18px; background: var(--brand); color: #fff; display: inline-grid; place-items: center; z-index: 20; box-shadow: 0 6px 18px -6px rgba(158,63,28,.6); border: 0; padding: 0; }
 .fab svg { width: 26px; height: 26px; }
 .fab:hover { background: var(--brand-deep); }
 
@@ -135,7 +140,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 @media (min-width: 900px) { .mobile-only { display: none !important; } }
 
 /* 表單與底部面板 */
-.sheet-backdrop { position: fixed; inset: 0; background: rgba(30,33,27,.4); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(23,24,28,.4); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { background: var(--surface); width: 100%; max-width: 640px; border-radius: 24px 24px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); max-height: 90dvh; overflow-y: auto; }
 @media (min-width: 900px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 24px; padding: 24px; } }
 .sheet h2 { font-size: var(--fs-title); font-weight: 700; margin: 0 0 16px; }
@@ -144,7 +149,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .input, .select, .textarea { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: var(--fs-input); }
 .textarea { min-height: 96px; resize: vertical; line-height: 1.6; }
 .select { -webkit-appearance: none; appearance: none; padding-right: 40px; cursor: pointer; text-overflow: ellipsis;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234F554A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%234D4F57' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 14px center; background-size: 12px 8px; }
 .select::-ms-expand { display: none; }
 .input:focus, .select:focus, .textarea:focus { outline: 2px solid var(--brand); outline-offset: -1px; border-color: transparent; background-color: #fff; }
@@ -152,7 +157,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .pick { position: relative; }
 .pick input { position: absolute; opacity: 0; inset: 0; }
 .pick span { display: inline-flex; min-height: 44px; align-items: center; padding: 4px 14px; border-radius: 12px; background: var(--ground); border: 1px solid var(--line-2); font-size: var(--fs-body); font-weight: 500; }
-.pick input:checked + span { background: var(--brand-4); border-color: var(--brand-2); color: var(--brand-deep); }
+.pick input:checked + span { background: var(--accent-4); border-color: var(--accent-2); color: var(--accent); }
 .pick input:focus-visible + span { outline: 2px solid var(--brand); }
 .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .btn { min-height: 44px; padding: 0 18px; border-radius: 12px; border: 0; font-weight: 500; font-size: var(--fs-body); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
@@ -190,7 +195,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .vc-title { font-size:var(--fs-title); font-weight:700; min-width:7.5em; }
 .vc-months { display:flex; flex-wrap:wrap; gap:4px; margin-left:auto; }
 .vc-months button { font-size:12px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-variant-numeric:tabular-nums; }
-.vc-months button[aria-pressed="true"] { background:var(--ink); color:var(--surface); border-color:var(--ink); }
+.vc-months button[aria-pressed="true"] { background:var(--accent); color:var(--ground); border-color:var(--accent); }
 .vc-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
 .vc-dow { font-size:12px; color:var(--ink-2); text-align:center; padding:8px 0 2px; border-left:1px solid var(--line-2); }
 .vc-dow:first-child { border-left:0; }
@@ -294,14 +299,14 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .date-badge.none b { font-size: var(--fs-secondary); color: var(--ink-2); font-weight: 500; }
 
 /* 演出列表：下一場大卡（spec show-planning-page「Shows page emphasises only the next show」） */
-.hero { display: block; background: var(--brand); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 10px 28px -16px rgba(184,77,42,.7); }
-.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: var(--fs-secondary); font-weight: 500; opacity: .92; }
+.hero { display: block; background: var(--brand); color: #fff; border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 10px 28px -16px rgba(158,63,28,.7); }
+.hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: var(--fs-secondary); font-weight: 700; }
 .hero-title { font-size: var(--fs-display); font-weight: 700; line-height: 1.3; margin: 6px 0 14px; overflow-wrap: anywhere; }
 .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 @media (min-width: 560px) { .hero-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.hero-stats div { background: rgba(255,255,255,.16); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.hero-stats div { background: rgba(23,24,28,.16); border-radius: 12px; padding: 8px 10px; min-width: 0; }
 .hero-stats b { display: block; font-size: var(--fs-title); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.hero-stats span { display: block; font-size: var(--fs-secondary); opacity: .9; white-space: nowrap; }
+.hero-stats span { display: block; font-size: var(--fs-secondary); font-weight: 700; white-space: nowrap; }
 .show-row { display: flex; align-items: center; gap: 12px; }
 .show-row-main { flex: 1; min-width: 0; }
 .show-row-name { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -399,17 +404,17 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .pick-chip small { font-size: var(--fs-secondary); color: var(--brand-deep); font-weight: 700; line-height: 1.4; }
 .pick-chip span { font-size: var(--fs-body); font-weight: 500; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
 .pick-chip em { font-style: normal; font-size: var(--fs-secondary); color: var(--ink-2); line-height: 1.4; }
-.pick-chip.on { background: var(--brand-4); border-color: var(--brand-2); }
-.pick-chip.on span { color: var(--brand-deep); }
+.pick-chip.on { background: var(--accent-4); border-color: var(--accent-2); }
+.pick-chip.on span { color: var(--accent); }
 .pick-chip.ghost { background: transparent; border-style: dashed; justify-content: center; }
 .pick-hint { font-size: var(--fs-secondary); color: var(--ink-2); }
 .pick-more { display: flex; flex-direction: column; max-height: 240px; overflow-y: auto; border: 1px solid var(--line-2); border-radius: 12px; padding: 0; background: var(--surface-2); }
 .pick-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; min-height: 44px; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--line-2); border-radius: 0; background: transparent; text-align: left; font-size: var(--fs-body); }
 .pick-row:last-child { border-bottom: 0; }
 .pick-row em { font-style: normal; color: var(--ink-2); flex: none; font-size: var(--fs-secondary); }
-.pick-row.on { background: var(--brand-4); color: var(--brand-deep); }
+.pick-row.on { background: var(--accent-4); color: var(--accent); }
 
-/* 行事曆（spec: team-calendar）：演出＝柿子紅實心、內部行程＝深色外框、待辦＝灰色小點 */
+/* 行事曆（spec: team-calendar）：演出＝赤陶橘實心、內部行程＝深色外框、待辦＝灰色小點 */
 .cal-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start; }
 @media (min-width: 900px) { .cal-split { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; } }
 .cal-nav { display: flex; align-items: center; justify-content: space-between; margin: -6px -6px 8px; }
@@ -424,8 +429,8 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .cal-day.out { opacity: .4; }
 .cal-num { font-size: var(--fs-secondary); font-weight: 500; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-variant-numeric: tabular-nums; }
 .cal-day.today .cal-num { color: var(--brand-deep); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--brand); }
-.cal-day.on { background: var(--brand-4); }
-.cal-day.on .cal-num { background: var(--brand); color: #fff; box-shadow: none; }
+.cal-day.on { background: var(--accent-4); }
+.cal-day.on .cal-num { background: var(--accent); color: #fff; box-shadow: none; }
 .cal-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
 .cal-dots i, .cal-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
 .cal-dots i.show, .cal-legend i.show { background: var(--brand); }
@@ -435,8 +440,10 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 10px; font-size: var(--fs-secondary); color: var(--ink-2); flex-wrap: wrap; }
 .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .cal-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; margin-bottom: 6px; background: var(--surface-2); border: 1px solid var(--line-2); }
-.cal-item.show { background: var(--brand-4); border-color: var(--brand-3); border-left: 4px solid var(--brand); }
-.cal-item.event { background: var(--surface); border-color: var(--line); border-left: 4px solid var(--ink-2); }
+.cal-item.show::before, .cal-item.event::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; margin-right: -4px; }
+.cal-item.show::before { background: var(--brand); }
+.cal-item.event::before { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.cal-item.todo::before { content: ""; flex: none; width: 8px; height: 8px; margin-right: -4px; border-radius: 50%; background: radial-gradient(circle, var(--ink-3) 2.5px, transparent 3px); }
 .cal-item.todo { padding: 8px 12px; font-size: var(--fs-secondary); color: var(--ink-2); }
 .cal-time { flex: none; width: 44px; font-size: var(--fs-secondary); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .cal-item-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -557,13 +564,13 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .member-tile .next-date { display: block; margin-top: 4px; font-size: var(--fs-secondary); color: var(--ink-3); }
 
 /* 演出收支列表：類別 badge、篩選 chips */
-.badge.s-main { background: var(--success-bg); color: var(--success); }
+.badge.s-main { background: var(--accent-3); color: var(--accent); }
 .badge.s-mpr { background: var(--ground-2); color: var(--ink-2); }
 .badge.s-special { background: var(--brand-4); color: var(--brand-deep); }
 .badge.s-badge { background: var(--ground); color: var(--ink-2); }
 .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .filter-chips > a, .filter-chips > button { min-height: 34px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: var(--fs-secondary); font-weight: 500; color: var(--ink-2); }
-.filter-chips > .on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.filter-chips > .on { background: var(--accent); color: var(--ground); border-color: var(--accent); }
 .table.pnl td.name { white-space: normal; min-width: 160px; max-width: 320px; }
 .table.pnl td.name a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
 .table.pnl th:first-child, .table.pnl td:first-child { position: static; }
@@ -591,7 +598,7 @@ a.notice { display: block; }
 .inbox-line:last-child { border-bottom: 0; }
 .inbox-line input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand); flex: none; }
 .inbox-line .btn { flex: none; }
-.quick-entry .filter-chips button.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.quick-entry .filter-chips button.on { background: var(--accent); border-color: var(--accent); color: var(--ground); }
 
 /* 開發頁（spec dev-tickets）：只用既有 token，狀態色沿用成功／警示／品牌色 */
 .tk-card { text-decoration: none; color: inherit; }
@@ -602,7 +609,7 @@ a.notice { display: block; }
 .tk-status.tk-done { background: var(--success-bg); color: var(--success); }
 .tk-status.tk-wontfix { background: var(--ground-2); color: var(--ink-3); }
 .tk-filter { display: inline-flex; align-self: flex-start; width: fit-content; align-items: center; min-height: 36px; padding: 0 14px; margin-bottom: 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: var(--fs-secondary); font-weight: 500; }
-.tk-filter.on { background: var(--brand-4); border-color: var(--brand-3); color: var(--brand-deep); font-weight: 700; }
+.tk-filter.on { background: var(--accent); border-color: var(--accent); color: var(--ground); font-weight: 700; }
 .tk-sheet h2 { margin: 8px 0 4px; }
 .tk-people { color: var(--ink-2); font-size: var(--fs-secondary); margin: 0 0 12px; }
 .tk-actions { flex-wrap: wrap; margin-bottom: 12px; }
@@ -630,3 +637,28 @@ a.notice { display: block; }
 .cl-devices li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 12px; }
 .cl-devices .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cl-devices small { color: var(--ink-2); font-size: var(--fs-secondary); }
+
+/* ===== 貼紙感（2026-11-12，change brand-palette-terracotta-navy；spec brand-design-system「Sticker surface styling」） =====
+   只有最外層有粗框：卡片類是 2px 墨黑外框、沒有陰影；下一場大卡、主要按鈕、＋ 另外加實心偏移陰影。
+   卡片裡面的列、小卡、輸入框維持細線，一張卡片裡只會有一圈粗框。 */
+:root { --sticker: 2px solid var(--ink); --pop: 3px 3px 0 var(--ink); }
+.content > section, .panel, .show-todos-body > section, .two-col > section, .card, .table-wrap, .composer, .note, .more-shows, .summary-card, .next-row, .venue-entry-link { border: var(--sticker); box-shadow: none; }
+.panel .note-list .note { border: 1px solid var(--line-2); }
+.avatar, .icon-btn { border: var(--sticker); }
+.hero { border: var(--sticker); box-shadow: var(--pop); margin-bottom: 16px; }
+.hero .chev { color: #fff; }
+.btn-primary { border: var(--sticker); box-shadow: var(--pop); }
+.btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn-ghost { border: var(--sticker); }
+.btn-ghost:hover { border-color: var(--ink); background: var(--surface-2); }
+.fab { border: var(--sticker); box-shadow: var(--pop); }
+.filter-chips > a, .filter-chips > button, .tk-filter, .sched-chip { border: var(--sticker); box-shadow: none; }
+.filter-chips > .on, .quick-entry .filter-chips button.on, .tk-filter.on, .sched-chip.soon { border-color: var(--ink); }
+.filter-chips > :nth-child(odd) { transform: rotate(-1.5deg); }
+.filter-chips > :nth-child(even) { transform: rotate(1deg); }
+.nav { border-top: var(--sticker); }
+@media (min-width: 900px) { .nav { border-top: 0; border-right: var(--sticker); } }
+/* 這幾條既有規則的權重比上面的外框高，聚焦或點過之後框色要維持墨黑 */
+.composer:focus-within, .summary-card:hover { border-color: var(--ink); }
+/* 圖表色塊加一圈墨線：淺色的類別在米白底上才看得出邊界 */
+.stack-bar i, .part-list li:not(.total) i { box-shadow: inset 0 0 0 1px var(--ink); }
