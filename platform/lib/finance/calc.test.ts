@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  categoryShares, categoryTotals, commonFund, defaultSettlementYear, deriveSettleStatus, groupKey, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend,
+  categoryShares, categoryTotals, commonFund, defaultSettlementYear, deriveSettleStatus, groupKey, incomeComposition, inYear, lastPayoutByMember, memberEarnings, MEMBERS, monthlyTrend,
   normalizeExcluded, priorYearsUnpaid, roundPreservingSum, settlementYearOf, showPnlById, showSplit, taxReservesForShow, taxReserveSummary, yearsOf, yearSummary, type Ledger, type Tx,
 } from "./calc.ts";
 
@@ -293,4 +293,14 @@ test("以前年度未付：只列還有人未付的年度，由新到舊；超�
   ]);
   // 都付清 → 沒有提示
   assert.deepEqual(priorYearsUnpaid(rows, [...paid(MEMBERS, "2026-12-10"), ...paid(MEMBERS, "2027-12-10")], [], years, "2028"), []);
+});
+
+test("上次出款：每位成員最近一筆正數結算的日期；負數校正列不算；沒領過的不出現", () => {
+  const settlements = [
+    led("柏文", 1000, "2026-10-16"), led("柏文", 2000, "2026-11-10"), led("柏文", -500, "2026-11-20"), // 11/20 是負數校正，不是出款
+    led("巧達", 800, "2027-01-10"), led("巧達", 900, "2026-12-10"),
+  ];
+  assert.deepEqual(lastPayoutByMember(settlements), { 柏文: "2026-11-10", 巧達: "2027-01-10" });
+  assert.equal(lastPayoutByMember(settlements)["傑哥"], undefined);
+  assert.deepEqual(lastPayoutByMember([]), {});
 });

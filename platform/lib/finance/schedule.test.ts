@@ -48,8 +48,6 @@ test("列的狀態標籤", () => {
   assert.equal(nextProcessingLabel({ kind: "oen_unpaid" }, t), "Oen 撥款後 11/7 入帳");
   assert.equal(nextProcessingLabel({ kind: "oen_pending" }, t), "確認後 11/10 計入分潤");
   assert.equal(nextProcessingLabel({ kind: "booked" }, t), "11/10 分潤");
-  assert.equal(nextProcessingLabel({ kind: "member_unsettled", member: "柏文" }, t), "11/10 出款");
-  assert.equal(nextProcessingLabel({ kind: "member_unsettled", member: "傑哥" }, t), "12/31 年底一次領");
   assert.equal(nextProcessingLabel({ kind: "tech_fee", performanceDate: "2026-11-21" }, t), "演出隔天 11/22 出款");
   assert.equal(nextProcessingLabel({ kind: "paid", date: "2026-10-10" }, t), "10/10 已付");
 });

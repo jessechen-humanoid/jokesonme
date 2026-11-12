@@ -41,6 +41,12 @@ ShowPnlTable 新增 `limit?: number`。有給的時候：排序與篩選後取�
 
 MembershipChart 的表格包進 `<details className="chart-table"><summary>看每月數字</summary>…</details>`。財務總覽底部的「待確認」連結卡刪除；頁面仍需要 pending 數字給頁首的分頁用。
 
+### 成員卡顯示上次出款，不推算下一次
+
+Jesse 2026-11-12 指出成員卡上的「12/10 出款」不對：那是用「每月 10 號」推算的，實際出款日（正式庫的結算紀錄）是 4/27、6/5、7/9、8/9、9/14、10/16、11/10，並不固定。他選擇改成有紀錄根據的「上次出款 M/D」。在 calc.ts 新增純函式 lastPayoutByMember(settlements)：每位成員最近一筆正數結算的 date；負數校正列不算。成員卡顯示「上次出款 M/D」（非今年的日期帶年份），沒有紀錄時顯示「還沒有出款紀錄」。schedule.ts 的 `member_unsettled` 標籤與 `YEAR_END` 沒有其他使用處，一併刪除。
+
+首頁與財務總覽上方的「10 號 計算分潤、請財務出款」時程膠囊，以及演出頁「M/D 分潤」、待確認「確認後 M/D 計入分潤」仍沿用每月 10 號的規則，這次不動，待 Jesse 決定。
+
 ## Implementation Contract
 
 - 行為：見規格四條需求。

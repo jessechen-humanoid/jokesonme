@@ -12,6 +12,10 @@
 
 - [x] 3.1 Finance overview avoids duplicated blocks，對應「付費會員表收合、拿掉待確認卡」：MembershipChart 的逐月表包進預設收合的 details；刪除財務總覽底部的待確認連結卡。驗證：靜態 HTML 的會員表在 `<details>` 內且沒有 `open`；finance/page.tsx 不再有連到 `/finance/inbox` 的 `link-row` 卡片，頁首分頁仍收到 pendingCount。
 
+## 3b. 成員卡的出款日
+
+- [x] 3b.1 Member tile shows the last recorded payout，對應「成員卡顯示上次出款，不推算下一次」：calc.ts 新增 lastPayoutByMember（先寫測試）；成員卡改顯示「上次出款 M/D」或「還沒有出款紀錄」；刪除 schedule.ts 的 `member_unsettled` 與 `YEAR_END`。驗證：`npm test` 退出碼 0；用正式庫唯讀查詢每位成員最近一筆正數結算的日期，與畫面規則一致。
+
 ## 4. 驗收
 
 - [x] 4.1 [after: 1.2] [after: 2.2] [after: 3.1] 在 platform 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出導到檔案並印出退出碼。驗證：四個退出碼都是 0。

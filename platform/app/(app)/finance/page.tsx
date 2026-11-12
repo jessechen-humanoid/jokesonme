@@ -2,10 +2,10 @@ import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
 import { listLedger, listTransactions } from "@/lib/finance/data";
 import { listShows, pickableShows, seriesOf, toPickerData } from "@/lib/shows";
-import { commonFund, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend, priorYearsUnpaid, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
+import { commonFund, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, incomeComposition, inYear, lastPayoutByMember, memberEarnings, MEMBERS, monthlyTrend, priorYearsUnpaid, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
 import { membershipByMonth } from "@/lib/finance/members";
 import { countPendingLines, listMembershipLines } from "@/lib/finance/oen";
-import { financeSchedule, nextProcessingLabel } from "@/lib/finance/schedule";
+import { financeSchedule } from "@/lib/finance/schedule";
 import { todayInTaipei } from "@/lib/dates";
 import { displayName } from "@/lib/auth/users";
 import FinanceHead, { FORECAST_URL } from "@/components/finance-head";
@@ -38,6 +38,9 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
   const tax = taxReserveSummary(allTxs, year);
   const members = memberEarnings(allTxs, settlements, repayments, year);
   const priorUnpaid = priorYearsUnpaid(allTxs, settlements, repayments, years, year);
+  const lastPayout = lastPayoutByMember(settlements);
+  // 上次出款日：今年的只寫 M/D，其他年份帶上年份
+  const payoutDate = (iso: string) => `${iso.startsWith(today.slice(0, 4)) ? "" : `${iso.slice(0, 4)}/`}${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
   const months = monthlyTrend(allTxs, year);
   const parts = incomeComposition(txs);
   const schedule = financeSchedule(today, shows.map((s) => ({ name: s.name, type: s.type, series: seriesOf(s), performanceDate: s.performanceDate, kind: s.kind })));
@@ -97,7 +100,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
                   <dt>未付</dt><dd className={m.unsettledNet < 0 ? "neg" : ""}>{money(m.unsettledNet)}</dd>
                   {m.advanceUnsettled !== 0 ? <><dt>代墊未結清</dt><dd className="neg" title={m.advanceUnsettled < 0 ? "超還：代墊已結清大於代墊總額" : undefined}>{money(m.advanceUnsettled)}</dd></> : null}
                 </dl>
-                <small className="next-date">{m.unsettledNet > 0 ? nextProcessingLabel({ kind: "member_unsettled", member: m.name }, today) : "無未付"}</small>
+                <small className="next-date">{lastPayout[m.name] ? `上次出款 ${payoutDate(lastPayout[m.name])}` : "還沒有出款紀錄"}</small>
               </div>
             ))}
           </div>

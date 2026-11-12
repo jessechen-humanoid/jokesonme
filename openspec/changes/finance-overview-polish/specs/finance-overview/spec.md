@@ -72,3 +72,22 @@ The finance overview SHALL present the paid-membership monthly figures table col
 
 - **WHEN** user opens the finance overview while 31 Oen lines are pending
 - **THEN** the pending count appears on the 待確認 tab and no separate pending card appears below the show list
+
+### Requirement: Member tile shows the last recorded payout
+
+Each member tile on the finance overview SHALL show the date of that member's most recent recorded payout, taken from the member's latest settlement with a positive amount (the settlement's payout date, regardless of which distribution year it was booked for). Negative correction settlements SHALL NOT count as payouts. A date in the current Taipei calendar year SHALL be shown as month and day; a date in another year SHALL include the year. When a member has no positive settlement the tile SHALL state that there is no payout record. The member tile SHALL NOT show a predicted next payout date.
+
+#### Scenario: Member with payouts
+
+- **WHEN** 柏文 has positive settlements dated 2026-10-16 and 2026-11-10 and today is 2026-11-12
+- **THEN** 柏文's tile shows 上次出款 11/10 and no future payout date
+
+#### Scenario: Member without payouts
+
+- **WHEN** 傑哥 has no settlements
+- **THEN** 傑哥's tile shows that there is no payout record
+
+#### Scenario: Correction rows are ignored
+
+- **WHEN** a member's latest settlement is a negative correction dated 2026-11-20 and the latest positive settlement is dated 2026-11-10
+- **THEN** the tile shows 上次出款 11/10

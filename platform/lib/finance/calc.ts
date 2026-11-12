@@ -264,6 +264,17 @@ export function priorYearsUnpaid(allTxs: Tx[], allSettlements: Ledger[], allReim
   return out;
 }
 
+/**
+ * 每位成員「上次出款」的日期：最近一筆正數結算的實際出款日（date，不是分潤年度）。
+ * 負數的校正列不是出款，不算。沒有領過的成員不會出現在結果裡。
+ * 畫面顯示這個有紀錄的日期，不再用「每月 10 號」推算下一次（實際出款日從 5 號到 27 號都有，Jesse 2026-11-12）。
+ */
+export function lastPayoutByMember(settlements: readonly Ledger[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const s of settlements) if (s.amount > 0 && (!out[s.member] || s.date > out[s.member])) out[s.member] = s.date;
+  return out;
+}
+
 /** 代墊結清狀態：各成員還款池 = 代墊還款帳本加總；該成員所有代墊交易依日期、同日依列順序，由舊到新沖銷。 */
 export type SettleStatus = { status: "settled" | "partial" | "unsettled"; reimbursedAmount: number };
 export function deriveSettleStatus(txs: Tx[], reimbursements: Ledger[]): Map<string, SettleStatus> {
