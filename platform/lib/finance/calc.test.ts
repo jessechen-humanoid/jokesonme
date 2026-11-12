@@ -53,6 +53,23 @@ test("稅務預留：退款扣減同分組的基礎，平台手續費不扣，�
   assert.deepEqual(taxReservesForShow("10 月號", legacy), [{ excludedMembers: [], amount: -180, date: "2026-10-09" }]);
 });
 
+test("稅務預留：依年度分開，新年度的收入與退款不會改到前一年的預留（0019）", () => {
+  const dec = tx({ amount: 100000, category: "付費會員", date: "2026-12-20" });
+  const jan = tx({ amount: 10000, category: "付費會員", date: "2027-01-05" });
+  const refund = tx({ amount: -4000, category: "退款", date: "2027-02-01" });
+  assert.deepEqual(taxReservesForShow("看我笑話會員", [dec]), [{ excludedMembers: [], amount: -3000, date: "2026-12-20" }]);
+  assert.deepEqual(taxReservesForShow("看我笑話會員", [dec, jan]), [
+    { excludedMembers: [], amount: -3000, date: "2026-12-20" },
+    { excludedMembers: [], amount: -300, date: "2027-01-05" },
+  ]);
+  assert.deepEqual(taxReservesForShow("看我笑話會員", [dec, jan, refund]), [
+    { excludedMembers: [], amount: -3000, date: "2026-12-20" },
+    { excludedMembers: [], amount: -180, date: "2027-02-01" }, // (10000 − 4000) × 3%，日期取 2027 最新一筆
+  ]);
+  // 2027 只有退款：基礎以 0 為下限，不產生 2027 的預留，也不回頭扣 2026
+  assert.deepEqual(taxReservesForShow("看我笑話會員", [dec, refund]), [{ excludedMembers: [], amount: -3000, date: "2026-12-20" }]);
+});
+
 test("共同基金：共同基金支付的支出不算共同支出，只算已動用；提撥取整、提撥＋可分配＝共同淨利", () => {
   const f = commonFund([tx({ amount: 10000 }), tx({ amount: -2000 }), tx({ amount: -1000, paidByFund: true })]);
   assert.equal(f.commonNetProfit, 8000);

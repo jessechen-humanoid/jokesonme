@@ -25,3 +25,23 @@ test("收入全刪光：所有自動預留都軟刪除", () => {
   const plan = planReserveSync([{ id: "a", excludedMembers: [], amount: -300, date: "2026-10-01" }], []);
   assert.deepEqual(plan, { inserts: [], updates: [], removes: ["a"] });
 });
+
+test("同一分組不同年度是兩筆：各自比對，不會互相取代（0019）", () => {
+  const plan = planReserveSync(
+    [{ id: "y26", excludedMembers: [], amount: -3000, date: "2026-12-20" }],
+    [
+      { excludedMembers: [], amount: -3000, date: "2026-12-20" },
+      { excludedMembers: [], amount: -300, date: "2027-01-05" },
+    ],
+  );
+  assert.deepEqual(plan, { inserts: [{ excludedMembers: [], amount: -300, date: "2027-01-05" }], updates: [], removes: [] });
+  // 舊規則留下來、被搬到 2027 的合併列：2026 要補回、2027 那筆更新成只算 2027
+  const merged = planReserveSync(
+    [{ id: "old", excludedMembers: [], amount: -3300, date: "2027-01-05" }],
+    [
+      { excludedMembers: [], amount: -3000, date: "2026-12-20" },
+      { excludedMembers: [], amount: -300, date: "2027-01-05" },
+    ],
+  );
+  assert.deepEqual(merged, { inserts: [{ excludedMembers: [], amount: -3000, date: "2026-12-20" }], updates: [{ id: "old", amount: -300, date: "2027-01-05" }], removes: [] });
+});
