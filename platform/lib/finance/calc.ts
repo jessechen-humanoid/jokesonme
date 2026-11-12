@@ -1,10 +1,10 @@
 // 財務計算規則（task 10.1）。逐條對照舊平台：
-//   - 稅務預留：gas/Code.gs recalcTaxReserveForShow（2026-11 起改：退款扣減基礎、基礎不為負；見 taxReservesForShow）
+//   - 稅務預留：gas/Code.gs recalcTaxReserveForShow（2026-11 起改：退款扣減基礎、基礎不為負、依年度分開；見 taxReservesForShow）
 //   - 共同基金、各專案損益、成員年度報表：js/analytics.js loadAnalytics / renderShowPnl / renderMemberEarnings
 //   - 代墊結清狀態（成員層級 FIFO）：js/transaction.js deriveSettleStatus
 // 舊規則怎麼算這裡就怎麼算（包含四捨五入的位置），改這裡前先確認舊平台的行為。
 // 2026-11 審查後的調整（_review/claude_review.md）：年度邊界、最大餘數法、基金提撥取整、退款。
-// 資料庫端 supabase/migrations/0013_finance_rules.sql 的 finance_sync_tax_reserve 必須與 taxReservesForShow 算出同樣結果
+// 資料庫端的 finance_sync_tax_reserve（0013_finance_rules.sql 建立、0019_tax_reserve_per_year.sql 改成依年度分開）必須與 taxReservesForShow 算出同樣結果
 // （scripts/check-tax-reserves.mts 用來核對）。
 
 export const MEMBERS = ["傑哥", "柏文", "巧達", "芭樂", "又又", "兔子", "大弋", "竹節蟲"] as const;
@@ -104,6 +104,9 @@ export function roundPreservingSum(values: readonly number[]): number[] {
 
 // ---- 稅務預留 ----
 
+/** 自動稅務預留的分組鍵：排除成員＋日期的年度。預留列的日期取自同年度的計入列，所以現有列也用自己的日期對應。 */
+export const reserveGroupKey = (excludedMembers: readonly string[], date: string): string => `${groupKey(excludedMembers)}|${yearOf(date)}`;
+
 /**
  * 哪些列算進 3% 的基礎：所有收入（正數），加上退款（「退款」分類、或收入分類的負數列）。
  * 平台手續費等其他支出不扣；系統自動產生的稅務預留本身不算。
@@ -115,8 +118,10 @@ export function countsTowardTaxBase(t: Pick<Tx, "amount" | "category" | "autoGen
 }
 
 /**
- * 稅務預留：某專案依「排除成員」分組，基礎 = 該組收入 − 退款（最低 0），每組一筆 -round(3%)，
- * 日期取該組最新一列（收入或退款）的日期。基礎為 0 的分組不提列。共同基金支出專案不提列。
+ * 稅務預留：某專案依「排除成員 × 台北日曆年」分組，基礎 = 該組該年的收入 − 退款（最低 0），每組一筆 -round(3%)，
+ * 日期取該組該年最新一列（收入或退款）的日期。基礎為 0 的分組不提列。共同基金支出專案不提列。
+ * 依年度分開（0019）：某年度的預留只看該年度的列，之後其他年度再進收入或退款都不會改到它；
+ * 跨年退款扣在退款當年，當年沒有收入可扣時不產生負的預留，也不回頭改前一年。
  */
 export type ReserveGroup = { excludedMembers: string[]; amount: number; date: string };
 export function taxReservesForShow(showName: string, showTxs: Tx[]): ReserveGroup[] {
@@ -124,7 +129,7 @@ export function taxReservesForShow(showName: string, showTxs: Tx[]): ReserveGrou
   const groups = new Map<string, { excluded: string[]; total: number; latest: string }>();
   for (const t of showTxs) {
     if (!countsTowardTaxBase(t)) continue;
-    const key = groupKey(t.excludedMembers);
+    const key = reserveGroupKey(t.excludedMembers, t.date);
     const g = groups.get(key) ?? { excluded: sortExcluded(t.excludedMembers), total: 0, latest: t.date };
     g.total += t.amount;
     if (t.date > g.latest) g.latest = t.date;

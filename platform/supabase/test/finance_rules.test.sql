@@ -1,4 +1,4 @@
--- 本機資料庫測試：0013 財務規則（寫入＋重算同交易、冪等匯入、排除成員正規化、專案參與成員）
+-- 本機資料庫測試：0013 財務規則（寫入＋重算同交易、冪等匯入、排除成員正規化、專案參與成員）與 0019 稅務預留依年度分開
 \set ON_ERROR_STOP on
 begin;
 set local app.actor = 'migration';
@@ -106,10 +106,73 @@ begin
   end;
 end $$;
 
+-- 0019 稅務預留依年度分開（spec tax-reserve-calculation「Automatic tax reserve expense per show and allocation group」的跨年範例）：
+-- 某年度的預留只看該年度的收入與退款；其他年度的收支變動不會改到它
+begin;
+set local app.actor = 'migration';
+insert into shows (id, name, type) values ('00000000-0000-0000-0000-0000000000c2', '跨年測試科目', 'other');
+commit;
+
+do $$
+declare
+  c2 constant uuid := '00000000-0000-0000-0000-0000000000c2';
+  v_2026_id uuid;
+  v_income_2027 uuid;
+  v_move uuid;
+  n int;
+  r record;
+begin
+  perform set_config('app.actor', 'user:U_rules', true);
+
+  -- 只有 2026 的收入 → 一筆 2026 的預留
+  perform finance_save_transaction(null, c2, '{"category":"付費會員","notes":"12 月","amount":100000,"excluded_members":[],"date":"2026-12-20"}'::jsonb);
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null;
+  if n <> 1 then raise exception 'FAIL: 只有 2026 收入時應有 1 筆預留，實際 %', n; end if;
+  select id, amount, date into r from transactions where show_id = c2 and auto_generated and deleted_at is null;
+  if r.amount <> -3000 or r.date <> date '2026-12-20' then raise exception 'FAIL: 2026 預留應為 -3000（2026-12-20），實際 %（%）', r.amount, r.date; end if;
+  v_2026_id := r.id;
+
+  -- 2027 再進一筆收入 → 2026 那筆不動，另外多一筆 2027 的預留
+  v_income_2027 := finance_save_transaction(null, c2, '{"category":"付費會員","notes":"1 月","amount":10000,"excluded_members":[],"date":"2027-01-05"}'::jsonb);
+  select amount, date into r from transactions where id = v_2026_id and deleted_at is null;
+  if not found or r.amount <> -3000 or r.date <> date '2026-12-20' then
+    raise exception 'FAIL: 2027 進收入後，2026 的預留被改動或合併了（應維持 -3000、2026-12-20），實際 %（%）', r.amount, r.date;
+  end if;
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null and date = date '2027-01-05' and amount = -300;
+  if n <> 1 then raise exception 'FAIL: 2027 應另有一筆 -300（2027-01-05）的預留'; end if;
+
+  -- 2027 的退款只扣 2027 的基礎：(10000 − 4000) × 3% = 180，日期跟著 2027 最新一筆
+  perform finance_save_transaction(null, c2, '{"category":"退款","notes":"退","amount":-4000,"excluded_members":[],"date":"2027-02-01"}'::jsonb);
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null and date = date '2027-02-01' and amount = -180;
+  if n <> 1 then raise exception 'FAIL: 2027 退款後，2027 的預留應為 -180（2027-02-01）'; end if;
+  if (select amount from transactions where id = v_2026_id and deleted_at is null) is distinct from -3000 then raise exception 'FAIL: 2027 的退款改到了 2026 的預留'; end if;
+
+  -- 2027 只剩退款：基礎以 0 為下限，不產生 2027 的預留，也不回頭扣 2026
+  perform finance_delete_transaction(v_income_2027, 'U_rules');
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null;
+  if n <> 1 then raise exception 'FAIL: 2027 只有退款時應只剩 2026 那一筆預留，實際 % 筆', n; end if;
+  select amount, date into r from transactions where id = v_2026_id and deleted_at is null;
+  if not found or r.amount <> -3000 or r.date <> date '2026-12-20' then raise exception 'FAIL: 2027 只有退款時，2026 的預留應維持 -3000（2026-12-20）'; end if;
+
+  -- 改日期跨年：兩個年度都重算（另一個分組，免得跟上面混在一起）
+  v_move := finance_save_transaction(null, c2, '{"category":"其他收入","notes":"搬","amount":10000,"excluded_members":["傑哥"],"date":"2026-12-28"}'::jsonb);
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null and excluded_members = array['傑哥'] and date = date '2026-12-28' and amount = -300;
+  if n <> 1 then raise exception 'FAIL: 搬日期前應有一筆 2026 的 -300'; end if;
+  perform finance_save_transaction(v_move, null, '{"category":"其他收入","notes":"搬","amount":10000,"excluded_members":["傑哥"],"date":"2027-01-03"}'::jsonb);
+  select count(*) into n from transactions where show_id = c2 and auto_generated and deleted_at is null and excluded_members = array['傑哥'];
+  if n <> 1 then raise exception 'FAIL: 搬日期後這個分組應只有一筆預留，實際 %', n; end if;
+  if not exists (select 1 from transactions where show_id = c2 and auto_generated and deleted_at is null and excluded_members = array['傑哥'] and date = date '2027-01-03' and amount = -300) then
+    raise exception 'FAIL: 搬日期後預留應落在 2027-01-03';
+  end if;
+  if (select amount from transactions where id = v_2026_id and deleted_at is null) is distinct from -3000 then raise exception 'FAIL: 別的分組搬日期改到了共同分組 2026 的預留'; end if;
+end $$;
+
 -- 唯一索引確實存在（測試庫沒有重複資料）
 do $$
 begin
-  if not exists (select 1 from pg_indexes where indexname = 'transactions_auto_reserve_uq') then raise exception 'FAIL: 缺 transactions_auto_reserve_uq'; end if;
+  if not exists (select 1 from pg_indexes where indexname = 'transactions_auto_reserve_uq' and indexdef ilike '%excluded_members%' and indexdef ilike '%year%') then
+    raise exception 'FAIL: transactions_auto_reserve_uq 不存在，或沒有把年度算進去（0019）';
+  end if;
   if not exists (select 1 from pg_indexes where indexname = 'transactions_oen_key_uq') then raise exception 'FAIL: 缺 transactions_oen_key_uq'; end if;
 end $$;
 \echo 'FINANCE RULES TESTS PASSED'
