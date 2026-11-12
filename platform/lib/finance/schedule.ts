@@ -8,8 +8,6 @@ import { addDays } from "../dates.ts";
 
 export const OEN_LEDGER_DAY = 7;
 export const PAYOUT_DAY = 10;
-/** 年底結算日：傑哥的分潤一次領。 */
-export const YEAR_END = "12-31";
 
 export type ScheduleEvent = {
   key: "oen" | "payout" | "tech";
@@ -84,7 +82,6 @@ export type RowStatus =
   | { kind: "oen_unpaid" }            // Oen 已售、未撥款
   | { kind: "oen_pending" }           // 已撥款、待確認（inbox）
   | { kind: "booked" }                // 已入帳的收支
-  | { kind: "member_unsettled"; member: string } // 成員未領
   | { kind: "tech_fee"; performanceDate: string } // 技術費
   | { kind: "paid"; date: string };   // 已出款
 
@@ -93,8 +90,6 @@ export function nextProcessingLabel(status: RowStatus, today: string): string {
     case "oen_unpaid": return `Oen 撥款後 ${shortDate(nextMonthlyDate(today, OEN_LEDGER_DAY))} 入帳`;
     case "oen_pending": return `確認後 ${shortDate(nextMonthlyDate(today, PAYOUT_DAY))} 計入分潤`;
     case "booked": return `${shortDate(nextMonthlyDate(today, PAYOUT_DAY))} 分潤`;
-    case "member_unsettled":
-      return status.member === "傑哥" ? `${YEAR_END.replace("-", "/").replace(/^0/, "")} 年底一次領` : `${shortDate(nextMonthlyDate(today, PAYOUT_DAY))} 出款`;
     case "tech_fee": return `演出隔天 ${shortDate(techFeeDate(status.performanceDate))} 出款`;
     case "paid": return `${shortDate(status.date)} 已付`;
   }

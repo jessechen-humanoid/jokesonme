@@ -135,7 +135,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 @media (min-width: 900px) { .split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; } }
 @media (max-width: 899px) { .split > * + * { margin-top: 16px; } }
 /* 顯示切換：用 !important，才不會被後面元件自己的 display 蓋掉 */
-@media (max-width: 899px) { .desk-only { display: none !important; } }
+@media (max-width: 899.98px) { .desk-only { display: none !important; } } /* .98：瀏覽器縮放時寬度可能是小數，避免 899.5px 兩份同時出現 */
 @media (min-width: 900px) { .mobile-only { display: none !important; } }
 
 /* 表單與底部面板 */
@@ -703,3 +703,17 @@ textarea.input { resize: vertical; }
   .page { margin-left: calc(var(--side-w) + 40px); }
   .fab { bottom: 32px; }
 }
+
+/* 演出收支的手機清單（spec finance-overview「Show profit and loss stays readable on narrow screens」）：每場一列，淨利固定在右邊 */
+.pnl-list.panel { padding: 8px 16px; }
+.pnl-sort { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 6px 0 4px; font-size: var(--fs-secondary); color: var(--ink-2); }
+.pnl-sort a { min-height: 32px; display: inline-flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line); }
+.pnl-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+.pnl-item:last-child { border-bottom: 0; }
+.pnl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pnl-main b { font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+.pnl-main small { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: var(--fs-secondary); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.pnl-net { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pnl-group { padding: 12px 0 2px; font-size: var(--fs-secondary); color: var(--ink-2); }
+.pnl-item.total .pnl-main b { font-weight: 700; }
+.table.pnl td.name, .table.pnl th:nth-child(2) { text-align: left; }

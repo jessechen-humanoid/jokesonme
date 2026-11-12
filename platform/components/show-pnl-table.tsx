@@ -4,6 +4,8 @@ import { seriesOf, SHOW_SERIES, type Show, type ShowSeries } from "@/lib/shows";
 
 // 演出收支列表（取代每場一個下拉選單）：日期、名稱、類別 badge、收入、成本、淨利；可排序、可依類別篩選；點列進詳細頁。
 // 伺服器端渲染，排序與篩選用網址參數（和逐筆、分析頁的做法一致，手機也不用等 JS）。
+// 同時輸出兩份（spec finance-overview）：電腦（≥ 900px）是六欄表格；手機是每場一列的清單，不用橫向捲就看得到淨利。
+// limit：只列排序後的前幾列（財務總覽用），合計仍是全部列的合計。
 type SortKey = "date" | "name" | "income" | "expense" | "net";
 const SORT_KEYS: SortKey[] = ["date", "name", "income", "expense", "net"];
 const money = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(Math.round(n)).toLocaleString()}`;
@@ -38,16 +40,24 @@ export function sortPnlRows(rows: PnlRow[], key: SortKey, dir: "asc" | "desc"): 
   });
 }
 
-export default function ShowPnlTable({ txs, shows, year, sort, dir, series, basePath, anchor = "", compact = false }: {
+export default function ShowPnlTable({ txs, shows, year, sort, dir, series, basePath, anchor = "", compact = false, limit, moreHref }: {
   txs: ReadonlyArray<Tx & { showId: string }>; shows: Show[]; year: string; sort?: string; dir?: string; series?: string; basePath: string; anchor?: string; compact?: boolean;
+  /** 只列前幾列；不給就全部列出並把非演出科目分一組 */
+  limit?: number;
+  /** 有 limit 且還有更多列時，「看全部」連到哪裡 */
+  moreHref?: string;
 }) {
   const sortKey: SortKey = SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : "date";
   const d: "asc" | "desc" = dir === "asc" || dir === "desc" ? dir : sortKey === "name" ? "asc" : "desc";
   const filter = (SHOW_SERIES as readonly string[]).includes(series ?? "") ? (series as ShowSeries) : null;
   const all = buildPnlRows(txs, shows);
   const rows = sortPnlRows(filter ? all.filter((r) => r.series === filter) : all, sortKey, d);
-  const perf = rows.filter((r) => r.kind === "performance");
-  const ledger = rows.filter((r) => r.kind !== "performance");
+  const limited = limit !== undefined;
+  const shown = limited ? rows.slice(0, limit) : rows;
+  const perf = limited ? shown : shown.filter((r) => r.kind === "performance");
+  const ledger = limited ? [] : shown.filter((r) => r.kind !== "performance");
+  const totalLabel = limited && rows.length > shown.length ? `全部 ${rows.length} 項合計` : "合計";
+  const GROUP_LABEL = "非演出科目（會員、頻道、共同基金…）";
   const href = (q: Record<string, string | undefined>) => {
     const p = new URLSearchParams({ year });
     const merged = { sort: sortKey, dir: d, series: filter ?? undefined, ...q };
@@ -71,6 +81,19 @@ export default function ShowPnlTable({ txs, shows, year, sort, dir, series, base
     </tr>
   ));
 
+  const dateText = (r: PnlRow) => (r.date ? r.date.slice(5).replace("-", "/") : "—");
+  const seriesTag = (r: PnlRow) => (r.series ? <span className={`badge ${SERIES_CLASS[r.series]}`}>{r.series}</span> : <span className="tag">科目</span>);
+  const items = (list: PnlRow[]) => list.map((r) => (
+    <Link key={r.showId} className="pnl-item" href={`/finance/shows/${r.showId}`}>
+      <span className="pnl-main">
+        <b>{r.name}</b>
+        <small>{r.date ? <span>{dateText(r)}</span> : null}{seriesTag(r)}</small>
+        <small>收入 {money(r.income)}・成本 {money(r.expense)}</small>
+      </span>
+      <span className={`pnl-net${r.net < 0 ? " neg" : ""}`}>{money(r.net)}</span>
+    </Link>
+  ));
+
   return (
     <>
       <div className="filter-chips" role="group" aria-label="依類別篩選">
@@ -78,24 +101,40 @@ export default function ShowPnlTable({ txs, shows, year, sort, dir, series, base
         {SHOW_SERIES.map((s) => <Link key={s} className={filter === s ? "on" : ""} href={href({ series: s })}>{s}</Link>)}
       </div>
       {rows.length === 0 ? <p className="empty">{year} 年沒有符合的收支</p> : (
-        <div className={`table-wrap${compact ? " flat" : ""}`}>
-          <table className="table pnl">
-            <thead>
-              <tr><th>{sortLink("date", "日期")}</th><th>{sortLink("name", "名稱")}</th><th>類別</th><th>{sortLink("income", "收入")}</th><th>{sortLink("expense", "成本")}</th><th>{sortLink("net", "淨利")}</th></tr>
-            </thead>
-            <tbody>
-              {body(perf)}
-              {ledger.length ? <tr className="group"><td colSpan={6}>非演出科目（會員、頻道、共同基金…）</td></tr> : null}
-              {body(ledger)}
-              <tr className="total">
-                <td colSpan={3}>合計</td>
-                <td className="pos">{money(total.income)}</td>
-                <td className="neg">{money(total.expense)}</td>
-                <td className={total.net < 0 ? "neg" : ""}>{money(total.net)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className={`table-wrap desk-only${compact ? " flat" : ""}`}>
+            <table className="table pnl">
+              <thead>
+                <tr><th>{sortLink("date", "日期")}</th><th>{sortLink("name", "名稱")}</th><th>類別</th><th>{sortLink("income", "收入")}</th><th>{sortLink("expense", "成本")}</th><th>{sortLink("net", "淨利")}</th></tr>
+              </thead>
+              <tbody>
+                {body(perf)}
+                {ledger.length ? <tr className="group"><td colSpan={6}>{GROUP_LABEL}</td></tr> : null}
+                {body(ledger)}
+                <tr className="total">
+                  <td colSpan={3}>{totalLabel}</td>
+                  <td className="pos">{money(total.income)}</td>
+                  <td className="neg">{money(total.expense)}</td>
+                  <td className={total.net < 0 ? "neg" : ""}>{money(total.net)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className={`pnl-list mobile-only${compact ? "" : " panel"}`}>
+            <div className="pnl-sort"><span>排序</span>{sortLink("date", "日期")}{sortLink("net", "淨利")}{sortLink("income", "收入")}{sortLink("expense", "成本")}{sortLink("name", "名稱")}</div>
+            {items(perf)}
+            {ledger.length ? <div className="pnl-group">{GROUP_LABEL}</div> : null}
+            {items(ledger)}
+            <div className="pnl-item total">
+              <span className="pnl-main">
+                <b>{totalLabel}</b>
+                <small>收入 {money(total.income)}・成本 {money(total.expense)}</small>
+              </span>
+              <span className={`pnl-net${total.net < 0 ? " neg" : ""}`}>{money(total.net)}</span>
+            </div>
+          </div>
+          {limited && rows.length > shown.length && moreHref ? <Link className="toggle-done" href={moreHref}>看全部 {rows.length} 項 →</Link> : null}
+        </>
       )}
     </>
   );

@@ -2,10 +2,10 @@ import Link from "next/link";
 import { requirePage } from "@/lib/auth/current";
 import { listLedger, listTransactions } from "@/lib/finance/data";
 import { listShows, pickableShows, seriesOf, toPickerData } from "@/lib/shows";
-import { commonFund, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
+import { commonFund, INCOME_CATEGORIES, MANUAL_EXPENSE_CATEGORIES, incomeComposition, inYear, lastPayoutByMember, memberEarnings, MEMBERS, monthlyTrend, priorYearsUnpaid, taxReserveSummary, yearsOf, yearSummary } from "@/lib/finance/calc";
 import { membershipByMonth } from "@/lib/finance/members";
 import { countPendingLines, listMembershipLines } from "@/lib/finance/oen";
-import { financeSchedule, nextProcessingLabel } from "@/lib/finance/schedule";
+import { financeSchedule } from "@/lib/finance/schedule";
 import { todayInTaipei } from "@/lib/dates";
 import { displayName } from "@/lib/auth/users";
 import FinanceHead, { FORECAST_URL } from "@/components/finance-head";
@@ -20,7 +20,7 @@ import { IconChevron } from "@/components/icons";
 const money = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(Math.round(n)).toLocaleString()}`;
 const cls = (n: number) => (n >= 0 ? "pos" : "neg");
 
-// 財務總覽（2026-11-03 改版）：右下角＋新增收支（先選專案）→ 年度選擇 → 年度 KPI → 每月收支圖＋收入組成 → 成員分潤卡 → 付費會員 → 演出收支列表 → 待確認
+// 財務總覽（2026-11-03 改版；2026-11-12 瘦身，spec finance-overview）：右下角＋新增收支（先選專案）→ 年度選擇 → 年度 KPI → 每月收支圖＋收入組成 → 成員分潤卡（上方提示以前年度未付）→ 付費會員 → 演出收支前 5 列
 export default async function FinanceOverview({ searchParams }: PageProps<"/finance">) {
   const sp = await searchParams;
   const me = await requirePage("finance", "/finance");
@@ -37,6 +37,10 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
   const fund = commonFund(allTxs, year);
   const tax = taxReserveSummary(allTxs, year);
   const members = memberEarnings(allTxs, settlements, repayments, year);
+  const priorUnpaid = priorYearsUnpaid(allTxs, settlements, repayments, years, year);
+  const lastPayout = lastPayoutByMember(settlements);
+  // 上次出款日：今年的只寫 M/D，其他年份帶上年份
+  const payoutDate = (iso: string) => `${iso.startsWith(today.slice(0, 4)) ? "" : `${iso.slice(0, 4)}/`}${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
   const months = monthlyTrend(allTxs, year);
   const parts = incomeComposition(txs);
   const schedule = financeSchedule(today, shows.map((s) => ({ name: s.name, type: s.type, series: seriesOf(s), performanceDate: s.performanceDate, kind: s.kind })));
@@ -45,6 +49,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
   const sort = typeof sp.sort === "string" ? sp.sort : undefined;
   const dir = typeof sp.dir === "string" ? sp.dir : undefined;
   const series = typeof sp.series === "string" ? sp.series : undefined;
+  const showsHref = `/finance/shows?${new URLSearchParams({ year, ...(sort ? { sort } : {}), ...(dir ? { dir } : {}), ...(series ? { series } : {}) })}`;
   const picker = toPickerData(pickableShows(shows, today));
   const ledgers = shows.filter((s) => s.kind === "ledger").map((s) => ({ id: s.id, name: s.name })).sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
 
@@ -79,6 +84,9 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
 
         <section>
           <div className="section"><h2>成員分潤</h2><span>年度應得 − 已出款</span></div>
+          {priorUnpaid.map((p) => (
+            <Link key={p.year} className="notice" href={`/finance?year=${p.year}`}>{p.year} 年還有 {p.members} 位成員共 {money(p.amount)} 未付 →</Link>
+          ))}
           <div className="member-grid">
             {members.map((m) => (
               <div key={m.name} className="member-tile">
@@ -92,7 +100,7 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
                   <dt>未付</dt><dd className={m.unsettledNet < 0 ? "neg" : ""}>{money(m.unsettledNet)}</dd>
                   {m.advanceUnsettled !== 0 ? <><dt>代墊未結清</dt><dd className="neg" title={m.advanceUnsettled < 0 ? "超還：代墊已結清大於代墊總額" : undefined}>{money(m.advanceUnsettled)}</dd></> : null}
                 </dl>
-                <small className="next-date">{m.unsettledNet > 0 ? nextProcessingLabel({ kind: "member_unsettled", member: m.name }, today) : "無未付"}</small>
+                <small className="next-date">{lastPayout[m.name] ? `上次出款 ${payoutDate(lastPayout[m.name])}` : "還沒有出款紀錄"}</small>
               </div>
             ))}
           </div>
@@ -109,14 +117,10 @@ export default async function FinanceOverview({ searchParams }: PageProps<"/fina
         </section>
 
         <section id="shows">
-          <div className="section"><h2>演出收支</h2><Link href="/finance/shows">全部 <IconChevron className="chev" /></Link></div>
-          <ShowPnlTable txs={txs} shows={shows} year={year} sort={sort} dir={dir} series={series} basePath="/finance" anchor="#shows" compact />
+          <div className="section"><h2>演出收支</h2><Link href={showsHref}>全部 <IconChevron className="chev" /></Link></div>
+          <ShowPnlTable txs={txs} shows={shows} year={year} sort={sort} dir={dir} series={series} basePath="/finance" anchor="#shows" compact limit={5} moreHref={showsHref} />
         </section>
 
-        <Link className="card link-row" href="/finance/inbox">
-          <span className="row-main"><b>待確認</b><span className="meta">{pending ? `${pending} 筆 Oen 明細等待核准` : "沒有待確認的 Oen 明細"}・{nextProcessingLabel({ kind: "oen_pending" }, today)}</span></span>
-          <IconChevron className="chev" />
-        </Link>
         <a className="toggle-done" href={FORECAST_URL} target="_blank" rel="noreferrer">財務預估（Google Sheet）↗</a>
         <a className="toggle-done" href="/api/finance/export">下載全部收支（CSV）</a>
       </div>

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  categoryShares, categoryTotals, commonFund, defaultSettlementYear, deriveSettleStatus, groupKey, incomeComposition, inYear, memberEarnings, MEMBERS, monthlyTrend,
-  normalizeExcluded, roundPreservingSum, settlementYearOf, showPnlById, showSplit, taxReservesForShow, taxReserveSummary, yearsOf, yearSummary, type Ledger, type Tx,
+  categoryShares, categoryTotals, commonFund, defaultSettlementYear, deriveSettleStatus, groupKey, incomeComposition, inYear, lastPayoutByMember, memberEarnings, MEMBERS, monthlyTrend,
+  normalizeExcluded, priorYearsUnpaid, roundPreservingSum, settlementYearOf, showPnlById, showSplit, taxReservesForShow, taxReserveSummary, yearsOf, yearSummary, type Ledger, type Tx,
 } from "./calc.ts";
 
 let seq = 0;
@@ -269,4 +269,43 @@ test("單場分潤預覽：共同列扣 20% 後 8 人均分；排除列由參與
   assert.equal(of("柏文"), 3800);
   assert.equal(of("巧達"), 800);
   assert.equal(Math.round(split.reduce((s, x) => s + x.amount, 0)), 8000 * 0.8 + 6000);
+});
+
+test("以前年度未付：只列還有人未付的年度，由新到舊；超付不算；最早年度沒有提示", () => {
+  // 每年共同收入 10000 → 提撥 20% 後 8000 → 每人 1000
+  const rows = [tx({ amount: 10000, date: "2026-06-01" }), tx({ amount: 10000, date: "2027-06-01" }), tx({ amount: 10000, date: "2028-06-01" })];
+  const paid = (members: readonly string[], date: string, amount = 1000) => members.map((m) => led(m, amount, date));
+  const years = ["2028", "2027", "2026"];
+  // 2026：傑哥、柏文還沒付，巧達超付 200（不算進未付）；2027：全部付清
+  const settlements = [
+    ...paid(MEMBERS.filter((m) => m !== "傑哥" && m !== "柏文" && m !== "巧達"), "2026-12-10"),
+    ...paid(["巧達"], "2026-12-10", 1200),
+    ...paid(MEMBERS, "2027-12-10"),
+  ];
+  assert.deepEqual(priorYearsUnpaid(rows, settlements, [], years, "2027"), [{ year: "2026", members: 2, amount: 2000 }]);
+  assert.deepEqual(priorYearsUnpaid(rows, settlements, [], years, "2028"), [{ year: "2026", members: 2, amount: 2000 }]); // 2027 已付清，不列
+  assert.deepEqual(priorYearsUnpaid(rows, settlements, [], years, "2026"), []); // 最早的年度
+  // 兩個以前年度都有未付 → 由新到舊
+  const partly = settlements.filter((l) => !(l.member === "又又" && l.date === "2027-12-10"));
+  assert.deepEqual(priorYearsUnpaid(rows, partly, [], years, "2028"), [
+    { year: "2027", members: 1, amount: 1000 },
+    { year: "2026", members: 2, amount: 2000 },
+  ]);
+  // 都付清 → 沒有提示
+  assert.deepEqual(priorYearsUnpaid(rows, [...paid(MEMBERS, "2026-12-10"), ...paid(MEMBERS, "2027-12-10")], [], years, "2028"), []);
+  // 1 月出款預設算前一年的分潤：傑哥 2027-01-10 領 2026 的份 → 2026 的提示消失
+  const others = paid(MEMBERS.filter((m) => m !== "傑哥"), "2026-12-10");
+  assert.deepEqual(priorYearsUnpaid(rows, [...others, led("傑哥", 1000, "2027-01-10")], [], years, "2027"), []);
+  // 2 月才出款、分潤年度記成 2027 → 2026 仍然算未付（幫忙抓出年度選錯）
+  assert.deepEqual(priorYearsUnpaid(rows, [...others, { ...led("傑哥", 1000, "2027-02-05"), forYear: "2027" }], [], years, "2027"), [{ year: "2026", members: 1, amount: 1000 }]);
+});
+
+test("上次出款：每位成員最近一筆正數結算的日期；負數校正列不算；沒領過的不出現", () => {
+  const settlements = [
+    led("柏文", 1000, "2026-10-16"), led("柏文", 2000, "2026-11-10"), led("柏文", -500, "2026-11-20"), // 11/20 是負數校正，不是出款
+    led("巧達", 800, "2027-01-10"), led("巧達", 900, "2026-12-10"),
+  ];
+  assert.deepEqual(lastPayoutByMember(settlements), { 柏文: "2026-11-10", 巧達: "2027-01-10" });
+  assert.equal(lastPayoutByMember(settlements)["傑哥"], undefined);
+  assert.deepEqual(lastPayoutByMember([]), {});
 });
