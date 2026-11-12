@@ -304,7 +304,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .hero-title { font-size: var(--fs-display); font-weight: 700; line-height: 1.3; margin: 6px 0 14px; overflow-wrap: anywhere; }
 .hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 @media (min-width: 560px) { .hero-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.hero-stats div { background: rgba(255,255,255,.16); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.hero-stats div { background: rgba(23,24,28,.16); border-radius: 12px; padding: 8px 10px; min-width: 0; }
 .hero-stats b { display: block; font-size: var(--fs-title); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .hero-stats span { display: block; font-size: var(--fs-secondary); font-weight: 700; white-space: nowrap; }
 .show-row { display: flex; align-items: center; gap: 12px; }
@@ -414,7 +414,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .pick-row em { font-style: normal; color: var(--ink-2); flex: none; font-size: var(--fs-secondary); }
 .pick-row.on { background: var(--accent-4); color: var(--accent); }
 
-/* 行事曆（spec: team-calendar）：演出＝柿子紅實心、內部行程＝深色外框、待辦＝灰色小點 */
+/* 行事曆（spec: team-calendar）：演出＝赤陶橘實心、內部行程＝深色外框、待辦＝灰色小點 */
 .cal-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; align-items: start; }
 @media (min-width: 900px) { .cal-split { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; } }
 .cal-nav { display: flex; align-items: center; justify-content: space-between; margin: -6px -6px 8px; }
@@ -443,6 +443,7 @@ section .card:last-child, .panel .card:last-child { border-bottom: 0; padding-bo
 .cal-item.show::before, .cal-item.event::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; margin-right: -4px; }
 .cal-item.show::before { background: var(--brand); }
 .cal-item.event::before { box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.cal-item.todo::before { content: ""; flex: none; width: 8px; height: 8px; margin-right: -4px; border-radius: 50%; background: radial-gradient(circle, var(--ink-3) 2.5px, transparent 3px); }
 .cal-item.todo { padding: 8px 12px; font-size: var(--fs-secondary); color: var(--ink-2); }
 .cal-time { flex: none; width: 44px; font-size: var(--fs-secondary); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .cal-item-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -643,8 +644,9 @@ a.notice { display: block; }
 :root { --sticker: 2px solid var(--ink); --pop: 3px 3px 0 var(--ink); }
 .content > section, .panel, .show-todos-body > section, .two-col > section, .card, .table-wrap, .composer, .note, .more-shows, .summary-card, .next-row, .venue-entry-link { border: var(--sticker); box-shadow: none; }
 .panel .note-list .note { border: 1px solid var(--line-2); }
-.avatar { border: var(--sticker); }
-.hero { border: var(--sticker); box-shadow: 4px 4px 0 var(--ink); margin-bottom: 16px; }
+.avatar, .icon-btn { border: var(--sticker); }
+.hero { border: var(--sticker); box-shadow: var(--pop); margin-bottom: 16px; }
+.hero .chev { color: #fff; }
 .btn-primary { border: var(--sticker); box-shadow: var(--pop); }
 .btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 .btn-ghost { border: var(--sticker); }
@@ -656,3 +658,7 @@ a.notice { display: block; }
 .filter-chips > :nth-child(even) { transform: rotate(1deg); }
 .nav { border-top: var(--sticker); }
 @media (min-width: 900px) { .nav { border-top: 0; border-right: var(--sticker); } }
+/* 這幾條既有規則的權重比上面的外框高，聚焦或點過之後框色要維持墨黑 */
+.composer:focus-within, .summary-card:hover { border-color: var(--ink); }
+/* 圖表色塊加一圈墨線：淺色的類別在米白底上才看得出邊界 */
+.stack-bar i, .part-list li:not(.total) i { box-shadow: inset 0 0 0 1px var(--ink); }
