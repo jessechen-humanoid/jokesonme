@@ -56,7 +56,7 @@ export function MonthlyChart({ rows }: { rows: MonthRow[] }) {
         })}
         {hasData ? <polyline points={netPts} fill="none" stroke="var(--ink)" strokeWidth={2} strokeLinejoin="round" /> : null}
         {hasData ? rows.map((r, i) => (
-          <circle key={r.month} cx={padL + slot * i + slot / 2} cy={y(r.net)} r={3.5} fill="var(--surface)" stroke="var(--ink)" strokeWidth={2}><title>{r.month} 月淨利 {fmt(r.net)}</title></circle>
+          <circle key={r.month} cx={padL + slot * i + slot / 2} cy={y(r.net)} r={3.5} fill="var(--surface)" stroke="var(--ink)" strokeWidth={2}><title>{`${r.month} 月淨利 ${fmt(r.net)}`}</title></circle>
         )) : null}
       </svg>
       <details className="chart-table">
@@ -102,7 +102,7 @@ export function CompositionChart({ parts, total }: { parts: { name: string; amou
   );
 }
 
-/** 付費會員：月訂閱與年訂閱有效各一根（分開、不堆疊），下附表。 */
+/** 付費會員：月訂閱與年訂閱有效各一根（分開、不堆疊）；逐月數字表預設收合（spec finance-overview）。 */
 export function MembershipChart({ rows, partialMonth }: { rows: MembershipMonth[]; partialMonth: string | null }) {
   const W = 640, H = 220, padL = 36, padR = 12, padT = 16, padB = 28;
   const innerW = W - padL - padR, innerH = H - padT - padB;
@@ -128,14 +128,16 @@ export function MembershipChart({ rows, partialMonth }: { rows: MembershipMonth[
           const x0 = padL + slot * i + (slot - barW * 2 - 2) / 2;
           return (
             <g key={r.month}>
-              <rect x={x0} y={y(r.monthly)} width={barW} height={Math.max(0, y(0) - y(r.monthly))} rx={2} fill="var(--brand)"><title>{label(r.month)} 月訂閱 {r.monthly}</title></rect>
-              <rect x={x0 + barW + 2} y={y(r.annualActive)} width={barW} height={Math.max(0, y(0) - y(r.annualActive))} rx={2} fill="var(--ink-3)"><title>{label(r.month)} 年訂閱有效 {r.annualActive}</title></rect>
+              <rect x={x0} y={y(r.monthly)} width={barW} height={Math.max(0, y(0) - y(r.monthly))} rx={2} fill="var(--brand)"><title>{`${label(r.month)} 月訂閱 ${r.monthly}`}</title></rect>
+              <rect x={x0 + barW + 2} y={y(r.annualActive)} width={barW} height={Math.max(0, y(0) - y(r.annualActive))} rx={2} fill="var(--ink-3)"><title>{`${label(r.month)} 年訂閱有效 ${r.annualActive}`}</title></rect>
               {rows.length <= 14 ? <text x={padL + slot * i + slot / 2} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--ink-2)">{label(r.month)}</text> : null}
             </g>
           );
         })}
       </svg>
-      <div className="table-wrap flat">
+      <details className="chart-table">
+        <summary>看每月數字</summary>
+        <div className="table-wrap flat">
         <table className="table mini">
           <thead><tr><th>月份</th><th>月訂閱</th><th>年訂閱有效</th><th>新增年訂閱</th><th>合計</th></tr></thead>
           <tbody>
@@ -147,7 +149,8 @@ export function MembershipChart({ rows, partialMonth }: { rows: MembershipMonth[
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </details>
     </figure>
   );
 }

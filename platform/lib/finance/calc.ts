@@ -249,6 +249,21 @@ export function memberEarnings(allTxs: Tx[], allSettlements: Ledger[], allReimbu
   });
 }
 
+/**
+ * 以前年度還沒付清的分潤（財務總覽的提示用）：對每個早於 year 的年度，數出「未付 > 0」的成員數與合計。
+ * 直接用 memberEarnings 逐年算，所以數字與切到那一年看到的「未付」一致；超付（負數）不算。
+ * 只回傳還有人未付的年度，由新到舊。
+ */
+export type PriorYearUnpaid = { year: string; members: number; amount: number };
+export function priorYearsUnpaid(allTxs: Tx[], allSettlements: Ledger[], allReimbursements: Ledger[], years: readonly string[], year: string): PriorYearUnpaid[] {
+  const out: PriorYearUnpaid[] = [];
+  for (const y of [...new Set(years)].filter((v) => v < year).sort((a, b) => b.localeCompare(a))) {
+    const unpaid = memberEarnings(allTxs, allSettlements, allReimbursements, y).filter((m) => m.unsettledNet > 0);
+    if (unpaid.length) out.push({ year: y, members: unpaid.length, amount: unpaid.reduce((s, m) => s + m.unsettledNet, 0) });
+  }
+  return out;
+}
+
 /** 代墊結清狀態：各成員還款池 = 代墊還款帳本加總；該成員所有代墊交易依日期、同日依列順序，由舊到新沖銷。 */
 export type SettleStatus = { status: "settled" | "partial" | "unsettled"; reimbursedAmount: number };
 export function deriveSettleStatus(txs: Tx[], reimbursements: Ledger[]): Map<string, SettleStatus> {
