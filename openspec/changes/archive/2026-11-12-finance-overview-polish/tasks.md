@@ -19,4 +19,4 @@
 ## 4. 驗收
 
 - [x] 4.1 [after: 1.2] [after: 2.2] [after: 3.1] 在 platform 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出導到檔案並印出退出碼。驗證：四個退出碼都是 0。
-- [ ] 4.2 [after: 4.1] 找一個沒看過製作過程的 agent 獨立審查 diff，修完「會壞」「會醜」的項目；開 PR，說明寫「不牽動 MCP」與未驗證事項。驗證：PR 內文含四項自檢結果與審查結論。
+- [x] 4.2 [after: 4.1] 找一個沒看過製作過程的 agent 獨立審查 diff，修完「會壞」「會醜」的項目；開 PR，說明寫「不牽動 MCP」與未驗證事項。驗證：PR 內文含四項自檢結果與審查結論。（已完成：獨立審查沒有找到會算錯或會壞的問題，指出的項目已修；PR jokesonme-studio/jokesonme#16，2026-11-12 合併並部署，正式站電腦寬度驗過。成員卡出款日的 commit 沒有被獨立審查到；手機版清單沒有在真實頁面上看過。）

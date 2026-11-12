@@ -12,4 +12,4 @@
 
 - [x] 3.1 [after: 1.2] [after: 1.3] [after: 2.1] 在 platform 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出導到檔案並印出退出碼。驗證：四個退出碼都是 0。
 - [x] 3.2 [after: 3.1] 把分支的樣式檔套到正式站的真實頁面上逐頁檢查（只在自己的瀏覽器裡、只瀏覽不送出表單），並找一個沒看過製作過程的 agent 獨立審查 diff；審查找到的「會壞」「會醜」項目修完。驗證：十頁的截圖與審查結論寫進 PR。
-- [ ] 3.3 [after: 3.2] 開 PR，說明寫「不牽動 MCP」，並附上封存 brand-palette-terracotta-navy 的說明。驗證：PR 內文含四項自檢結果、審查結論與未驗證事項。
+- [x] 3.3 [after: 3.2] 開 PR，說明寫「不牽動 MCP」，並附上封存 brand-palette-terracotta-navy 的說明。驗證：PR 內文含四項自檢結果、審查結論與未驗證事項。（已完成：PR jokesonme-studio/jokesonme#15，2026-11-12 合併並部署。真實頁面只在電腦寬度看過，手機寬度只在假資料預覽頁驗證。）
