@@ -11,5 +11,5 @@
 
 - [x] 3.1 [after: 1.2] [after: 2.1] 在 platform 跑 `npm run test`、`npm run test:db`、`npm run typecheck`、`npm run lint`，輸出各自導到檔案並印出退出碼。驗證：四個退出碼都是 0。
 - [x] 3.2 [after: 2.1] 用新的 TypeScript 規則對正式庫跑 platform/scripts/check-tax-reserves.mts（唯讀，不寫入）。驗證：回報 0 個專案需要調整，代表套用 0019 不會改動現有資料；把輸出貼進 PR。
-- [ ] 3.3 [after: 3.1] [after: 3.2] 開 PR：說明寫明新增 migration 0019_tax_reserve_per_year.sql、合併後 Jesse 要對正式庫跑 `npm run db:migrate`、期限是 2027 年第一筆收入進來之前，並寫「不牽動 MCP」。驗證：PR 內文含上述四點與 3.1、3.2 的結果。
-- [ ] 3.4 [after: 3.3] Jesse 套用 0019 之後，再跑一次 check-tax-reserves.mts 並查有效自動預留列數。驗證：0 個專案需要調整，列數與套用前相同。
+- [x] 3.3 [after: 3.1] [after: 3.2] 開 PR：說明寫明新增 migration 0019_tax_reserve_per_year.sql、合併後 Jesse 要對正式庫跑 `npm run db:migrate`、期限是 2027 年第一筆收入進來之前，並寫「不牽動 MCP」。驗證：PR 內文含上述四點與 3.1、3.2 的結果。（已完成：PR jokesonme-studio/jokesonme#14，2026-11-12 合併。）
+- [x] 3.4 [after: 3.3] Jesse 套用 0019 之後，再跑一次 check-tax-reserves.mts 並查有效自動預留列數。驗證：0 個專案需要調整，列數與套用前相同。（已完成：2026-11-12 對正式庫套用 0019；套用後 check-tax-reserves.mts 回報 28 個專案 0 個需要調整，有效自動預留 30 筆、合計 −55,720，與套用前相同。）
