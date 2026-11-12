@@ -1,6 +1,6 @@
 // 財務總覽的圖：伺服器端 SVG，不加圖表套件（2026-11-03 Jesse）。
 // 顏色沿用 globals.css 的 design tokens（收入 --success、支出 --danger-fin，與整個財務區的 pos/neg 一致；
-// 分類系列用海軍藍 --accent 色階與中性灰，不用品牌橘 --brand；spec brand-design-system「Chart colour palette」）。
+// 分類系列用橘色階 --brand／--brand-2、中性灰與霧灰 --mist；spec brand-design-system「Chart colour palette」）。
 // 每張圖都有圖例、直接標籤、長條間距，下面再附數字表，不靠顏色辨識。
 import type { MonthRow } from "@/lib/finance/calc";
 import type { MembershipMonth } from "@/lib/finance/members";
@@ -74,7 +74,7 @@ export function MonthlyChart({ rows }: { rows: MonthRow[] }) {
   );
 }
 
-const PART_COLORS: Record<string, string> = { 票房: "var(--accent)", 會員: "var(--accent-2)", 周邊: "var(--ink-2)", 贊助: "var(--ink-3)", 其他: "var(--accent-3)" };
+const PART_COLORS: Record<string, string> = { 票房: "var(--brand)", 會員: "var(--brand-2)", 周邊: "var(--ink-2)", 贊助: "var(--ink-3)", 其他: "var(--mist)" };
 
 /** 收入組成：一條堆疊橫條＋逐項金額與百分比。 */
 export function CompositionChart({ parts, total }: { parts: { name: string; amount: number; pct: number }[]; total: number }) {
@@ -114,7 +114,7 @@ export function MembershipChart({ rows, partialMonth }: { rows: MembershipMonth[
   return (
     <figure className="chart">
       <div className="chart-legend" aria-hidden="true">
-        <span><i style={{ background: "var(--accent)" }} />月訂閱（當月成功扣款）</span>
+        <span><i style={{ background: "var(--brand)" }} />月訂閱（當月成功扣款）</span>
         <span><i style={{ background: "var(--ink-3)" }} />年訂閱有效（12 個月內扣款）</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="每月付費會員扣款數長條圖" className="chart-svg">
@@ -128,7 +128,7 @@ export function MembershipChart({ rows, partialMonth }: { rows: MembershipMonth[
           const x0 = padL + slot * i + (slot - barW * 2 - 2) / 2;
           return (
             <g key={r.month}>
-              <rect x={x0} y={y(r.monthly)} width={barW} height={Math.max(0, y(0) - y(r.monthly))} rx={2} fill="var(--accent)"><title>{label(r.month)} 月訂閱 {r.monthly}</title></rect>
+              <rect x={x0} y={y(r.monthly)} width={barW} height={Math.max(0, y(0) - y(r.monthly))} rx={2} fill="var(--brand)"><title>{label(r.month)} 月訂閱 {r.monthly}</title></rect>
               <rect x={x0 + barW + 2} y={y(r.annualActive)} width={barW} height={Math.max(0, y(0) - y(r.annualActive))} rx={2} fill="var(--ink-3)"><title>{label(r.month)} 年訂閱有效 {r.annualActive}</title></rect>
               {rows.length <= 14 ? <text x={padL + slot * i + slot / 2} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--ink-2)">{label(r.month)}</text> : null}
             </g>

@@ -17,8 +17,8 @@
 ## 4. 驗收
 
 - [x] 4.1 [after: 2.1] [after: 2.2] [after: 2.3] [after: 3.1] [after: 3.2] 在 platform 目錄跑 `npm run typecheck`、`npm run lint`、`npm test`，各自把輸出導到檔案並印出退出碼（不接管線）。驗證：三個退出碼都是 0。
-- [ ] 4.2 [after: 4.1] 在本機或預覽環境以 375px 寬逐頁檢查 `/home`、`/shows`、`/finance`、`/finance/shows`、`/finance/inbox`、`/calendar`、`/ideas`、`/ideas/venue-availability`、`/todos`、`/tickets`、`/me`：沒有舊的柿子紅或橄欖灰、沒有文字撞色、場地檔期頁的標示仍可分辨。只瀏覽，不送出任何表單。驗證：每頁一張截圖交給 Jesse 確認。
-- [ ] 4.3 [after: 4.2] Jesse 看過截圖並同意後才部署（`npm run cf:build`、`npm run cf:deploy`）。開 PR 時在說明寫明「不牽動 MCP」。驗證：正式站 `/finance` 的 body 計算後背景色為 `rgb(245, 241, 230)`。
+- [x] 4.2 [after: 4.1] 在本機或預覽環境以 375px 寬逐頁檢查 `/home`、`/shows`、`/finance`、`/finance/shows`、`/finance/inbox`、`/calendar`、`/ideas`、`/ideas/venue-availability`、`/todos`、`/tickets`、`/me`：沒有舊的柿子紅或橄欖灰、沒有文字撞色、場地檔期頁的標示仍可分辨。只瀏覽，不送出任何表單。驗證：每頁一張截圖交給 Jesse 確認。（2026-11-12 實際做法：真實頁面在電腦版寬度逐頁看過 10 頁；手機寬度只在假資料預覽頁以 375／390px 驗證，因為這台機器沒有假資料的開發環境、Chrome 視窗也縮不到手機寬度。）
+- [x] 4.3 [after: 4.2] Jesse 看過截圖並同意後才部署（`npm run cf:build`、`npm run cf:deploy`）。開 PR 時在說明寫明「不牽動 MCP」。驗證：正式站 `/finance` 的 body 計算後背景色為 `rgb(245, 241, 230)`。
 
 ## 5. 貼紙感
 
