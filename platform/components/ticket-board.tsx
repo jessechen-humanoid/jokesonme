@@ -14,7 +14,7 @@ type Detail = { ticket: TicketView; events: TicketEvent[]; actions: TicketAction
 
 const NEEDS_NOTE: TicketAction[] = ["reject", "wontfix"];
 const EVENT_LABEL: Record<TicketEvent["action"], string> = { create: "開票", ...ACTION_LABEL };
-// 主要按鈕（赤陶橘）：輪到這個人的那一步
+// 主要按鈕（橘色）：輪到這個人的那一步
 const PRIMARY: TicketAction[] = ["claim", "deliver", "accept"];
 
 function withT(listHref: string, n: number): string {
